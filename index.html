@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Location tracking</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div id="message">
+        <p id="text"></p>
+    </div>
+
+    <div>
+        <p>Enter destination:</p>
+        <form method="post">
+            <label for="x_destination">X:</label>
+            <input id="x_destination" type="number" name="x_destination">
+            <label for="y_destination">Y:</label>
+            <input id="y_destination" type="number" name="y_destination">
+            <button type="button" onclick="sendOrder()">Go!</button>
+        </form>
+    </div>
+
+    <script src="static/socket_handler.js"></script>
+    </body>
+</html>
