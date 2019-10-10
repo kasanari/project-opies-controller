@@ -12,7 +12,7 @@ class Servo():
 class Steering(Servo):
 
     def set_angle(self, angle):
-        self.pwm.ChangeDutyCycle(angle)
+        self.pwm.ChangeDutyCycle(angle) #TODO make this more sophisticated
 
 class Motor(Servo):
 
