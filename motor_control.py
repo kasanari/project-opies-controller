@@ -17,7 +17,7 @@ class Steering(Servo):
 class Motor(Servo):
 
     def neutral(self):
-        self.pwm.ChangeDutyCycle(PWM_NEUTRAL)
+        self.pwm.ChangeDutyCycle(PWM_NEUTRAL) #TODO make this more sophisticated
 
     def set_speed(self, speed):
         self.pwm.ChangeDutyCycle(speed)
