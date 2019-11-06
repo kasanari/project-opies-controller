@@ -16,15 +16,24 @@
         <div id="destination_input">
             <p>Enter destination:</p>
             <form method="post">
-                <label for="x_destination">X:</label>
-                <input id="x_destination" type="number" name="x_destination">
-                <label for="y_destination">Y:</label>
-                <input id="y_destination" type="number" name="y_destination">
-                <br>
-                <label for="wheel_angle">Angle:</label>
-                <input id="wheel_angle" type="number" name="wheel_angle">
-                <label for="drive_speed">Speed:</label>
-                <input id="drive_speed" type="number" name="drive_speed">
+                <div class="grid-container">
+                  <div class="grid-item">
+                      <label for="x_destination">X:</label>
+                      <input id="x_destination" type="number" name="x_destination">
+                  </div>
+                  <div class="grid-item">
+                      <label for="y_destination">Y:</label>
+                      <input id="y_destination" type="number" name="y_destination">
+                  </div>
+                  <div class="grid-item">
+                      <label for="wheel_angle">Angle:</label>
+                      <input id="wheel_angle" type="number" name="wheel_angle">
+                  </div>
+                  <div class="grid-item">
+                      <label for="drive_speed">Speed:</label>
+                      <input id="drive_speed" type="number" name="drive_speed">
+                  </div>
+                </div>
                 <button type="button" onclick="sendOrder()">Go!</button>
             </form>
         </div>

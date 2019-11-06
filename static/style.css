@@ -26,3 +26,10 @@
 body {
     background-color: whitesmoke;
 }
+
+.grid-container {
+     display: grid;
+    grid-template-columns: auto auto;
+    justify-content: space-evenly;
+    grid-column-gap: 50px;
+}
