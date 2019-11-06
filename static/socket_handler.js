@@ -1,4 +1,4 @@
-var ws = new WebSocket("ws://127.0.0.1:5678/");
+var ws = new WebSocket("ws://" + location.hostname + ":5678/");
 
 ws.onmessage = function (event) {
     var message = document.getElementById("text");

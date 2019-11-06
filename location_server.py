@@ -8,7 +8,7 @@ import random
 import threading
 
 PORT_NUMBER = 8080
-
+IP = "192.168.1.251"
 
 async def order(message):  # TODO add proper order handling
     print(message)
@@ -41,7 +41,7 @@ async def handler(websocket: WebSocketServerProtocol, path: str):
 
 def start_websocket_server():
     print("Starting Websocket Server")
-    start_server = websockets.serve(handler, "localhost", 5678)
+    start_server = websockets.serve(handler, IP, 5678)
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
 
@@ -51,7 +51,7 @@ def start_http_server():
     HTTPServer(server_address, SimpleHTTPRequestHandler).serve_forever()
 
 
-print("Starting HTTP Server")
+print(f"Starting HTTP Server at port {PORT_NUMBER}")
 daemon = threading.Thread(name='daemon_server', target=start_http_server)
 daemon.setDaemon(True)  # Set as a daemon so it will be killed once the main thread is dead.
 daemon.start()
