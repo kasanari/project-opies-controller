@@ -12,7 +12,11 @@ function addMessage(message_content) {
 }
 
 function eventHandler(event) {
-    addMessage(event.data)
+    addMessage(event.data);
+    var data = JSON.parse(event.data);
+    myLineChart.data.labels.push(data.x);
+    myLineChart.data.datasets[0].data.push(data.y);
+    myLineChart.update()
 }
 
 function sendOrder() {

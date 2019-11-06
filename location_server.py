@@ -7,6 +7,7 @@ import datetime
 import random
 import threading
 from main import motor_control_task
+import json
 
 PORT_NUMBER = 8080
 IP = "192.168.1.251"
@@ -18,7 +19,13 @@ async def order_handler(websocket, path, queue):
 
 async def time():  # TODO change this to send location info as well as time
     await asyncio.sleep(1)
-    return f"{datetime.datetime.utcnow().isoformat()}: X={random.randint(0, 10)} Y={random.randint(0, 10)}"
+    data_to_send = {
+        'x':random.randint(0, 10),
+        'y':random.randint(0, 10),
+        'timestamp':datetime.datetime.utcnow().isoformat()
+    }
+
+    return json.dumps(data_to_send)
 
 
 async def time_handler(websocket, path):
