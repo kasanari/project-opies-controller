@@ -6,12 +6,19 @@ from websockets import WebSocketServerProtocol
 import datetime
 import random
 import threading
+import json
+from motor_control import Steering
 
 PORT_NUMBER = 8080
 IP = "192.168.1.251"
+steering = Steering(17)
 
 async def order(message):  # TODO add proper order handling
+    message = json.loads(message)
     print(message)
+    angle = int(message["angle"])
+    print(angle)
+    steering.set_angle(angle)
 
 
 async def order_handler(websocket, path):
@@ -57,3 +64,4 @@ daemon.setDaemon(True)  # Set as a daemon so it will be killed once the main thr
 daemon.start()
 
 start_websocket_server()
+
