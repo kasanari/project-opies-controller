@@ -4,21 +4,30 @@
     <meta charset="UTF-8">
     <title>Location tracking</title>
     <link rel="stylesheet" href="static/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Inconsolata&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="message">
-        <p id="text"></p>
-    </div>
 
-    <div>
-        <p>Enter destination:</p>
-        <form method="post">
-            <label for="x_destination">X:</label>
-            <input id="x_destination" type="number" name="x_destination">
-            <label for="y_destination">Y:</label>
-            <input id="y_destination" type="number" name="y_destination">
-            <button type="button" onclick="sendOrder()">Go!</button>
-        </form>
+    <div id="main">
+        <div id="messages">
+        </div>
+
+        <div id="destination_input">
+            <p>Enter destination:</p>
+            <form method="post">
+                <label for="x_destination">X:</label>
+                <input id="x_destination" type="number" name="x_destination">
+                <label for="y_destination">Y:</label>
+                <input id="y_destination" type="number" name="y_destination">
+                <br>
+                <label for="wheel_angle">Angle:</label>
+                <input id="wheel_angle" type="number" name="wheel_angle">
+                <label for="drive_speed">Speed:</label>
+                <input id="drive_speed" type="number" name="drive_speed">
+                <button type="button" onclick="sendOrder()">Go!</button>
+            </form>
+        </div>
     </div>
 
     <script src="static/socket_handler.js"></script>
