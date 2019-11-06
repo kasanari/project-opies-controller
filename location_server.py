@@ -4,6 +4,7 @@ import asyncio
 import websockets
 from websockets import WebSocketServerProtocol
 import datetime
+import random
 import threading
 
 PORT_NUMBER = 8080
@@ -19,7 +20,7 @@ async def order_handler(websocket, path):
 
 
 async def time():  # TODO change this to send location info as well as time
-    return datetime.datetime.utcnow().isoformat() + "Z"
+    return f"{datetime.datetime.utcnow().isoformat()}: X={random.randint(0, 10)} Y={random.randint(0, 10)}"
 
 
 async def time_handler(websocket, path):
