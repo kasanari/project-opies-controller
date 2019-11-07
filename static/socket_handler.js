@@ -28,6 +28,7 @@ function sendOrder() {
         destination.speed = formData.get("drive_speed");
         destination.angle = formData.get("wheel_angle");
         let json = JSON.stringify(destination);
+        console.log(json);
         ws.send(json)
     } else {
         console.log("WebSocket not connected!")
