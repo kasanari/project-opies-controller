@@ -6,7 +6,6 @@ import random
 import datetime
 from websockets import WebSocketServerProtocol
 
-#steering = Steering(17, 4, 13)
 
 async def time():  # TODO change this to send location info as well as time
     await asyncio.sleep(1)
@@ -40,37 +39,40 @@ async def handler(websocket: WebSocketServerProtocol, path: str):
     done, pending = await asyncio.wait([consumer_task, producer_task, motor_task], return_when=asyncio.FIRST_COMPLETED)
     print("Client Disconnected!")
     for task in pending:
-     task.cancel()
+        task.cancel()
 
 
 async def motor_control_task(queue):
     steering = Steering(17, 4, 13)
-    #drive = Motor(2)
+    motor = Motor(18)
+
+    print("Initialized motors.")
 
     try:
         while True:
             message = await queue.get()
             message = json.loads(message)
             print(message)
-            angle = float(message["angle"])
-            steering.set_angle(angle)
+            try:
+                angle = float(message["angle"])
+                steering.set_angle(angle)
+            except ValueError as e:
+                print(e)
 
+            try:
+                speed = float(message["speed"])
+                motor.set_speed(speed)
+            except ValueError as e:
+                print(e)
 
     except asyncio.CancelledError:
-        print("Motor task cancelled")
+        print("Motor task cancelled.")
     finally:
         steering.stop()
-        #drive.stop()
+        motor.stop()
 
 
-async def order(message):
-    message = json.loads(message)
-    print(message)
-    angle = float(message["angle"])
-    print(angle)
-    #steering.set_angle(angle)
-
-if __name__== "__main__":
+if __name__ == "__main__":
 
     try:
         location_server.start_web_client()
