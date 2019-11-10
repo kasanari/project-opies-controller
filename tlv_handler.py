@@ -4,6 +4,23 @@ from tlv_reader import read_tlv
 from tlv_sender import send_tlv
 
 
+class TLVHandler:
+    def __init__(self, ser, tlv_command):
+        self.ser = ser
+        self.tlv_command = tlv_command
+        self.tlv_bytes, self.tlv_n_responses = API_dictionary.get(self.tlv_command)
+
+    def send_tlv_request(self):
+        send_tlv(self.ser, self.tlv_bytes)
+
+    def read_tlv(self):
+        tlv_type, tlv_length, tlv_value = read_tlv(self.ser, self.tlv_n_responses)
+        return tlv_type, tlv_length, tlv_value
+
+
+# TODO make TLV class
+
+
 def tlv_handler(tlv_command):
     try:
         ser = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
