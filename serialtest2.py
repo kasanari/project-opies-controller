@@ -15,7 +15,7 @@ except RuntimeError:
 # ser.write(b'')
 #
 f = open("location_data.txt", "w+")
-#while True:
+# while True:
 ser.write(b'\x02\x00')
 for i in range(100):
     # ser.write(b'\x02\x00')
@@ -28,22 +28,20 @@ for i in range(100):
     f.write(res_decoded)
 f.close()
 
-
-
-    #ser.write(b'si\r')  # System information pls
-   #time.sleep(0.5)
+# ser.write(b'si\r')  # System information pls
+# time.sleep(0.5)
 # # ser.write(b'acts 0 1 0 1 0 1 1 2 0\r')
 #
-    #f = open("location_data.txt", "w+")
+# f = open("location_data.txt", "w+")
 #
-    #ser.write(b'lep\r')
-   # for i in range(100):
-       # print('hh')
-      #  res = ser.read(100)
-     #   if len(res) > 0:
-    #        res_decoded = res.decode("utf-8")
-   #         print(res_decoded)
+# ser.write(b'lep\r')
+# for i in range(100):
+# print('hh')
+#  res = ser.read(100)
+#   if len(res) > 0:
+#        res_decoded = res.decode("utf-8")
+#         print(res_decoded)
 #         # Regular expression. only write those that match POS
-  #          f.write(res_decoded)
+#          f.write(res_decoded)
 #
- #   f.close()
+#   f.close()

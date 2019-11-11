@@ -23,9 +23,9 @@ with serial.Serial('/dev/tty.usbmodem0007600866181', timeout=3) as ser:
 
     ser.write(0x73)
     ser.write(0x69)
-    #ser.write(0x6C)  # l
-    #ser.write(0x65)  # e
-    #ser.write(0x63)  # c
+    # ser.write(0x6C)  # l
+    # ser.write(0x65)  # e
+    # ser.write(0x63)  # c
     ser.write(0x0D)  # enter
     # ser.write(0x0B)
     # ser.write(b'\r')

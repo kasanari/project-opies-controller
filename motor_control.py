@@ -1,11 +1,14 @@
 import RPi.GPIO as GPIO
 import warnings
 
+
 def cleanup():
     GPIO.cleanup()
 
-def rescale(x, min, max):
-    return min + x*(max - min)
+
+def rescale(x, minimum, maximum):
+    return minimum + x * (maximum - minimum)
+
 
 class Servo:
     def __init__(self, pin):
@@ -25,7 +28,6 @@ class Steering(Servo):
         self.max_angle = max_angle
         self.min_angle = min_angle
         self.pwm.start(self.neutral)
-
 
     def set_angle(self, angle):
 

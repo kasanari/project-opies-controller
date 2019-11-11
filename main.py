@@ -6,14 +6,15 @@ import random
 import datetime
 from websockets import WebSocketServerProtocol
 
+PORT_NUMBER = 8080  # Port for web server
+IP = "192.168.1.251"  # IP for websocket server
 
-PORT_NUMBER = 8080 # Port for web server
-IP = "192.168.1.251" # IP for websocket server
-#IP = "192.168.0.24"
+
+# IP = "192.168.0.24"
 
 async def time():  # TODO change this to send location info as well as time
     """Generates a message containing the location of the Pi and the current time"""
-    await asyncio.sleep(1) # To simulate a delay in getting the location data
+    await asyncio.sleep(1)  # To simulate a delay in getting the location data
     data_to_send = {
         'x': random.randint(0, 10),
         'y': random.randint(0, 10),
