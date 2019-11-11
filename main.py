@@ -1,4 +1,4 @@
-import location_server
+from web_server import location_server
 from motor_control import Steering, Motor, cleanup
 import json
 import asyncio
