@@ -1,12 +1,25 @@
-from tlv_handler import tlv_handler
+import pytest
+from tlv_handler import TLVHandler
 
 
-def test_tlv_handler():
-    tlv_type, tlv_length, tlv_value = tlv_handler("dwm_baddr_get")
+@pytest.fixture
+def serial_con():
+    import serial
 
-    assert tlv_type[0] == 64
-    assert tlv_type[1] == 95
-    assert tlv_length[0] == 1
-    assert tlv_length[1] == 6
-    assert tlv_value[0] == 0
-    print(tlv_value[1])
+    ser = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
+    yield ser
+    ser.close()
+
+
+def test_baddr_get(serial_con):
+    tlvh1 = TLVHandler(serial_con, "dwm_baddr_get")
+    tlvh1.send_tlv_request()
+    tlv_object_list, indexes = tlvh1.read_tlv()
+
+    assert indexes == 2
+    assert tlv_object_list[0].tlv_type == 64
+    assert tlv_object_list[1].tlv_type == 95
+    assert tlv_object_list[0].tlv_length == 1
+    assert tlv_object_list[1].tlv_length == 6
+    assert tlv_object_list[0].tlv_value == 0
+    print(tlv_object_list[1].tlv_value)
