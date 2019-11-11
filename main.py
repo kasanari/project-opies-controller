@@ -24,7 +24,7 @@ async def time():  # TODO change this to send location info as well as time
     return json.dumps(data_to_send)
 
 
-async def time_handler(websocket, path):
+async def send_handler(websocket, path):
     """ Sends location data (only time currently) to client """
     print("Client Connected!")
     while True:
@@ -32,7 +32,7 @@ async def time_handler(websocket, path):
         await websocket.send(message)
 
 
-async def order_handler(websocket, path, queue):
+async def receive_handler(websocket, path, queue):
     """ Handles incoming messages from client """
     async for message in websocket:
         await queue.put(message)
@@ -41,11 +41,11 @@ async def order_handler(websocket, path, queue):
 async def handler(websocket: WebSocketServerProtocol, path: str):
     """ Starts all tasks related to websockets and motor control"""
     queue = asyncio.Queue()
-    consumer_task = asyncio.create_task(order_handler(websocket, path, queue))
-    producer_task = asyncio.create_task(time_handler(websocket, path))
+    receive_msg_task = asyncio.create_task(receive_handler(websocket, path, queue))
+    send_msg_task = asyncio.create_task(send_handler(websocket, path))
     motor_task = asyncio.create_task(motor_control_task(queue))
 
-    done, pending = await asyncio.wait([consumer_task, producer_task, motor_task], return_when=asyncio.FIRST_COMPLETED)
+    done, pending = await asyncio.wait([receive_msg_task, send_msg_task, motor_task], return_when=asyncio.FIRST_COMPLETED)
     print("Client Disconnected!")
     for task in pending:
         task.cancel()
