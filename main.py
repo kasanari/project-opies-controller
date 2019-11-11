@@ -1,5 +1,5 @@
 import location_server
-from motor_control import Steering, Motor
+from motor_control import Steering, Motor, cleanup
 import json
 import asyncio
 import random
@@ -53,17 +53,23 @@ async def motor_control_task(queue):
             message = await queue.get()
             message = json.loads(message)
             print(message)
-            try:
-                angle = float(message["angle"])
-                steering.set_angle(angle)
-            except ValueError as e:
-                print(e)
 
-            try:
-                speed = float(message["speed"])
-                motor.set_speed(speed)
-            except ValueError as e:
-                print(e)
+            message_type = message["type"]
+
+            if message_type == "car_control":
+                try:
+                    angle = float(message["angle"])
+                    steering.set_angle(angle)
+                except ValueError as e:
+                    print(e)
+
+                try:
+                    speed = float(message["speed"])
+                    motor.set_speed(speed)
+                except ValueError as e:
+                    print(e)
+            elif message_type == "destination":
+                print(f"Going to ({message['x']}, {message['y']})")
 
     except asyncio.CancelledError:
         print("Motor task cancelled.")
@@ -81,5 +87,6 @@ if __name__ == "__main__":
         asyncio.get_event_loop().run_forever()
 
     except KeyboardInterrupt:
-        asyncio.get_event_loop().stop()
         print("Stopping..")
+        asyncio.get_event_loop().stop()
+        cleanup()

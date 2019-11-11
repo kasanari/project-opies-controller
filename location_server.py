@@ -4,8 +4,8 @@ import websockets
 import threading
 
 PORT_NUMBER = 8080
-#IP = "192.168.1.251"
-IP = "192.168.0.24"
+IP = "192.168.1.251"
+#IP = "192.168.0.24"
 
 def start_websocket_server(handler_func):
     print("Starting Websocket Server")
