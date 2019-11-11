@@ -1,6 +1,11 @@
 import RPi.GPIO as GPIO
 import warnings
 
+def cleanup():
+    GPIO.cleanup()
+
+def rescale(x, min, max):
+    return min + x*(max - min)
 
 class Servo:
     def __init__(self, pin):
@@ -11,7 +16,7 @@ class Servo:
 
     def stop(self):
         self.pwm.stop()
-        GPIO.cleanup()
+
 
 class Steering(Servo):
 
@@ -23,6 +28,9 @@ class Steering(Servo):
 
 
     def set_angle(self, angle):
+
+        angle = rescale(angle, self.min_angle, self.max_angle)
+
         if angle > self.max_angle:
             warnings.warn(f"Angle of {angle} exceeds max_angle of {self.max_angle}!")
             angle = self.max_angle
@@ -45,6 +53,9 @@ class Motor(Servo):
         self.pwm.ChangeDutyCycle(7.5)
 
     def set_speed(self, speed):
+
+        speed = rescale(speed, self.max_bspeed, self.max_fspeed)
+
         if speed > self.max_fspeed:
             speed = self.max_fspeed
             warnings.warn(f"{speed} exceeds max speed of {self.max_fspeed}!")
