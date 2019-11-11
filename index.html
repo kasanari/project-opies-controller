@@ -4,50 +4,60 @@
     <meta charset="UTF-8">
     <title>Location tracking</title>
     <link rel="stylesheet" href="static/style.css">
-    <link href="https://fonts.googleapis.com/css?family=Inconsolata&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="main">
-        <div id="messages">
-        </div>
-
-        <div id="destination_input">
-            <p>Enter destination:</p>
-            <form method="post">
-                <div class="grid-container">
-                  <div class="grid-item">
-                      <label for="x_destination">X:</label>
-                      <input id="x_destination" type="number" name="x_destination">
-                  </div>
-                  <div class="grid-item">
-                      <label for="y_destination">Y:</label>
-                      <input id="y_destination" type="number" name="y_destination">
-                  </div>
-                  <div class="grid-item">
-                      <label for="wheel_angle">Angle:</label>
-                      <input id="wheel_angle" type="number" name="wheel_angle">
-                  </div>
-                  <div class="grid-item">
-                      <label for="drive_speed">Speed:</label>
-                      <input id="drive_speed" type="number" name="drive_speed">
-                  </div>
-                </div>
-                <button type="button" onclick="sendOrder()">Go!</button>
-            </form>
-        </div>
-
-        <button type="button" onclick="connect()">Connect.</button>
-        <button type="button" onclick="disconnect()">Disconnect.</button>
+<div id="main">
+    <div id="messages">
     </div>
+
+    <div id="controls">
+            <div class="grid-item">
+                <form id="form-destination">
+                    <h2>Destination</h2>
+                    <div>
+                        <label for="x_destination">X:</label>
+                        <input id="x_destination" type="number" name="x_destination">
+                    </div>
+                    <div>
+                        <label for="y_destination">Y:</label>
+                        <input id="y_destination" type="number" name="y_destination">
+                    </div>
+                    <button type="button" onclick="sendDestination()">Send</button>
+                </form>
+            </div>
+
+            <div class="grid-item" id="car-controller">
+                <form id="form-carcontrol">
+                    <h2>Car control</h2>
+                    <div class="control">
+                        <label for="wheel_angle">Angle:</label>
+                        <input id="wheel_angle" min="0" max="1" value="0.5" step="0.1" type="range" name="wheel_angle">
+                        <p class="indicator" id="wheel_angle_indicator"></p>
+                    </div>
+                    <div class="control">
+                        <label for="drive_speed">Speed:</label>
+                        <input id="drive_speed" min="0" max="1" value="0.5" step="0.1" type="range" name="drive_speed">
+                        <p class="indicator" id="drive_speed_indicator"></p>
+                    </div>
+                    <button type="button" onclick="stop()">Stop!</button>
+                </form>
+            </div>
+
+            <div class="grid-item" id="connection-controller">
+                <h2>Connection</h2>
+                <button type="button" onclick="connect()">Connect.</button>
+                <button type="button" onclick="disconnect()">Disconnect.</button>
+            </div>
+        </div>
+</div>
 
 <div class="chart-container" style="position: relative; height:10vh; width:20vw">
     <canvas id="myChart" width="100" height="100"></canvas>
 </div>
-
-    <script src="static/Chart.min.js"></script>
-    <script src="static/socket_handler.js"></script>
-    <script src="static/graphics.js"></script>
-    </body>
+<script src="static/slider.js"></script>
+<script src="static/Chart.min.js"></script>
+<script src="static/socket_handler.js"></script>
+<script src="static/graphics.js"></script>
+</body>
 </html>
