@@ -9,8 +9,17 @@ drive_slider_out.innerHTML = drive_slider.value; // Display the default slider v
 
 angle_slider.oninput = function() {
   angle_slider_out.innerHTML = this.value;
+  sendCarControl()
 };
 
 drive_slider.oninput = function () {
   drive_slider_out.innerHTML = this.value;
+  sendCarControl()
 };
+
+function resetSliders() {
+  angle_slider.value = 0.5;
+  drive_slider.value = 0.5;
+  angle_slider_out.innerHTML = angle_slider.value; // Display the default slider value
+  drive_slider_out.innerHTML = drive_slider.value; // Display the default slider value
+}

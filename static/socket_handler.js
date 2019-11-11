@@ -3,8 +3,8 @@ var ws;
 
 function addMessage(message_content) {
     var message_holder = document.getElementById("messages"),
-    message = document.createElement('p'),
-    content = document.createTextNode(message_content);
+        message = document.createElement('p'),
+        content = document.createTextNode(message_content);
     message.id = "message";
     message.appendChild(content);
     message_holder.appendChild(message);
@@ -49,6 +49,15 @@ function sendDestination() {
     } else {
         console.log("WebSocket not connected!")
     }
+}
+
+function stop() {
+    var message = {};
+    message.type = "car_control";
+    message.speed = 0.5;
+    message.angle = 0.5;
+    resetSliders();
+    sendWSMessage(message)
 }
 
 function connect() {
