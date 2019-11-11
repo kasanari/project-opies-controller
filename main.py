@@ -7,8 +7,13 @@ import datetime
 from websockets import WebSocketServerProtocol
 
 
+PORT_NUMBER = 8080 # Port for web server
+IP = "192.168.1.251" # IP for websocket server
+#IP = "192.168.0.24"
+
 async def time():  # TODO change this to send location info as well as time
-    await asyncio.sleep(1)
+    """Generates a message containing the location of the Pi and the current time"""
+    await asyncio.sleep(1) # To simulate a delay in getting the location data
     data_to_send = {
         'x': random.randint(0, 10),
         'y': random.randint(0, 10),
@@ -19,6 +24,7 @@ async def time():  # TODO change this to send location info as well as time
 
 
 async def time_handler(websocket, path):
+    """ Sends location data (only time currently) to client """
     print("Client Connected!")
     while True:
         message = await time()
@@ -26,11 +32,13 @@ async def time_handler(websocket, path):
 
 
 async def order_handler(websocket, path, queue):
+    """ Handles incoming messages from client """
     async for message in websocket:
         await queue.put(message)
 
 
 async def handler(websocket: WebSocketServerProtocol, path: str):
+    """ Starts all tasks related to websockets and motor control"""
     queue = asyncio.Queue()
     consumer_task = asyncio.create_task(order_handler(websocket, path, queue))
     producer_task = asyncio.create_task(time_handler(websocket, path))
@@ -43,6 +51,7 @@ async def handler(websocket: WebSocketServerProtocol, path: str):
 
 
 async def motor_control_task(queue):
+    """ Controls the steering servo and motor, awaits orders from queue"""
     steering = Steering(17, 4, 13)
     motor = Motor(18)
 
@@ -81,8 +90,8 @@ async def motor_control_task(queue):
 if __name__ == "__main__":
 
     try:
-        location_server.start_web_client()
-        start_server = location_server.start_websocket_server(handler)
+        location_server.start_web_client(PORT_NUMBER)
+        start_server = location_server.start_websocket_server(IP, handler)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
 
