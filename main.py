@@ -1,5 +1,6 @@
 import location_server
-from motor_control import Steering, Motor, cleanup
+from gpiozero import Servo
+from gpiozero.pins.pigpio import PiGPIOFactory
 import json
 import asyncio
 import random
@@ -43,8 +44,9 @@ async def handler(websocket: WebSocketServerProtocol, path: str):
 
 
 async def motor_control_task(queue):
-    steering = Steering(17, 4, 13)
-    motor = Motor(18)
+    factory = PiGPIOFactory()
+    steering = Servo(13, pin_factory=factory)
+    motor = Servo(19, pin_factory=factory)
 
     print("Initialized motors.")
 
@@ -59,13 +61,13 @@ async def motor_control_task(queue):
             if message_type == "car_control":
                 try:
                     angle = float(message["angle"])
-                    steering.set_angle(angle)
+                    steering.value = angle
                 except ValueError as e:
                     print(e)
 
                 try:
                     speed = float(message["speed"])
-                    motor.set_speed(speed)
+                    motor.value = speed
                 except ValueError as e:
                     print(e)
             elif message_type == "destination":
@@ -74,8 +76,8 @@ async def motor_control_task(queue):
     except asyncio.CancelledError:
         print("Motor task cancelled.")
     finally:
-        steering.stop()
-        motor.stop()
+        steering.detach()
+        motor.detach()
 
 
 if __name__ == "__main__":
@@ -89,4 +91,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Stopping..")
         asyncio.get_event_loop().stop()
-        cleanup()
+        #cleanup()

@@ -1,22 +1,12 @@
 import RPi.GPIO as GPIO
 import warnings
+from gpiozero import Servo
 
 def cleanup():
     GPIO.cleanup()
 
 def rescale(x, min, max):
     return min + x*(max - min)
-
-class Servo:
-    def __init__(self, pin):
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(pin, GPIO.OUT)
-        self.pwm = GPIO.PWM(pin, 50)
-        self.neutral = 7.5
-
-    def stop(self):
-        self.pwm.stop()
-
 
 class Steering(Servo):
 
