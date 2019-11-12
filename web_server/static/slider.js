@@ -18,8 +18,8 @@ drive_slider.oninput = function () {
 };
 
 function resetSliders() {
-  angle_slider.value = 0.5;
-  drive_slider.value = 0.5;
+  angle_slider.value = 0;
+  drive_slider.value = 0;
   angle_slider_out.innerHTML = angle_slider.value; // Display the default slider value
   drive_slider_out.innerHTML = drive_slider.value; // Display the default slider value
 }

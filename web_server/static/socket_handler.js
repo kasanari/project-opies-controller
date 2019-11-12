@@ -54,8 +54,8 @@ function sendDestination() {
 function stop() {
     var message = {};
     message.type = "car_control";
-    message.speed = 0.5;
-    message.angle = 0.5;
+    message.speed = 0;
+    message.angle = 0;
     resetSliders();
     sendWSMessage(message)
 }
