@@ -6,7 +6,7 @@ import json
 import asyncio
 import random
 import datetime
-from websockets import WebSocketServerProtocol
+from websockets import WebSocketServerProtocol, ConnectionClosedError
 
 PORT_NUMBER = 8080  # Port for web server
 
@@ -32,8 +32,11 @@ async def send_handler(websocket, path):
 
 async def receive_handler(websocket, path, queue):
     """ Handles incoming messages from client """
+    try:
     async for message in websocket:
         await queue.put(message)
+    except ConnectionClosedError:
+        return
 
 
 async def handler(websocket: WebSocketServerProtocol, path: str):
