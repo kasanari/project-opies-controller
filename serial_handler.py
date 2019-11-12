@@ -1,6 +1,8 @@
 import serial
 from tlv_handler import TLVHandler
+from location_data_handler import extract_location, extract_distance
 
+# just incorporate into the functions, rm dictionary after
 API_dictionary = {
     "get_location": "dwm_loc_get",
     "get_bluetooth_info": "dwm_baddr_get",
@@ -25,9 +27,23 @@ def get_location():
     responses, indexes = connect_serial_uart()
     if responses[0].tlv_value != 0:
         print("Error in reading location. Is the RTLS on?")
-    # else:
-    #     print("Location data:\n")
-    return responses
+    else:
+        print("Location data:\n")
+        extract_location(responses)
+        # ask for locationdata from locationdata_handler. send responses. locationdata_handler
+        # either sends back distances or a location
+    return responses  # can get errors if minicom:ed earlier..?
+
+
+def get_distance():
+    responses, indexes = connect_serial_uart()
+    if responses[0].tlv_value != 0:
+        print("Error in reading location. Is the RTLS on?")
+    else:
+        print("Location data:\n")
+
+        # parse distance heeere
+    return responses  # can get errors if minicom:ed earlier..?
 
 
 def get_nodeid():
