@@ -51,8 +51,13 @@ async def handler(websocket: WebSocketServerProtocol, path: str):
 
 async def motor_control_task(queue):
     factory = PiGPIOFactory()
+
+    motor_max_duty = 0.1
+    motor_min_duty = 0.05
+    min_pulse_width = motor_min_duty * 20/1000
+    max_pulse_width = motor_max_duty * 20/1000
     steering = Servo(13, pin_factory=factory)
-    motor = Servo(19, pin_factory=factory)
+    motor = Servo(19, pin_factory=factory, min_pulse_width=min_pulse_width, max_pulse_width=max_pulse_width)
 
     print("Initialized motors.")
 
