@@ -14,8 +14,8 @@ class LocationData:
 
 @dataclass
 class Anchor:
-    anchor_id: str
-    position: LocationData()
+    anchor_id: str  # could add = '' but have to rearrange order or do to all
+    position: LocationData('', '', '', -1)
     distance: str
     distance_quality: float
 
@@ -44,7 +44,7 @@ def extract_location(tlv_response, n=2, max_index=12):
     c.x = tlv_response[n].tlv_value[max_index-9]
 
     for i in range(max_index-2, max_index-4, -1):
-        c.z = c.z + tlv_response[n].tlv_value[i]  # concatenate? (might have to make it into a string)
+        c.z = c.z + tlv_response[n].tlv_value[i]  # concatenate pls? (might have to make it into a string)
         c.y = c.y + tlv_response[n].tlv_value[i-4]
         c.x = c.x + tlv_response[n].tlv_value[i-8]
 
@@ -62,19 +62,25 @@ def extract_location(tlv_response, n=2, max_index=12):
 
 
 def extract_distances(tlv_response):
-    c = Anchor()
+    a_list = []
     # initialize y, x, z
 
-    # WIP under here
-    c.z = tlv_response[3].tlv_value[11]
-    c.y = tlv_response[3].tlv_value[7]
-    c.x = tlv_response[3].tlv_value[3]
+    n_anchors = int(tlv_response[2].tlv_value[0])
 
-    for i in range(10, 8, -1):
-        c.z = c.z + tlv_response.tlv_value[i]  # concatenate? (might have to make it into a string)
-        c.y = c.y + tlv_response.tlv_value[i - 4]
-        c.x = c.x + tlv_response.tlv_value[i - 8]
+    for i in range(n_anchors):  # loops through anchors
+        a = Anchor('', '', '', -1)
+        start_index_bytetrain = 1+(20*i)
+        end_index_bytetrain = 20*(i+1)
 
-    return c
+        # UWB address for anchor i
+        a.anchor_id = tlv_response[2].tlv_value[start_index_bytetrain+1]
+        a.anchor_id = a.anchor_id + tlv_response[2].tlv_value[start_index_bytetrain]
+        a_list.append(a)
+
+        # distance
+        for j in range(start_index_bytetrain + 6, start_index_bytetrain + 2, -1):
+            a.distance = a.distance + tlv_response[2].tlv_value[j]
+        a.position = extract_location(tlv_response, 2, end_index_bytetrain)
+    return a_list
 
 

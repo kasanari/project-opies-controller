@@ -1,6 +1,6 @@
 import serial
 from tlv_handler import TLVHandler
-from location_data_handler import extract_location, extract_distance
+from location_data_handler import extract_location, extract_distances, Anchor
 
 # just incorporate into the functions, rm dictionary after
 API_dictionary = {
@@ -35,15 +35,14 @@ def get_location():
     return responses  # can get errors if minicom:ed earlier..?
 
 
-def get_distance():
-    responses, indexes = connect_serial_uart()
-    if responses[0].tlv_value != 0:
-        print("Error in reading location. Is the RTLS on?")
+def get_anchor_distances():
+    responses, indexes = connect_serial_uart("dwm_loc_get")
+    if responses[0].tlv_type == 0:
+        print("Error in reading location. No response. Is the RTLS on?")
+        return Anchor('', '', '', -1)  # empty anchor
     else:
-        print("Location data:\n")
-
-        # parse distance heeere
-    return responses  # can get errors if minicom:ed earlier..?
+        a_list = extract_distances(responses)
+        return a_list
 
 
 def get_nodeid():
