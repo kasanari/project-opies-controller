@@ -2,7 +2,6 @@ import RPi.GPIO as GPIO
 import warnings
 from gpiozero import Servo
 
-
 def cleanup():
     GPIO.cleanup()
 
