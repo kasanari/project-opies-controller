@@ -1,4 +1,5 @@
 from web_server import location_server
+import argparse
 from motor_control import Steering, Motor, cleanup
 import json
 import asyncio
@@ -7,10 +8,6 @@ import datetime
 from websockets import WebSocketServerProtocol
 
 PORT_NUMBER = 8080  # Port for web server
-IP = "192.168.1.251"  # IP for websocket server
-
-
-# IP = "192.168.0.24"
 
 async def time():  # TODO change this to send location info as well as time
     """Generates a message containing the location of the Pi and the current time"""
@@ -89,6 +86,14 @@ async def motor_control_task(queue):
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Start the car control server.')
+    parser.add_argument('ip_addr', metavar='IP', type=str,
+                        help='The IP address to use.')
+
+    args = parser.parse_args()
+
+    IP = args.ip_addr
 
     try:
         location_server.start_web_client(PORT_NUMBER)
