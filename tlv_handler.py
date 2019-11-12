@@ -29,8 +29,12 @@ def _read_tlv_worker(ser):
     length_bytes = ser.read(1)
     length = int.from_bytes(length_bytes, byteorder='big')
 
-    value_bytes = ser.read(length)
-    value = int.from_bytes(value_bytes, byteorder='big')
+      # do this in a loop and add to a list? 'cause then each byte would be accessible on its own.
+    value = []
+    for i in range(length):
+        value_bytes = ser.read(1)
+        value.append(value_bytes.hex())
+        #value.append(int.from_bytes(value_bytes, byteorder='big'))
 
     c = TLV(tlv_type, length, value)
     return c
@@ -55,7 +59,14 @@ def send_tlv(ser, send_bytes):
     ser.write(send_bytes)
 
 
+def distance_to_anchor(self):
+    pass  # in loop from range(tlv.value[0] in the .tlv_value list on tlv_list[2],
+    # skip 1 + 2 + (n-1)*18  entries to then read the following 4 bytes for distance to anchor n. 5th byte is quality
+
+
 API_dictionary = {
-  "dwm_loc_get": [b'\x0c\x00', 3],
-  "dwm_baddr_get": [b'\x10\x00', 2]
+    "dwm_loc_get": [b'\x0c\x00', 3],  # position value: from output value in 2nd response type
+    "dwm_baddr_get": [b'\x10\x00', 2],
+    "dwm_cfg_get": [b'\x08\x00', 2],
+    "dwm_nodeid_get": [b'\x30\x00', 2]
 }
