@@ -33,8 +33,8 @@ async def send_handler(websocket, path):
 async def receive_handler(websocket, path, queue):
     """ Handles incoming messages from client """
     try:
-    async for message in websocket:
-        await queue.put(message)
+        async for message in websocket:
+            await queue.put(message)
     except ConnectionClosedError:
         return
 
@@ -86,6 +86,9 @@ async def motor_control_task(queue):
                     print(e)
             elif message_type == "destination":
                 print(f"Going to ({message['x']}, {message['y']})")
+            elif message_type == 'stop':
+                motor.mid()
+                steering.mid()
 
     except asyncio.CancelledError:
         print("Motor task cancelled.")
