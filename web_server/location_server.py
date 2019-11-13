@@ -9,11 +9,6 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
-def start_websocket_server(ip_addr, handler_func):
-    """Starts the WebSocket server"""
-    print("Starting Websocket Server")
-    return websockets.serve(handler_func, ip_addr, 5678)
-
 
 def start_http_server(port):
     """Starts the web client_server http server"""

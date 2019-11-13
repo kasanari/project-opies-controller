@@ -1,10 +1,49 @@
-import RPi.GPIO as GPIO
 import warnings
+import asyncio
 from gpiozero import Servo
+from gpiozero.pins.pigpio import PiGPIOFactory
 
-def cleanup():
-    GPIO.cleanup()
+async def motor_control_task(queue):
+    factory = PiGPIOFactory()
 
+    motor_max_duty = 0.1
+    motor_min_duty = 0.05
+    min_pulse_width = motor_min_duty * 20/1000
+    max_pulse_width = motor_max_duty * 20/1000
+    steering = Servo(13, pin_factory=factory)
+    motor = Servo(19, pin_factory=factory, min_pulse_width=min_pulse_width, max_pulse_width=max_pulse_width)
+
+    print("Initialized motors.")
+
+    try:
+        while True:
+            message = await queue.get()
+            print(message)
+            message_type = message["type"]
+
+            if message_type == "car_control":
+                try:
+                    angle = float(message["angle"])
+                    steering.value = angle
+                except ValueError as e:
+                    print(e)
+
+                try:
+                    speed = float(message["speed"])
+                    motor.value = speed
+                except ValueError as e:
+                    print(e)
+            elif message_type == "destination":
+                print(f"Going to ({message['x']}, {message['y']})")
+            elif message_type == 'stop':
+                motor.mid()
+                steering.mid()
+
+    except asyncio.CancelledError:
+        print("Motor task cancelled.")
+    finally:
+        steering.detach()
+        motor.detach()
 
 def rescale(x, minimum, maximum):
     return minimum + x * (maximum - minimum)
