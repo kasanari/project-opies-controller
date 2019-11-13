@@ -6,6 +6,7 @@ import json
 import asyncio
 import random
 import datetime
+import functools
 import subprocess
 from websockets import WebSocketServerProtocol, ConnectionClosedError
 
@@ -40,14 +41,12 @@ async def receive_handler(websocket, path, queue):
         return
 
 
-async def handler(websocket: WebSocketServerProtocol, path: str):
+async def handler(websocket: WebSocketServerProtocol, path: str, queue):
     """ Starts all tasks related to websockets and motor control"""
-    queue = asyncio.Queue()
     receive_msg_task = asyncio.create_task(receive_handler(websocket, path, queue))
     send_msg_task = asyncio.create_task(send_handler(websocket, path))
-    motor_task = asyncio.create_task(motor_control_task(queue))
 
-    done, pending = await asyncio.wait([receive_msg_task, send_msg_task, motor_task], return_when=asyncio.FIRST_COMPLETED)
+    done, pending = await asyncio.wait([receive_msg_task, send_msg_task], return_when=asyncio.FIRST_COMPLETED)
     print("Client Disconnected!")
     for task in pending:
         task.cancel()
@@ -98,6 +97,19 @@ async def motor_control_task(queue):
         motor.detach()
 
 
+async def main(ip_addr):
+    queue = asyncio.Queue()
+
+    start_server = location_server.start_websocket_server(ip_addr, functools.partial(handler, queue=queue))
+
+    motor_task = asyncio.create_task(motor_control_task(queue))
+
+    await asyncio.gather(start_server, motor_task)
+
+    # asyncio.get_event_loop().run_until_complete(start_server)
+    # asyncio.get_event_loop().run_forever()
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Start the car control server.')
@@ -106,7 +118,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    IP = args.ip_addr
+    ip = args.ip_addr
 
     try:
         subprocess.run("sudo killall pigpiod", shell=True, check=True)
@@ -117,11 +129,13 @@ if __name__ == "__main__":
 
     try:
 
-        asyncio.run(main())
+        location_server.start_web_client(PORT_NUMBER)
+
+        asyncio.run(main(ip))
 
     except KeyboardInterrupt:
         print("Stopping..")
-        asyncio.get_event_loop().stop()
+        #asyncio.get_event_loop().stop()
         try:
             subprocess.run("sudo killall pigpiod", shell=True, check=True)
         except subprocess.CalledProcessError:
