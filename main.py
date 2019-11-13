@@ -6,6 +6,7 @@ import json
 import asyncio
 import random
 import datetime
+import subprocess
 from websockets import WebSocketServerProtocol, ConnectionClosedError
 
 PORT_NUMBER = 8080  # Port for web server
@@ -108,11 +109,20 @@ if __name__ == "__main__":
     IP = args.ip_addr
 
     try:
-        location_server.start_web_client(PORT_NUMBER)
-        start_server = location_server.start_websocket_server(IP, handler)
-        asyncio.get_event_loop().run_until_complete(start_server)
-        asyncio.get_event_loop().run_forever()
+        subprocess.run("sudo killall pigpiod", shell=True, check=True)
+    except subprocess.CalledProcessError:
+        pass
+
+    subprocess.run("sudo pigpiod", shell=True, check=True)
+
+    try:
+
+        asyncio.run(main())
 
     except KeyboardInterrupt:
         print("Stopping..")
         asyncio.get_event_loop().stop()
+        try:
+            subprocess.run("sudo killall pigpiod", shell=True, check=True)
+        except subprocess.CalledProcessError:
+            pass
