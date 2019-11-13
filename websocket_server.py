@@ -18,6 +18,7 @@ async def time():  # TODO change this to send location info as well as time
     return json.dumps(data_to_send)
 
 def create_websocket_task(ip_addr, queue):
+    """Creates a task for running the websocket server"""
     handler_func = functools.partial(handler, queue=queue)
     return websockets.serve(handler_func, ip_addr, 5678)
 
@@ -37,7 +38,7 @@ async def receive_handler(websocket, path, queue):
             await queue.put(message)
     except ConnectionClosedError:
         message = {'type': 'stop'}
-        queue.put(message)
+        await queue.put(message)
         return
 
 
