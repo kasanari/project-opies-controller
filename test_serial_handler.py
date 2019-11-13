@@ -26,8 +26,7 @@ def test_get_anchor_distances():
     # specifikt till set up Pomodoro + Basilico
     assert a_list[0].anchor_id == '561d'
     assert a_list[1].anchor_id == '549b'
-    # testa att location (of anchor) stämmer
-    # förstå hur 64000003 blir 0.90........ hur parse:ar jag distansen
-    # börja med imorn: debug, kolla vad locationdata objektet har i sig
-    assert a_list[0].distance == '0.90'  # prolly not
-    assert a_list[1].distance == '0.00'
+    distance_pomodoro = int(a_list[0].distance, base=16)
+    distance_basilico = int(a_list[1].distance, base=16)
+    assert distance_basilico == 0
+    assert distance_pomodoro == 0
