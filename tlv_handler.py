@@ -17,7 +17,9 @@ class TLVHandler:
         return tlv_object_list, self.tlv_n_responses  # self.tlv_n_responses is length of list!
 
 
-# ------------------ Functions --------------------- #
+####################################
+# Functions
+####################################
 
 # _read_tlv_worker: reads TLV responses
 # input: serial connection
@@ -29,12 +31,10 @@ def _read_tlv_worker(ser):
     length_bytes = ser.read(1)
     length = int.from_bytes(length_bytes, byteorder='big')
 
-      # do this in a loop and add to a list? 'cause then each byte would be accessible on its own.
     value = []
     for i in range(length):
         value_bytes = ser.read(1)
         value.append(value_bytes.hex())
-        #value.append(int.from_bytes(value_bytes, byteorder='big'))
 
     c = TLV(tlv_type, length, value)
     return c
