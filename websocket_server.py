@@ -6,6 +6,7 @@ import random
 import datetime
 import functools
 
+
 async def time():  # TODO change this to send location info as well as time
     """Generates a message containing the location of the Pi and the current time"""
     await asyncio.sleep(1)  # To simulate a delay in getting the location data
@@ -17,17 +18,20 @@ async def time():  # TODO change this to send location info as well as time
 
     return json.dumps(data_to_send)
 
-def create_websocket_task(ip_addr, queue):
+
+def create_websocket_task(ip_addr, message_queue, location_queue):
     """Creates a task for running the websocket server"""
-    handler_func = functools.partial(handler, queue=queue)
+    handler_func = functools.partial(handler, message_queue=message_queue, location_queue=location_queue)
+
     return websockets.serve(handler_func, ip_addr, 5678)
 
-async def send_handler(websocket, path):
+
+async def send_handler(websocket, path, location_queue):
     """ Sends location data (only time currently) to client """
     print("Client Connected!")
     while True:
-        message = await time()
-        await websocket.send(message)
+        message = await location_queue.get()
+        await websocket.send(json.dumps(message.get_as_dict()))
 
 
 async def receive_handler(websocket, path, queue):
@@ -42,10 +46,10 @@ async def receive_handler(websocket, path, queue):
         return
 
 
-async def handler(websocket: WebSocketServerProtocol, path: str, queue):
+async def handler(websocket: WebSocketServerProtocol, path: str, message_queue, location_queue):
     """ Starts all tasks related to websockets and motor control"""
-    receive_msg_task = asyncio.create_task(receive_handler(websocket, path, queue))
-    send_msg_task = asyncio.create_task(send_handler(websocket, path))
+    receive_msg_task = asyncio.create_task(receive_handler(websocket, path, message_queue))
+    send_msg_task = asyncio.create_task(send_handler(websocket, path, location_queue))
 
     done, pending = await asyncio.wait([receive_msg_task, send_msg_task], return_when=asyncio.FIRST_COMPLETED)
     print("Client Disconnected!")

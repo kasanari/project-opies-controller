@@ -1,5 +1,6 @@
 import serial
 import time
+import asyncio
 from tlv_handler import TLVHandler
 from location_data_handler import extract_location, extract_distances, Anchor, LocationData
 
@@ -39,6 +40,28 @@ class SerialHandler:
     def get_nodeid(self):
         responses, indexes = self.serial_request("dwm_nodeid_get")
         return responses
+
+
+async def serial_task(queue: asyncio.Queue):
+    try:
+        ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
+        ser_handler = SerialHandler(ser_con)
+        while True:
+            loc_data = ser_handler.get_location_data()
+            await queue.put(loc_data)
+            await asyncio.sleep(1)
+    except KeyboardInterrupt:
+        print("Stopping..")
+    except serial.SerialException:
+        print("The device could not be found/no serial connection was made.")
+    except asyncio.CancelledError:
+        print("Task cancelled.")
+    finally:
+        if ser_con is not None:
+            ser_con.close()
+
+
+
 
 
 if __name__ == "__main__":

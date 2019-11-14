@@ -1,6 +1,7 @@
 from motor_control import motor_control_task
 from web_server import location_server
 from websocket_server import create_websocket_task
+from serial_handler import serial_task
 import argparse
 import asyncio
 import subprocess
@@ -8,16 +9,26 @@ import subprocess
 PORT_NUMBER = 8080  # Port for web server
 
 
-async def main(ip_addr):
-    queue = asyncio.Queue()
+async def main_task_handler(ip_addr):
+    message_queue = asyncio.Queue()
+    location_queue = asyncio.Queue()
+    location_task = asyncio.create_task(serial_task(location_queue))
+    start_server = create_websocket_task(ip_addr, message_queue, location_queue)
 
-    start_server = create_websocket_task(ip_addr, queue)
+    # motor_task = asyncio.create_task(motor_control_task(message_queue))
 
-    motor_task = asyncio.create_task(motor_control_task(queue))
+    await asyncio.gather(start_server, location_task)
 
 
+def start_pigpiod():
+    subprocess.run("sudo pigpiod", shell=True, check=True)
 
-    await asyncio.gather(start_server, motor_task)
+
+def kill_pigpiod():
+    try:
+        subprocess.run("sudo killall pigpiod", shell=True, check=True)
+    except subprocess.CalledProcessError:
+        pass
 
 
 if __name__ == "__main__":
@@ -31,21 +42,11 @@ if __name__ == "__main__":
     ip = args.ip_addr
 
     try:
-        subprocess.run("sudo killall pigpiod", shell=True, check=True)
-    except subprocess.CalledProcessError:
-        pass
-
-    subprocess.run("sudo pigpiod", shell=True, check=True)
-
-    try:
 
         location_server.start_web_client(PORT_NUMBER)
 
-        asyncio.run(main(ip))
+        asyncio.run(main_task_handler(ip))
 
     except KeyboardInterrupt:
         print("Stopping..")
-        try:
-            subprocess.run("sudo killall pigpiod", shell=True, check=True)
-        except subprocess.CalledProcessError:
-            pass
+
