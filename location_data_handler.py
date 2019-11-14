@@ -16,7 +16,7 @@ class LocationData:
 class Anchor:
     anchor_id: str  # could add = '' but have to rearrange order or do to all
     position: LocationData(-99.0, -99.0, -99.0, -99.0)
-    distance: str
+    distance: float
     distance_quality: float
 
     def get_as_dict(self):
@@ -95,21 +95,23 @@ def extract_distances(tlv_response):
     n_anchors = int(tlv_response[2].tlv_value[0])
 
     for i in range(n_anchors):  # loops through anchors
-        a = Anchor('', '', '', -1)
         start_index_bytetrain = 1+(anchor_frame_length*i)
         end_index_bytetrain = start_index_bytetrain + anchor_frame_length
 
         # UWB address for anchor i
-        a.anchor_id = tlv_response[2].tlv_value[i*anchor_frame_length + uwb_address_offset + 1]
-        a.anchor_id = a.anchor_id + tlv_response[2].tlv_value[i*anchor_frame_length + uwb_address_offset]
+        anchor_id = tlv_response[2].tlv_value[i*anchor_frame_length + uwb_address_offset + 1]
+        anchor_id = anchor_id + tlv_response[2].tlv_value[i*anchor_frame_length + uwb_address_offset]
 
         # distance
+        distance = ''
         for j in range(distance_upper_offset, distance_lower_offset-1, -1):
-            a.distance = a.distance + tlv_response[2].tlv_value[j + start_index_bytetrain]
+            distance = distance + tlv_response[2].tlv_value[j + start_index_bytetrain]
 
-        a.distance_quality = tlv_response[2].tlv_value[i*anchor_frame_length+quality_offset]
+        distance_quality = tlv_response[2].tlv_value[i*anchor_frame_length+quality_offset]
         position_of_anchor_i = extract_location(tlv_response, 2, end_index_bytetrain)  # 2 is for tlv_response[2], position anchor
-        a.position = position_of_anchor_i
+
+        a = Anchor(anchor_id, position_of_anchor_i, value_in_float(distance, millimeter_to_meter=1),
+                   value_in_float(distance_quality))
         anchor_list.append(a)
     return anchor_list
 
