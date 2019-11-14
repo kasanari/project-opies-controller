@@ -1,7 +1,7 @@
 import serial
 import time
 from tlv_handler import TLVHandler
-from location_data_handler import extract_location, extract_distances, Anchor
+from location_data_handler import extract_location, extract_distances, Anchor, LocationData
 
 # just incorporate into the functions, rm dictionary after
 API_dictionary = {
@@ -24,6 +24,18 @@ def connect_serial_uart(command="dwm_loc_get"):  # move to highest instance 'mai
         serial_con.close()
 
 
+def get_anchor_distances():
+    responses, indexes = connect_serial_uart("dwm_loc_get")
+    if responses[0].tlv_type == 0:
+        print("Error in reading location. No response. Is the RTLS on?")
+        return Anchor('', '', '', -1)  # empty anchor
+    else:
+        a_list = extract_distances(responses)
+        return a_list
+
+# what's the difference between these two under me:
+
+
 def get_location():
     responses, indexes = connect_serial_uart()
     if responses[0].tlv_value != 0:
@@ -37,14 +49,14 @@ def get_location():
     return responses  # can get errors if minicom:ed earlier..?
 
 
-def get_anchor_distances():
+def get_location_data():
     responses, indexes = connect_serial_uart("dwm_loc_get")
     if responses[0].tlv_type == 0:
         print("Error in reading location. No response. Is the RTLS on?")
-        return Anchor('', '', '', -1)  # empty anchor
+        return LocationData('', '', '', -1)  # empty LD
     else:
-        a_list = extract_distances(responses)
-        return a_list
+        location = extract_location(responses)
+        return location
 
 
 def get_nodeid():
@@ -63,20 +75,27 @@ def serial_request(serial_con, command):
 if __name__ == "__main__":
     try:
         while True:
-            a_list = get_anchor_distances()
+            a_list = get_anchor_distances()  # positions for anchors all point to the same object?? scuzi?
 
-            # specifikt till set up Pomodoro + Basilico
-            if a_list[0].anchor_id == '561d':
-                print("Pomodoro active")
-            if a_list[1].anchor_id == '549b':
-                print("Basilico acknowledged")
+            length = len(a_list)
+            if length < 4:
+                print("List length is only: ")
+                print(length)
+                print("We won't get a position estimate from this.")
+            else:  # specifikt till set up Pomodoro - Funghi - Basilico - Tagliatelle i ordn. 1, 2, 3, 4
+                #if a_list[0].anchor_id == '49af' & a_list[1].anchor_id == '549b' & a_list[2].anchor_id == '561d' \
+                        #& a_list[3].anchor_id == '8a25':
+                print("4 node Pizza Party is active! Let's get that position!")
+                location_of_tag = get_location_data()
+                print("Tag is at:")
+                print(location_of_tag.get_as_dict())
 
-            distance_pomodoro = int(a_list[0].distance, base=16)
-            print("Pomodoro:")
-            print(distance_pomodoro)
-            distance_basilico = int(a_list[1].distance, base=16)
-            print("Basilico:")
-            print(distance_basilico)
+                # distance_pomodoro = int(a_list[0].distance, base=16)
+                # print("Pomodoro:")
+                # print(distance_pomodoro)
+                # distance_basilico = int(a_list[1].distance, base=16)
+                # print("Basilico:")
+                # print(distance_basilico)
             time.sleep(0.5)
 
     except KeyboardInterrupt:

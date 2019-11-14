@@ -3,9 +3,9 @@ from dataclasses import dataclass, asdict
 
 @dataclass
 class LocationData:
-    x: str
-    y: str
-    z: str
+    x: float  # float?
+    y: float
+    z: float
     quality: float
 
     def get_as_dict(self):
@@ -15,7 +15,7 @@ class LocationData:
 @dataclass
 class Anchor:
     anchor_id: str  # could add = '' but have to rearrange order or do to all
-    position: LocationData('', '', '', -1)
+    position: LocationData(-99.0, -99.0, -99.0, -99.0)
     distance: str
     distance_quality: float
 
@@ -35,23 +35,40 @@ class Anchor:
 # output: LocationData object (dataclass)
 
 
-def extract_location(tlv_response, n=2, max_index=13):
-    c = LocationData
+def extract_location(tlv_response, n=1, max_index=13):
     list_starts_at_zero_offset = 1
     max_index = max_index - list_starts_at_zero_offset
-    c.quality = tlv_response[n].tlv_value[max_index]  # 13 bytes, little endian. quality is at index = 12
+    quality = tlv_response[n].tlv_value[max_index]  # 13 bytes, little endian. quality is at index = 12
     # initialize y, x, z
-    c.z = tlv_response[n].tlv_value[max_index-1]
-    c.y = tlv_response[n].tlv_value[max_index-5]
-    c.x = tlv_response[n].tlv_value[max_index-9]
+    z = tlv_response[n].tlv_value[max_index-1]
+    y = tlv_response[n].tlv_value[max_index-5]
+    x = tlv_response[n].tlv_value[max_index-9]
 
     for i in range(max_index-2, max_index-5, -1):
-        c.z = c.z + tlv_response[n].tlv_value[i]  # concatenate pls? (might have to make it into a string)
-        c.y = c.y + tlv_response[n].tlv_value[i-4]
-        c.x = c.x + tlv_response[n].tlv_value[i-8]
+        z = z + tlv_response[n].tlv_value[i]  # concatenates the string of hexadecimal numbers
+        y = y + tlv_response[n].tlv_value[i-4]
+        x = x + tlv_response[n].tlv_value[i-8]
+
+    c = LocationData(value_in_float(x, millimeter_to_meter=1), value_in_float(y, millimeter_to_meter=1),
+                     value_in_float(z, millimeter_to_meter=1), value_in_float(quality))
 
     return c
 
+#####
+# value_in_float: converts a string written of hexadecimal values to a float number
+#
+# input: a string, a 0 or 1 depending on if the value should be divided by 1000.0 to get [m] instead of [mm]
+
+
+def value_in_float(string, millimeter_to_meter=0):
+    converted_to_int = int(string, base=16)
+    if millimeter_to_meter:
+        to_float_divider = 1000.0
+    else:
+        to_float_divider = 1.0
+
+    converted_to_float = converted_to_int/to_float_divider
+    return converted_to_float
 ######
 # extract_distances: reads bytes from value list (from tlv response) in reverse order as the values are described in
 # little endian order. The first byte in the value field described the number of anchors we are reading distances from,
@@ -61,6 +78,8 @@ def extract_location(tlv_response, n=2, max_index=13):
 # input: list of tlv objects, index of tlv object list where the position data is in, the index the position bytes
 #          start at
 # output: LocationData object (dataclass)
+
+# split into frames so I don't need dynamic offsets?
 
 
 def extract_distances(tlv_response):
@@ -89,8 +108,8 @@ def extract_distances(tlv_response):
             a.distance = a.distance + tlv_response[2].tlv_value[j + start_index_bytetrain]
 
         a.distance_quality = tlv_response[2].tlv_value[i*anchor_frame_length+quality_offset]
-        a.position = extract_location(tlv_response, 2, end_index_bytetrain)  # 2 is tlv_response[2]
-
+        position_of_anchor_i = extract_location(tlv_response, 2, end_index_bytetrain)  # 2 is for tlv_response[2], position anchor
+        a.position = position_of_anchor_i
         anchor_list.append(a)
     return anchor_list
 
