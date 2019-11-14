@@ -61,13 +61,16 @@ def extract_location(tlv_response, n=1, max_index=13):
 
 
 def value_in_float(string, millimeter_to_meter=0):
-    converted_to_int = int(string, base=16)
+    converted_to_byte = bytearray.fromhex(string)
+    converted_to_int = int.from_bytes(converted_to_byte, byteorder='big', signed=True)  # i think i do unnecessary \
+    # conversions earlier in the code..
     if millimeter_to_meter:
         to_float_divider = 1000.0
     else:
         to_float_divider = 1.0
 
     converted_to_float = converted_to_int/to_float_divider
+
     return converted_to_float
 ######
 # extract_distances: reads bytes from value list (from tlv response) in reverse order as the values are described in
