@@ -15,13 +15,16 @@ async def main_task_handler(ip_addr):
     location_task = asyncio.create_task(serial_task(location_queue))
     start_server = create_websocket_task(ip_addr, message_queue, location_queue)
 
-    # motor_task = asyncio.create_task(motor_control_task(message_queue))
+    motor_task = asyncio.create_task(motor_control_task(message_queue))
 
-    await asyncio.gather(start_server, location_task)
+    await asyncio.gather(start_server, motor_task, location_task)
 
 
 def start_pigpiod():
-    subprocess.run("sudo pigpiod", shell=True, check=True)
+    try:
+        subprocess.run("sudo pigpiod", shell=True, check=True)
+    except subprocess.CalledProcessError:
+        pass
 
 
 def kill_pigpiod():
@@ -41,6 +44,10 @@ if __name__ == "__main__":
 
     ip = args.ip_addr
 
+    #kill_pigpiod()
+
+    #subprocess.run("sudo pigpiod", shell=True, check=True)
+
     try:
 
         location_server.start_web_client(PORT_NUMBER)
@@ -50,3 +57,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Stopping..")
 
+    finally:
+        #kill_pigpiod()
+        pass
