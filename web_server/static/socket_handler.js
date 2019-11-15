@@ -53,7 +53,7 @@ function sendDestination() {
 
 function stop() {
     var message = {};
-    message.type = "car_control";
+    message.type = "stop";
     message.speed = 0;
     message.angle = 0;
     resetSliders();

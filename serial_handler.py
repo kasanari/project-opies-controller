@@ -42,13 +42,13 @@ class SerialHandler:
         return responses
 
 
-async def serial_task(queue: asyncio.Queue):
+async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue: asyncio.Queue):
     try:
         ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
         ser_handler = SerialHandler(ser_con)
         while True:
             loc_data = ser_handler.get_location_data()
-            await queue.put(loc_data)
+            asyncio.gather(to_web_queue.put(loc_data), to_motor_queue.put(loc_data))
             await asyncio.sleep(1)
     except KeyboardInterrupt:
         print("Stopping..")
