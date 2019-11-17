@@ -1,6 +1,8 @@
 import asyncio
 from car import Car
 from location_data_handler import LocationData
+from pidcontroller import PIDController
+import time
 
 
 def control_car_from_message(rc_car, message):
@@ -17,11 +19,40 @@ def control_car_from_message(rc_car, message):
         print(e)
 
 
+async def reverse(rc_car):
+    rc_car.motor_servo.value = 0
+    await asyncio.sleep(10)
+
+
+async def auto_steer_task(rc_car, destination, from_serial_queue):
+
+    print(f"Going to ({destination['x']}, {destination['y']})")
+    loop = asyncio.get_running_loop()
+
+    controller = PIDController(destination['x'], destination['y'], loop.time())
+
+    try:
+        while True:
+
+            location: LocationData = await from_serial_queue.get()
+
+            control_signal = controller.get_constant_control_signal(location.x, location.y, loop.time())
+
+            rc_car.motor_servo.value = control_signal
+    except asyncio.CancelledError:
+        rc_car.stop()
+        print("Auto steer cancelled.")
+
+
+
+def sign(x):
+    sign = lambda x: -2 if x < 0 else (1 if x > 0 else (0 if x == 0 else None))
+    return sign(x)
+
 async def motor_control_task(web_queue, from_serial_queue: asyncio.Queue):
 
     rc_car = Car()
 
-    sign = lambda x: -1 if x < 0 else (1 if x > 0 else (0 if x == 0 else None))
 
     print("Waiting for speed controller...")
 
@@ -29,51 +60,30 @@ async def motor_control_task(web_queue, from_serial_queue: asyncio.Queue):
 
     print("Initialized motors.")
 
+    auto_steer = None
+
     try:
         while True:
             message = await web_queue.get()
             message_type = message["type"]
 
-            #if message_type == "car_control":
-            #    control_car_from_message(rc_car, message)
+            if message_type == "car_control":
+               control_car_from_message(rc_car, message)
 
-            #elif message_type == "destination":
-            #    print(f"Going to ({message['x']}, {message['y']})")
-
-            if message_type == 'stop':
-                rc_car.stop()
-                return
-            else:
-
+            elif message_type == "destination":
                 x_destination = message["x"]
                 y_destination = message["y"]
-                prev_y_diff = 1
-                rc_car.steering_servo.value = -0.15
-                while True:
-                    location: LocationData = await from_serial_queue.get()
-                    try:
-                        x_diff = int(x_destination) - location.x
-                    except ValueError:
-                        x_diff = 0
-                    try:
-                        y_diff = int(y_destination) - location.y
-                    except ValueError:
-                        y_diff = 0
-                    print(f"deltaX: {x_diff}, deltaY: {y_diff}")
+                destination = {'x': int(x_destination), 'y':int(y_destination)}
+                auto_steer = asyncio.create_task(auto_steer_task(rc_car, destination, from_serial_queue))
 
-                    if sign(y_diff) != sign(prev_y_diff):
-                        print("sign change!")
-                        rc_car.motor_servo.value = 0
-                        await asyncio.sleep(10)
+            elif message_type == 'stop':
+                if auto_steer is not None:
+                    auto_steer.cancel()
+                else:
+                    rc_car.stop()
+            else:
+                print("Invalid message type")
 
-                    if y_diff > 0:
-                        rc_car.motor_servo.value = 0.2
-                    elif y_diff < 0:
-                        rc_car.motor_servo.value = -0.3
-                    else:
-                        rc_car.motor_servo.value = 0
-
-                    prev_y_diff = y_diff
 
     except asyncio.CancelledError:
         print("Motor task cancelled.")
