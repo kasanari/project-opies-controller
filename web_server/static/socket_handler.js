@@ -14,8 +14,10 @@ function addMessage(message_content) {
 function eventHandler(event) {
     addMessage(event.data);
     var data = JSON.parse(event.data);
-    myLineChart.data.labels.push(data.x);
-    myLineChart.data.datasets[0].data.push(data.y);
+
+    position = {'x':data.x, 'y':data.y};
+
+    myLineChart.data.datasets[0].data.push(position);
     myLineChart.update()
 }
 

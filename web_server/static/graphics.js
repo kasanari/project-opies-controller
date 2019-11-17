@@ -8,14 +8,11 @@ var data = [{
 }];
 
 var myLineChart = new Chart(ctx, {
-type: 'line',
+type: 'scatter',
   data: {
-    labels: [0],
     datasets: [{
-        data: [0],
-        label: "Steering",
-        borderColor: "#3e95cd",
-        fill: false
+        data: [],
+        label: "Position Data"
       }
     ]
   },
@@ -23,6 +20,12 @@ type: 'line',
     title: {
       display: false,
       text: 'Steering'
-    }
+    },
+    scales: {
+            xAxes: [{
+                type: 'linear',
+                position: 'bottom'
+            }]
+        }
   }
 });
