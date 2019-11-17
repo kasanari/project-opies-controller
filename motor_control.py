@@ -51,8 +51,12 @@ def sign(x):
 
 async def motor_control_task(web_queue, from_serial_queue: asyncio.Queue):
 
-    rc_car = Car()
-
+    try:
+        rc_car = Car()
+    except OSError as e:
+        print(e)
+        print("Failed to connect to PIGPIOD")
+        return
 
     print("Waiting for speed controller...")
 

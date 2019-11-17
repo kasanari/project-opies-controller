@@ -43,6 +43,7 @@ class SerialHandler:
 
 
 async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue: asyncio.Queue):
+    ser_con = None
     try:
         ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
         ser_handler = SerialHandler(ser_con)
