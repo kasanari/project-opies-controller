@@ -20,8 +20,12 @@ def control_car_from_message(rc_car, message):
 
 
 async def reverse(rc_car):
+    print("Setting brake")
+    rc_car.motor_servo.value = -0.2
+    await asyncio.sleep(1.5)
+    print("waiting...")
     rc_car.motor_servo.value = 0
-    await asyncio.sleep(10)
+    await asyncio.sleep(1.5)
 
 
 async def auto_steer_task(rc_car, destination, from_serial_queue):
@@ -29,16 +33,39 @@ async def auto_steer_task(rc_car, destination, from_serial_queue):
     print(f"Going to ({destination['x']}, {destination['y']})")
     loop = asyncio.get_running_loop()
 
-    controller = PIDController(destination['x'], destination['y'], loop.time())
+    controller = PIDController(destination['x'], destination['y'], 0, K_p=0.2, K_d=0.06, K_i=0.00005)
+
+    prev_control_signal = None
+
+    rc_car.steering_servo.value = -0.15
 
     try:
         while True:
 
             location: LocationData = await from_serial_queue.get()
 
-            control_signal = controller.get_constant_control_signal(location.x, location.y, loop.time())
+            control_signal = controller.get_control_signal(location.x, location.y, loop.time(), P=True, D=True, I=False)
+
+            print(f"control_signal: {control_signal}")
+
+            if control_signal > 0.2:
+                control_signal = 0.2
+
+            elif control_signal < 0.1:
+                control_signal = -0.5
+            #elif control_signal < -0.4:
+            #    control_signal = -0.4
+
+            if prev_control_signal is not None:
+                if (prev_control_signal > 0) and control_signal < 0:
+                    print("Reverse")
+
+                    #await reverse(rc_car)
 
             rc_car.motor_servo.value = control_signal
+            prev_control_signal = control_signal
+            print("----")
+
     except asyncio.CancelledError:
         rc_car.stop()
         print("Auto steer cancelled.")
@@ -46,7 +73,7 @@ async def auto_steer_task(rc_car, destination, from_serial_queue):
 
 
 def sign(x):
-    sign = lambda x: -2 if x < 0 else (1 if x > 0 else (0 if x == 0 else None))
+    sign = lambda x: -1 if x < 0 else (1 if x > 0 else (0 if x == 0 else None))
     return sign(x)
 
 async def motor_control_task(web_queue, from_serial_queue):
@@ -74,7 +101,7 @@ async def motor_control_task(web_queue, from_serial_queue):
             if message_type == "car_control":
                 if auto_steer is not None:
                     auto_steer.cancel()
-               control_car_from_message(rc_car, message)
+                control_car_from_message(rc_car, message)
 
             elif message_type == "destination":
                 x_destination = message["x"]

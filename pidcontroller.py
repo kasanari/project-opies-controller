@@ -26,21 +26,33 @@ class PIDController:
         e = self.error(x, y)
         control_signal = 0
 
+        print(f"error: {e}")
+
         delta_t = abs(current_time - self.time)
         self.time = current_time
 
+        print(f"delta_t = {delta_t}")
+
         if P:
-            control_signal = self.K_p * e
+            p = self.K_p * e
+            print(f"p: {p}")
+            control_signal += p
         if D:
-            control_signal += self.K_d * (e - self.prev_e)/delta_t
+            d = self.K_d * (e - self.prev_e)/delta_t
+            control_signal += d
+            print(f"d: {d}")
         if I:
-            control_signal += self.K_i * self.sum_e
+            i = self.K_i * self.sum_e
+            control_signal += i
+            print(f"i: {i}")
 
         self.sum_e += e*delta_t
+        self.prev_e = e
+
         return control_signal
 
 
     def error(self, x, y):
-        x_diff = x - self.target_x
-        return x_diff
+        y_diff = y - self.target_y
+        return y_diff
 
