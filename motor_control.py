@@ -37,7 +37,7 @@ async def auto_steer_task(rc_car, destination, from_serial_queue):
 
     prev_control_signal = None
 
-    rc_car.steering_servo.value = -0.15
+    rc_car.steering_servo.value = -0.2
 
     try:
         while True:
