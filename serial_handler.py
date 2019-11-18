@@ -42,7 +42,7 @@ class SerialHandler:
         return responses
 
 
-async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue):
+async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=1):
     ser_con = None
     try:
         ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
@@ -50,7 +50,7 @@ async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue):
         while True:
             loc_data = ser_handler.get_location_data()
             await asyncio.gather(to_web_queue.put(loc_data), to_motor_queue.put(loc_data))
-            await asyncio.sleep(1)
+            await asyncio.sleep(update_delay)  # cannot be smaller than 0.1 (update rate on nodes is 100ms)
     except KeyboardInterrupt:
         print("Stopping..")
     except serial.SerialException:
