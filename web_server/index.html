@@ -17,11 +17,11 @@
                     <h2>Destination</h2>
                     <div>
                         <label for="x_destination">X:</label>
-                        <input id="x_destination" type="number" name="x_destination">
+                        <input id="x_destination" type="number" step="0.1" value="0" name="x_destination">
                     </div>
                     <div>
                         <label for="y_destination">Y:</label>
-                        <input id="y_destination" type="number" name="y_destination">
+                        <input id="y_destination" type="number" step="0.1" value="0" name="y_destination">
                     </div>
                     <button type="button" onclick="sendDestination()">Send</button>
                 </form>
@@ -32,7 +32,7 @@
                     <h2>Car control</h2>
                     <div class="control">
                         <label for="wheel_angle">Angle:</label>
-                        <input id="wheel_angle" min="-0.5" max="0.5" value="0" step="0.05" type="range" name="wheel_angle">
+                        <input id="wheel_angle" min="-0.5" max="0.5" value="-0.15" step="0.05" type="range" name="wheel_angle">
                         <p class="indicator" id="wheel_angle_indicator"></p>
                     </div>
                     <div class="control">
