@@ -49,7 +49,7 @@ def sign(x):
     sign = lambda x: -2 if x < 0 else (1 if x > 0 else (0 if x == 0 else None))
     return sign(x)
 
-async def motor_control_task(web_queue, from_serial_queue: asyncio.Queue):
+async def motor_control_task(web_queue, from_serial_queue):
 
     try:
         rc_car = Car()

@@ -12,7 +12,7 @@ PORT_NUMBER = 8080  # Port for web server
 async def main_task_handler(ip_addr):
     message_queue = asyncio.Queue()
     location_queue = asyncio.Queue()
-    serial_to_motor_queue = asyncio.Queue()
+    serial_to_motor_queue = asyncio.LifoQueue()
     location_task = asyncio.create_task(serial_task(location_queue, serial_to_motor_queue))
     start_server = create_websocket_task(ip_addr, message_queue, location_queue)
 
