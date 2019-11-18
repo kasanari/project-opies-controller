@@ -12,7 +12,7 @@ class Car:
         motor_min_duty = 0.05
         min_pulse_width = motor_min_duty * 20/1000
         max_pulse_width = motor_max_duty * 20/1000
-        self.steering_servo = Servo(13, initial_value=-0.15, pin_factory=factory)
+        self.steering_servo = Servo(13, initial_value=-0.2, pin_factory=factory)
         self.motor_servo = Servo(19, pin_factory=factory, min_pulse_width=min_pulse_width, max_pulse_width=max_pulse_width)
 
     def stop(self):

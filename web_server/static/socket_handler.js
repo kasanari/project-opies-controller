@@ -57,7 +57,7 @@ function stop() {
     var message = {};
     message.type = "stop";
     message.speed = 0;
-    message.angle = -0.15;
+    message.angle = -0.2;
     resetSliders();
     sendWSMessage(message)
 }
