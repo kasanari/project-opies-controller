@@ -3,6 +3,7 @@ import time
 import asyncio
 from tlv_handler import TLVHandler
 from location_data_handler import extract_location, extract_distances, Anchor, LocationData
+from kalman_filtering import KalmanHelper
 
 
 class SerialHandler:
@@ -42,13 +43,19 @@ class SerialHandler:
         return responses
 
 
-async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=1):
+async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=1, kalman_on = False):
     ser_con = None
     try:
         ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
         ser_handler = SerialHandler(ser_con)
+        first_loop = True
         while True:
             loc_data = ser_handler.get_location_data()
+            if kalman_on:
+                if first_loop:
+                    kalman_helper = KalmanHelper(loc_data)
+                #loc_data =
+
             await asyncio.gather(to_web_queue.put(loc_data), to_motor_queue.put(loc_data))
             await asyncio.sleep(update_delay)  # cannot be smaller than 0.1 (update rate on nodes is 100ms)
     except KeyboardInterrupt:
