@@ -2,6 +2,7 @@ import asyncio
 from car import Car
 from location_data_handler import LocationData
 from pidcontroller import PIDController
+from arduino_interface import arduino_serial
 import time
 
 
@@ -41,6 +42,16 @@ async def auto_steer_task(rc_car, destination, from_serial_queue):
 
     try:
         while True:
+
+            distance = await arduino_serial.distance_measure()
+            print(f"Distance in CM: {distance}")
+
+            if distance < 10:
+                print("Too close!")
+                rc_car.motor_servo.value = -0.15
+                await asyncio.sleep(1)
+                rc_car.stop()
+                return
 
             location: LocationData = await from_serial_queue.get()
 
