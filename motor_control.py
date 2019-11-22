@@ -41,7 +41,7 @@ def angle_error(self, x, y):
     print(f"x_diff: {x_diff}")
     print(f"y_diff: {y_diff}")
     angle = (np.arctan2(y_diff, x_diff) - np.pi/2)*-1
-    return angle
+    return np.rad2deg(angle)
 
 
 async def auto_steer_task(rc_car, destination, from_serial_queue, distance_control = True):
@@ -52,11 +52,6 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
     controller = PIDController(destination['x'], destination['y'], 0, K_p=0.2, K_d=0.02, K_i=0.00005)
 
     prev_control_signal = None
-
-
-
-    rc_car.steering_servo.value = -0.2
-
     try:
         while True:
 
@@ -77,8 +72,14 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
 
             angle = angle_error(controller, location.x, location.y)
 
+            if angle < -34.5:
+                angle = -34.5
+            if angle > 17.5:
+                angle = 17.5
+            rc_car.steering_servo.angle = int(angle)
+
             print(f"control_signal: {control_signal}")
-            print(f"angle: {np.rad2deg(angle)}")
+            print(f"angle: {angle}")
 
             if control_signal > 0.2:
                 control_signal = 0.2
@@ -98,9 +99,14 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
             prev_control_signal = control_signal
             print("----")
 
-    except asyncio.CancelledError:
+    except asyncio.CancelledError as e:
+        print(e)
         rc_car.stop()
         print("Auto steer cancelled.")
+
+    except Exception as e:
+        print(e)
+
 
 
 

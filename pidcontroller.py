@@ -53,6 +53,6 @@ class PIDController:
 
 
     def error(self, x, y):
-        y_diff = y - self.target_y
+        y_diff = self.target_y - y
         return y_diff
 
