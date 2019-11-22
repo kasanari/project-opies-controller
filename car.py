@@ -24,10 +24,10 @@ class Car:
         self.steering_servo.detach()
         self.motor_servo.detach()
 
-    def turn_wheels(self, degrees):
-        # TODO turn wheels x degrees
-        pass
+    def turn_wheels(self, angle):
+        self.steering_servo.angle = angle
 
     def set_velocity(self, speed, direction_backward=bool):
-        # TODO set motor speed and direction
-        pass
+        if direction_backward:
+            speed = speed * -2
+        self.motor_servo.value = speed
