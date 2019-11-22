@@ -8,7 +8,7 @@ import time
 def control_car_from_message(rc_car, message):
     try:
         angle = float(message["angle"])
-        rc_car.steering_servo.value = angle
+        rc_car.steering_servo.angle = angle
     except ValueError as e:
         print(e)
 
@@ -33,7 +33,7 @@ async def auto_steer_task(rc_car, destination, from_serial_queue):
     print(f"Going to ({destination['x']}, {destination['y']})")
     loop = asyncio.get_running_loop()
 
-    controller = PIDController(destination['x'], destination['y'], 0, K_p=0.2, K_d=0.06, K_i=0.00005)
+    controller = PIDController(destination['x'], destination['y'], 0, K_p=0.2, K_d=0.02, K_i=0.00005)
 
     prev_control_signal = None
 
@@ -44,7 +44,7 @@ async def auto_steer_task(rc_car, destination, from_serial_queue):
 
             location: LocationData = await from_serial_queue.get()
 
-            control_signal = controller.get_control_signal(location.x, location.y, loop.time(), P=True, D=True, I=False)
+            control_signal = controller.get_control_signal(location.x, location.y, loop.time(), P=True, D=True, I=True)
 
             print(f"control_signal: {control_signal}")
 

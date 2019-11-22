@@ -1,4 +1,4 @@
-from gpiozero import Servo
+from gpiozero import Servo, AngularServo
 from gpiozero.pins.pigpio import PiGPIOFactory
 
 class Car:
@@ -12,7 +12,7 @@ class Car:
         motor_min_duty = 0.05
         min_pulse_width = motor_min_duty * 20/1000
         max_pulse_width = motor_max_duty * 20/1000
-        self.steering_servo = Servo(13, initial_value=-0.2, pin_factory=factory)
+        self.steering_servo = AngularServo(13, initial_angle=-9.5, min_angle=-45, max_angle=45)  # initial_value=-0.2, pin_factory=factory)
         self.motor_servo = Servo(19, pin_factory=factory, min_pulse_width=min_pulse_width, max_pulse_width=max_pulse_width)
 
     def stop(self):
@@ -28,6 +28,6 @@ class Car:
         # TODO turn wheels x degrees
         pass
 
-    def set_velocity(self, speed, direction):
+    def set_velocity(self, speed, direction_backward=bool):
         # TODO set motor speed and direction
         pass
