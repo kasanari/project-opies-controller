@@ -22,6 +22,13 @@ class SerialHandler:
             a_list = extract_distances(responses)
             return a_list
 
+    def get_anchors(self, anchor_list): #process anchor_list. but what format suits the webtask?
+        anchor_positions = []
+        for anchor in anchor_list:
+            anchor_positions.append(anchor_list[anchor].LocationData)
+        return anchor_positions # returns list of the anchors' positions. Maybe we want the ID:s too?
+        # in that case maybe this function is unecessary - a_list in get_anchor_distances has the ID, and the LocData object
+        
     def serial_request(self, command):
         tlv_h = TLVHandler(self.ser_con, command)
         tlv_h.send_tlv_request()
@@ -43,19 +50,19 @@ class SerialHandler:
         return responses
 
 
-async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=1, kalman_on = False):
+async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=1):
     ser_con = None
     try:
         ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
+        # does this get called again? put an if first loop?
         ser_handler = SerialHandler(ser_con)
-        first_loop = True
+        loc_data = ser_handler.get_location_data()
+        anchor_list = ser_handler.get_anchor_distances()
+        loc_data_of_anchors = ser_handler.get_anchors()
+        # TODO: send loc_data_of_anchors ( list )to web
+
         while True:
             loc_data = ser_handler.get_location_data()
-            if kalman_on:
-                if first_loop:
-                    kalman_helper = KalmanHelper(loc_data)
-                #loc_data =
-
             await asyncio.gather(to_web_queue.put(loc_data), to_motor_queue.put(loc_data))
             await asyncio.sleep(update_delay)  # cannot be smaller than 0.1 (update rate on nodes is 100ms)
     except KeyboardInterrupt:
@@ -67,10 +74,7 @@ async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=
     finally:
         if ser_con is not None:
             ser_con.close()
-
-
-
-
+    
 
 if __name__ == "__main__":
     try:
