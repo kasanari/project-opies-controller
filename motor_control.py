@@ -1,6 +1,7 @@
 import asyncio
 from car import Car
-from auto_steering import auto_steer_task
+from auto_steering import AutoPilot
+from location_data_handler import Transform
 
 def control_car_from_message(rc_car, message):
     try:
@@ -47,10 +48,13 @@ async def motor_control_task(web_queue, from_serial_queue):
             elif message_type == "destination":
                 x_destination = message["x"]
                 y_destination = message["y"]
-                destination = {'x': float(x_destination), 'y': float(y_destination)}
+                destination = Transform(float(x_destination), float(y_destination))
                 if auto_steer is not None:
                     auto_steer.cancel()
-                auto_steer = asyncio.create_task(auto_steer_task(rc_car, destination, from_serial_queue))
+
+                auto_pilot = AutoPilot(destination)
+
+                auto_steer = asyncio.create_task(auto_pilot.auto_steer_task(rc_car, destination, from_serial_queue))
 
             elif message_type == 'stop':
                 if auto_steer is not None:
