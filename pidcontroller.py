@@ -1,13 +1,11 @@
 class PIDController:
-    def __init__(self, target_x, target_y, current_time, K_p=1, K_d=1, K_i=1):
-        self.target_x = target_x
-        self.target_y = target_y
+    def __init__(self, K_p=1, K_d=1, K_i=1):
         self.prev_e = 0
         self.sum_e = 0
         self.K_p = K_p
         self.K_d = K_d
         self.K_i = K_i
-        self.time = current_time
+        self.time = 0
 
     def get_constant_control_signal(self, x, y, current_time):
 
@@ -22,8 +20,8 @@ class PIDController:
         else:
             return 0
 
-    def get_control_signal(self, x, y, current_time, P=True, D=False, I=False):
-        e = self.error(x, y)
+    def get_control_signal(self, error, current_time, P=True, D=False, I=False):
+        e = error
         control_signal = 0
 
         print(f"error: {e}")
@@ -52,7 +50,4 @@ class PIDController:
         return control_signal
 
 
-    def error(self, x, y):
-        y_diff = self.target_y - y
-        return y_diff
 
