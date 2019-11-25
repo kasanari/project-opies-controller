@@ -7,9 +7,9 @@ class PIDController:
         self.K_i = K_i
         self.time = 0
 
-    def get_constant_control_signal(self, x, y, current_time):
+    def get_constant_control_signal(self, error, current_time):
 
-        e = self.error(x, y)
+        e = error
 
         print(f"error: {e}")
 
