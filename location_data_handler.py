@@ -1,5 +1,10 @@
 from dataclasses import dataclass, asdict
 
+@dataclass
+class Transform:
+    x: float
+    y: float
+    z: float
 
 @dataclass
 class LocationData:
