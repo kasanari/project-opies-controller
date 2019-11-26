@@ -13,12 +13,14 @@ matplotlib.use('Agg')
 
 def create_plots(dataframe):
     dataframe.plot(x="x", y="y", kind='scatter')
-
-    plt.savefig("scatter_plot.png")
+    plt.ylim(0, 5)
+    plt.xlim(0, 5)
+    timestamp = generate_timestamp()
+    plt.savefig(f"scatter_plot_xy_{timestamp}.png")
 
     dataframe.reset_index().plot(x='index', y=['x','y'])
 
-    plt.savefig("line_plot.png")
+    plt.savefig(f"line_plot_xy_{timestamp}.png")
 
 
 
@@ -58,7 +60,7 @@ async def main(data_file=None, disable_motor=True, no_saving=False, out_file=Non
         location_task = asyncio.create_task(fake_serial_task(data_file, log_queue, serial_queue)) #get data from file
 
     if not disable_motor:
-        message = {'type': "destination", 'x': 0, 'y': 1.5}
+        message = {'type': "destination", 'x': 0, 'y': 2.4}
         await message_queue.put(message)
         motor_task = asyncio.create_task(motor_control_task(message_queue, serial_queue))
 
@@ -78,9 +80,7 @@ async def main(data_file=None, disable_motor=True, no_saving=False, out_file=Non
 
     if not no_saving:
         if out_file is None:
-            timestamp = pd.Timestamp.utcnow().ctime()
-            timestamp = str(timestamp).replace(" ", "_")
-            timestamp = timestamp.replace(":", "")
+            timestamp = generate_timestamp()
             result.to_csv(f'{timestamp}.csv')
         else:
             result.to_csv(out_file)
@@ -89,6 +89,11 @@ async def main(data_file=None, disable_motor=True, no_saving=False, out_file=Non
 
     print("Done")
 
+def generate_timestamp():
+    timestamp = pd.Timestamp.utcnow().ctime()
+    timestamp = str(timestamp).replace(" ", "_")
+    timestamp = timestamp.replace(":", "")
+    return timestamp
 
 if __name__ == "__main__":
 
