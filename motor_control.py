@@ -54,7 +54,7 @@ async def motor_control_task(web_queue, from_serial_queue):
 
                 auto_pilot = AutoPilot(destination)
 
-                auto_steer = asyncio.create_task(auto_pilot.auto_steer_task(rc_car, destination, from_serial_queue))
+                auto_steer = asyncio.create_task(auto_pilot.auto_steer_task(rc_car, from_serial_queue))
 
             elif message_type == 'stop':
                 if auto_steer is not None:
