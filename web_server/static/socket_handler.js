@@ -1,5 +1,6 @@
 var connected = false;
 var ws;
+var graph_index = 0;
 
 function addMessage(message_content) {
     var message_holder = document.getElementById("messages"),
@@ -17,7 +18,17 @@ function eventHandler(event) {
 
     position = {'x':data.x, 'y':data.y};
 
-    myLineChart.data.datasets[0].data.push(position);
+    //myLineChart.data.datasets[0].data.shift();
+
+        if (graph_index % 40 === 0) {
+            graph_index = 0;
+            myLineChart.data.datasets[0].data[graph_index] = position;
+        } else {
+            myLineChart.data.datasets[0].data[graph_index] = position;
+            graph_index++;
+        }
+
+        //myLineChart.data.datasets[0].data.push(position)
     myLineChart.update()
 }
 

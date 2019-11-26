@@ -24,8 +24,20 @@ type: 'scatter',
     scales: {
             xAxes: [{
                 type: 'linear',
-                position: 'bottom'
-            }]
+                position: 'bottom',
+                ticks: {
+                    beginAtZero: true,
+                    suggestedMax:5
+                }
+            }],
+            yAxes: [{
+                    type: 'linear',
+                    position: 'left',
+                    ticks: {
+                        beginAtZero: true,
+                        suggestedMax:5
+                    }
+                }]
         }
   }
 });
