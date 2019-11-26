@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 class Transform:
     x: float
     y: float
-    z: float
+    z: float = 0
 
 @dataclass
 class LocationData:
