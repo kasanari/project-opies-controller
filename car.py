@@ -40,11 +40,11 @@ class Car:
             speed = speed * 2
 
         if speed > self.max_speed:
-            speed = 0.2
+            speed = self.max_speed
             self.current_direction = 1
 
-        elif speed < -self.max_speed:
-            speed = -0.2
+        elif speed < -2*self.max_speed:
+            speed = -2*self.max_speed
             self.current_direction = -1
 
         self.motor_servo.value = speed
