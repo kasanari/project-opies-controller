@@ -6,17 +6,20 @@ import pandas as pd
 import asyncio
 
 
+def approximate_angle(length, speed, wheel_angle):
+    return (speed * np.tan(wheel_angle)) / length
+
+
 class AutoPilot:
 
-    def __init__(self, target : Transform):
+    def __init__(self, target: Transform):
         self.target = target
         self.data_log = pd.DataFrame()
         self.prev_location = Transform(0, 0, 0)
         self.target_angle = 45
         self.time = 0
 
-
-    def calculate_errors(self, position : Transform, angle):
+    def calculate_errors(self, position: Transform, angle):
         x_diff = self.target.x - position.x
         y_diff = self.target.y - position.y
         x = np.cos(angle) * x_diff + np.sin(angle) * y_diff
@@ -24,20 +27,17 @@ class AutoPilot:
         theta = self.target_angle - angle
         return x, y, theta
 
-
     def position_error(self, x, y):
         y_diff = self.target.y - y
         return y_diff
-
 
     def angle_error(self, x, y):
         x_diff = self.target.x - x
         y_diff = self.target.y - y
         print(f"x_diff: {x_diff}")
         print(f"y_diff: {y_diff}")
-        angle = (np.arctan2(y_diff, x_diff) - np.pi/2)*-1
+        angle = (np.arctan2(y_diff, x_diff) - np.pi / 2) * -1
         return np.rad2deg(angle)
-
 
     def check_for_collision(self, limit):
         distance = await arduino_serial.distance_measure()
@@ -46,8 +46,7 @@ class AutoPilot:
         if distance < limit:
             return True
 
-
-    async def auto_steer_task(self, rc_car, from_serial_queue, distance_control = True):
+    async def auto_steer_task(self, rc_car, from_serial_queue, distance_control=True):
 
         print(f"Going to ({self.target.x}, {self.target.y})")
         loop = asyncio.get_running_loop()
@@ -93,16 +92,10 @@ class AutoPilot:
         except Exception as e:
             print(e)
 
-
     def logger(self, **kwargs):
-        #location = location.get_as_dict()
+        # location = location.get_as_dict()
         time_stamp = pd.Timestamp.utcnow()
         self.data_log = self.data_log.append(pd.DataFrame(kwargs, index=[time_stamp]))
 
-
-    def approximate_speed(self, current_location : Transform, current_time):
-        return (self.prev_location.x-current_location.x)/(self.time-current_time)
-
-
-    def approximate_angle(self, length, speed, wheel_angle):
-        return (speed*np.tan(wheel_angle))/length
+    def approximate_speed(self, current_location: Transform, current_time):
+        return (self.prev_location.x - current_location.x) / (self.time - current_time)
