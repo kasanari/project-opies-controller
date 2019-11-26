@@ -30,7 +30,7 @@ class KalmanHelper:
 
 
 # var_x and var_y in meters
-def init_kalman_filter(loc_data, var_x=0.1, var_y=0.1, covar_x_y=0.2, dt=0.1):
+def init_kalman_filter(loc_data, dt, var_x=0.1, var_y=0.1, covar_x_y=0.2):
     kf = KalmanFilter(dim_x=4, dim_z=2)  
     #init state vector x:
     kf.x = np.array([loc_data.x, loc_data.y, 0.0, 0.0])  # initialize with first loc_data x and y, 0 in velocity
@@ -87,7 +87,7 @@ def measurement_noise_update(loc_data, var_x=0.1, var_y=0.1, covar_x_y=0.2):
 
 def kalman_updates(kf, loc_data):
     if loc_data is None:
-        loc_data = LocationData(x=0, y=0, quality=0.00000000000000000000000001)
+        loc_data = LocationData(x=0, y=0, quality=0.000000001)
     z = measurement_update(loc_data)
     kf.R = measurement_noise_update(loc_data)
     kf.predict()
