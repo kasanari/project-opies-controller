@@ -78,22 +78,22 @@ def measurement_update(loc_data):
     return z
 
 def measurement_noise_update(loc_data, var_x=0.1, var_y=0.1, covar_x_y=0.2):
-    var_x = loc_data.quality * var_x
-    var_y = loc_data.quality * var_y
-    r = np.array([[var_x, covar_x_y,],
-                    [covar_x_y, var_y]])
+    var_x = var_x/loc_data.quality
+    var_y = var_y/loc_data.quality
+    r = np.array([[var_x, covar_x_y],
+                  [covar_x_y, var_y]])
     return r
 
-def kalman_updates(kf, loc_data, update_R=False):
+
+def kalman_updates(kf, loc_data):
+    if loc_data is None:
+        loc_data = LocationData(x=0, y=0, quality=0.00000000000000000000000001)
     z = measurement_update(loc_data)
-    if update_R:
-        kf.R = measurement_noise_update(loc_data)
+    kf.R = measurement_noise_update(loc_data)
     kf.predict()
     kf.update(z)
-    filtered_loc = LocationData()
-    filtered_loc.x = kf.x[0]
-    filtered_loc.y = kf.x[1]
-    filtered_loc.quality = -1  # hm hm
+    filtered_loc = LocationData(x=kf.x[0], y=kf.x[1], z=0, quality=-1)
+
     return filtered_loc  
 
 

@@ -3,7 +3,7 @@ import time
 import asyncio
 from tlv_handler import TLVHandler
 from location_data_handler import extract_location, extract_distances, Anchor, LocationData
-from kalman_filtering import KalmanHelper
+from kalman_filtering import init_kalman_filter, kalman_updates
 
 
 class SerialHandler:
@@ -25,7 +25,7 @@ class SerialHandler:
     def get_anchors(self, anchor_list): #process anchor_list. but what format suits the webtask?
         anchor_positions = []
         for anchor in anchor_list:
-            anchor_positions.append(anchor_list[anchor].LocationData)
+            anchor_positions.append(anchor.position)
         return anchor_positions # returns list of the anchors' positions. Maybe we want the ID:s too?
         # in that case maybe this function is unecessary - a_list in get_anchor_distances has the ID, and the LocData object
         
@@ -52,18 +52,21 @@ class SerialHandler:
 
 async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=1):
     ser_con = None
+    update_rate = 1/update_delay
     try:
         ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
         # does this get called again? put an if first loop?
         ser_handler = SerialHandler(ser_con)
         loc_data = ser_handler.get_location_data()
+        kf = init_kalman_filter(loc_data, dt=update_rate)
         anchor_list = ser_handler.get_anchor_distances()
-        loc_data_of_anchors = ser_handler.get_anchors()
+        loc_data_of_anchors = ser_handler.get_anchors(anchor_list)
         # TODO: send loc_data_of_anchors ( list )to web
 
         while True:
             loc_data = ser_handler.get_location_data()
-            await asyncio.gather(to_web_queue.put(loc_data), to_motor_queue.put(loc_data))
+            loc_data_filtered = kalman_updates(kf, loc_data)
+            await asyncio.gather(to_web_queue.put(loc_data_filtered), to_motor_queue.put(loc_data_filtered))
             await asyncio.sleep(update_delay)  # cannot be smaller than 0.1 (update rate on nodes is 100ms)
     except KeyboardInterrupt:
         print("Stopping..")
