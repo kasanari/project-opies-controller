@@ -17,8 +17,9 @@ def angle_error(target_x, target_y, x, y):
     angle = (np.arctan2(y_diff, x_diff) - np.pi/2)*-1
     return np.rad2deg(angle)
 
-async def check_for_collision(limit):
-    distance = await arduino_serial.distance_measure()
+
+def check_for_collision(connection, limit):
+    distance = arduino_serial.measure_distance(connection)
     print(f"Distance in CM: {distance}")
 
     if distance < limit:
@@ -36,11 +37,13 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
     speed_controller = PIDController(K_p=0.2, K_d=0.02, K_i=0.00005)
     steering_controller = PIDController(K_p=0.2, K_d=0.02, K_i=0.00005)
 
+    arduino_connection = arduino_serial.connect_to_arduino()
+
     try:
         while True:
 
             if distance_control:
-                collision_imminent = await check_for_collision(limit=40)
+                collision_imminent = check_for_collision(arduino_connection, limit=40)
                 if collision_imminent:
                     print("Stopping due to wall.")
                     rc_car.brake()
