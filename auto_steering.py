@@ -6,7 +6,8 @@ import asyncio
 
 def position_error(target_x, target_y, x, y):
     y_diff = target_y - y
-    return y_diff
+    x_diff = target_x - x
+    return y_diff, x_diff
 
 
 def angle_error(target_x, target_y, x, y):
@@ -35,7 +36,7 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
     loop = asyncio.get_running_loop()
 
     speed_controller = PIDController(K_p=0.2, K_d=0.02, K_i=0.00005)
-    steering_controller = PIDController(K_p=0.2, K_d=0.02, K_i=0.00005)
+    steering_controller = PIDController(K_p=50, K_d=30, K_i=0.1)
 
     arduino_connection = arduino_serial.connect_to_arduino()
 
@@ -43,7 +44,7 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
         while True:
 
             if distance_control:
-                collision_imminent = check_for_collision(arduino_connection, limit=40)
+                collision_imminent = check_for_collision(arduino_connection, limit=60)
                 if collision_imminent:
                     print("Stopping due to wall.")
                     rc_car.brake()
@@ -54,10 +55,10 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
             location: LocationData = await from_serial_queue.get()
 
             e_angle = angle_error(target_x, target_y, location.x, location.y)
-            e_pos = position_error(target_x, target_y, location.x, location.y)
+            y_diff, x_diff = position_error(target_x, target_y, location.x, location.y)
 
-            acceleration = speed_controller.get_control_signal(e_pos, loop.time(), P=True, D=True, I=False)
-            angle = steering_controller.get_control_signal(e_angle, loop.time())
+            acceleration = speed_controller.get_control_signal(y_diff, loop.time(), P=True, D=True, I=False)
+            angle = steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=True, I=False) - 8.5
 
             print(f"acceleration: {acceleration}")
             print(f"angle: {angle}")
