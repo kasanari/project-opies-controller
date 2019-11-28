@@ -65,9 +65,9 @@ async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=
 
         while True:
             loc_data = ser_handler.get_location_data()
-                loc_data_filtered = kalman_updates(kf, loc_data, update_delay)
-                tasks = [q.put([loc_data, loc_data_filtered]) for q in queues]
-                await asyncio.gather(*tasks)
+            loc_data_filtered = kalman_updates(kf, loc_data, update_delay)
+            tasks = [q.put([loc_data, loc_data_filtered]) for q in queues]
+            await asyncio.gather(*tasks)
             await asyncio.sleep(update_delay)
     except KeyboardInterrupt:
         print("Stopping..")
