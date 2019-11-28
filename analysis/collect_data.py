@@ -19,7 +19,7 @@ def create_plots(dataframe):
     timestamp = generate_timestamp()
     plt.savefig(f"scatter_plot_xy_{timestamp}.png")
 
-    dataframe.reset_index().plot(x='index', y=['x','y', 'target', 'x_kf', 'y_kf'])
+    dataframe.reset_index().plot(x='index', y=['x','y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
 
     plt.savefig(f"line_plot_xy_{timestamp}.png")
 
