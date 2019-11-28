@@ -51,7 +51,8 @@ async def log_task(location_queue):
             locations = {
                 'x': location.x,
                 'y': location.y,
-                'target': 1.5,
+                'target_y': 2.5,
+                'target_x': 1.8,
                 'quality': location.quality,
                 'x_kf': location_filtered.x,
                 'y_kf': location_filtered.y
