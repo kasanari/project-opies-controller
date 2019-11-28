@@ -30,8 +30,15 @@ async def send_handler(websocket, path, location_queue):
     """ Sends location data (only time currently) to client """
     print("Client Connected!")
     while True:
-        message = await location_queue.get()
-        await websocket.send(json.dumps(message.get_as_dict()))
+        loc_message, loc_filtered_message = await location_queue.get()
+        loc_dict = {
+            'x': loc_message.x,
+            'x_kf': loc_filtered_message.x,
+            'y': loc_message.y,
+            'y_kf': loc_filtered_message.y,
+            'quality': loc_message.quality
+        }
+        await websocket.send(json.dumps(loc_dict)) #filtered_message.get_as_dict()))
 
 
 async def receive_handler(websocket, path, queue):
