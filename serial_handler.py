@@ -50,7 +50,7 @@ class SerialHandler:
         return responses
 
 
-async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=1):
+async def serial_task(*queues, update_delay=0.1):
     ser_con = None
     update_rate = 1/update_delay
     try:
@@ -58,7 +58,7 @@ async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=
         # does this get called again? put an if first loop?
         ser_handler = SerialHandler(ser_con)
         loc_data = ser_handler.get_location_data()
-        kf = init_kalman_filter(loc_data, dt=update_rate)
+        kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0)
         anchor_list = ser_handler.get_anchor_distances()
         loc_data_of_anchors = ser_handler.get_anchors(anchor_list)
         # TODO: send loc_data_of_anchors ( list )to web
