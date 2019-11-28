@@ -1,30 +1,32 @@
 import serial
-import asyncio
 
-
-async def distance_measure_task():
-    while True:
-        distance = await distance_measure()
-        print(f"Distance in CM: {distance}")
-
-
-async def distance_measure():
+def connect_to_arduino():
     try:
-        ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=2)
-    except:
-        ser = serial.Serial('/dev/ttyUSB1', 115200, timeout=2)
+        ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=2)
+    except serial.SerialException:
+        ser = serial.Serial('/dev/ttyUSB1', 9600, timeout=2)
+    return ser
 
-    ser.write(b'a')
-    while True:
-        line = ser.readline()
-        if line != '':
-            break
-    distance = int(line)
+def measure_distance(connection):
+    line = b''
 
-    ser.close()
-    return distance
+    while line == b'':
+        msg = "a\n".encode()
+        connection.write(msg)
+        line = connection.readline()
 
+    return int(line)
 
 if __name__ == "__main__":
+    a_ser = None
+    try:
+        a_ser = connect_to_arduino()
 
-    asyncio.run(distance_measure_task())
+        while 1:
+            distance = measure_distance(a_ser)
+            print(distance)
+
+    except KeyboardInterrupt:
+        print("Stopping")
+        if a_ser is not None:
+            a_ser.close()

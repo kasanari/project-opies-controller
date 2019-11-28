@@ -1,24 +1,27 @@
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import asyncio
 import csv
 import argparse
-from motor_control import motor_control_task
-from serial_handler import serial_task
-from location_data_handler import LocationData
+from car.motor_control import motor_control_task
+from serial_with_dwm.serial_handler import serial_task
+from serial_with_dwm.location_data_handler import LocationData
 
 matplotlib.use('Agg')
+sleep_time = 20
 
 def create_plots(dataframe):
-    dataframe.plot(x="x", y="y", kind='scatter')
+    dataframe.plot(x=['x', 'x_kf'], y=['y', 'y_kf'], kind='scatter')
+    plt.ylim(0, 5)
+    plt.xlim(0, 5)
+    timestamp = generate_timestamp()
+    plt.savefig(f"scatter_plot_xy_{timestamp}.png")
 
-    plt.savefig("scatter_plot.png")
+    #Line plot
+    dataframe.reset_index().plot(x='index', y=['x','y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
 
-    dataframe.reset_index().plot(x='index', y=['x','y'])
-
-    plt.savefig("line_plot.png")
+    plt.savefig(f"line_plot_xy_{timestamp}.png")
 
 
 
@@ -35,11 +38,21 @@ async def log_task(location_queue):
     location_df = pd.DataFrame()
     try:
         while True:
-            location = await location_queue.get()
+            location, location_filtered = await location_queue.get()
 
-            location = location.get_as_dict()
+            locations = {
+                'x': location.x,
+                'y': location.y,
+                'target_y': 2.5,
+                'target_x': 1.8,
+                'quality': location.quality,
+                'x_kf': location_filtered.x,
+                'y_kf': location_filtered.y
+            }
+            print(f"logging task: x is {location.x}")
+            print(f"logging task: x_kf is {location_filtered.x}")
             time_stamp = pd.Timestamp.utcnow()
-            location_df = location_df.append(pd.DataFrame(location, index=[time_stamp]))
+            location_df = location_df.append(pd.DataFrame(locations, index=[time_stamp]))
 
     except asyncio.CancelledError:
         print("Logging cancelled")
@@ -58,14 +71,14 @@ async def main(data_file=None, disable_motor=True, no_saving=False, out_file=Non
         location_task = asyncio.create_task(fake_serial_task(data_file, log_queue, serial_queue)) #get data from file
 
     if not disable_motor:
-        message = {'type': "destination", 'x': 0, 'y': 1.5}
+        message = {'type': "destination", 'x': 1, 'y': 1.5}
         await message_queue.put(message)
         motor_task = asyncio.create_task(motor_control_task(message_queue, serial_queue))
 
     logging_task = asyncio.create_task(log_task(log_queue))
 
     if data_file is None: #If we are using real serial, collect data for 7 seconds and then cancel the task
-        await asyncio.sleep(7)
+        await asyncio.sleep(sleep_time)
         location_task.cancel()
     else: #otherwise we just wait for the task to finish reading the file
         await location_task
@@ -78,9 +91,7 @@ async def main(data_file=None, disable_motor=True, no_saving=False, out_file=Non
 
     if not no_saving:
         if out_file is None:
-            timestamp = pd.Timestamp.utcnow().ctime()
-            timestamp = str(timestamp).replace(" ", "_")
-            timestamp = timestamp.replace(":", "")
+            timestamp = generate_timestamp()
             result.to_csv(f'{timestamp}.csv')
         else:
             result.to_csv(out_file)
@@ -89,6 +100,12 @@ async def main(data_file=None, disable_motor=True, no_saving=False, out_file=Non
 
     print("Done")
 
+
+def generate_timestamp():
+    timestamp = pd.Timestamp.utcnow().ctime()
+    timestamp = str(timestamp).replace(" ", "_")
+    timestamp = timestamp.replace(":", "")
+    return timestamp
 
 if __name__ == "__main__":
 

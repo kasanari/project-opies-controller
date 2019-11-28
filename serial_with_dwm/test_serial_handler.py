@@ -1,5 +1,4 @@
-import pytest
-import serial_handler
+from serial_with_dwm import serial_handler
 
 
 def test_get_location():

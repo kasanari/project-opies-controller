@@ -32,12 +32,12 @@
                     <h2>Car control</h2>
                     <div class="control">
                         <label for="wheel_angle">Angle:</label>
-                        <input id="wheel_angle" min="-0.5" max="0.5" value="-0.2" step="0.01" type="range" name="wheel_angle">
+                        <input id="wheel_angle" min="-35" max="35" value="-0.2" step="0.01" type="range" name="wheel_angle">
                         <p class="indicator" id="wheel_angle_indicator"></p>
                     </div>
                     <div class="control">
                         <label for="drive_speed">Speed:</label>
-                        <input id="drive_speed" min="-0.5" max="0.2" value="0" step="0.01" type="range" name="drive_speed">
+                        <input id="drive_speed" min="-0.2" max="0.2" value="0" step="0.01" type="range" name="drive_speed">
                         <p class="indicator" id="drive_speed_indicator"></p>
                     </div>
                     <button type="button" onclick="stop()">Stop!</button>

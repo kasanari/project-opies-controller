@@ -1,14 +1,16 @@
 import serial
 import time
 import asyncio
-from tlv_handler import TLVHandler
-from location_data_handler import extract_location, extract_distances, Anchor, LocationData
-from kalman_filtering import KalmanHelper
+from serial_with_dwm.tlv_handler import TLVHandler
+from serial_with_dwm.location_data_handler import extract_location, extract_distances
+from kalman.kalman_filtering import init_kalman_filter, kalman_updates
+import datetime
 
 
 class SerialHandler:
     def __init__(self, ser_con):
         self.ser_con = ser_con
+        self.no_response_in_a_row_count = 0
 
     def close_serial(self):
         self.ser_con.close()
@@ -22,6 +24,13 @@ class SerialHandler:
             a_list = extract_distances(responses)
             return a_list
 
+    def get_anchors(self, anchor_list): #process anchor_list. but what format suits the webtask?
+        anchor_positions = []
+        for anchor in anchor_list:
+            anchor_positions.append(anchor.position)
+        return anchor_positions # returns list of the anchors' positions. Maybe we want the ID:s too?
+        # in that case maybe this function is unecessary - a_list in get_anchor_distances has the ID, and the LocData object
+        
     def serial_request(self, command):
         tlv_h = TLVHandler(self.ser_con, command)
         tlv_h.send_tlv_request()
@@ -32,10 +41,11 @@ class SerialHandler:
     def get_location_data(self):
         responses, indexes = self.serial_request("dwm_loc_get")
         if responses[0].tlv_type == 0:
-            print("Error in reading location. No response. Is the RTLS on?")
+            self.no_response_in_a_row_count += 1  # start keeping track of how many
             return None  # null object
         else:
             location = extract_location(responses)
+            self.no_response_in_a_row_count = 0
             return location
 
     def get_nodeid(self):
@@ -43,21 +53,38 @@ class SerialHandler:
         return responses
 
 
-async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=1, kalman_on = False):
+async def serial_task(*queues, update_delay=0.1):
     ser_con = None
+    getting_responses = True
+    if update_delay < 0.1: # update rate on nodes is 100ms
+        update_delay = 0.1
+        print("Setting update delay to 0.1 (our min value)")
+    update_rate = 1/update_delay
+    
     try:
         ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
         ser_handler = SerialHandler(ser_con)
-        first_loop = True
-        while True:
-            loc_data = ser_handler.get_location_data()
-            if kalman_on:
-                if first_loop:
-                    kalman_helper = KalmanHelper(loc_data)
-                #loc_data =
+        loc_data = ser_handler.get_location_data()
+        kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0)
+        anchor_list = ser_handler.get_anchor_distances()
+        loc_data_of_anchors = ser_handler.get_anchors(anchor_list)
+        # TODO: send loc_data_of_anchors ( list )to web
 
-            await asyncio.gather(to_web_queue.put(loc_data), to_motor_queue.put(loc_data))
-            await asyncio.sleep(update_delay)  # cannot be smaller than 0.1 (update rate on nodes is 100ms)
+        while getting_responses:
+            a = datetime.datetime.now()
+            loc_data = ser_handler.get_location_data()
+            if ser_handler.no_response_in_a_row_count > 10:
+                print(f"No location data from the last {ser_handler.no_response_in_a_row_count} measurements")
+                getting_responses = False
+            elif loc_data is not None:
+                b = datetime.datetime.now()
+                delta = b - a
+                seconds = delta.total_seconds()  # ceiling? milliseconds = int(seconds * 1000)
+                dt_measurements = update_delay + seconds
+                loc_data_filtered = kalman_updates(kf, loc_data, dt_measurements)
+                tasks = [q.put([loc_data, loc_data_filtered]) for q in queues]
+                await asyncio.gather(*tasks)
+            await asyncio.sleep(update_delay)
     except KeyboardInterrupt:
         print("Stopping..")
     except serial.SerialException:
@@ -67,10 +94,7 @@ async def serial_task(to_web_queue: asyncio.Queue, to_motor_queue, update_delay=
     finally:
         if ser_con is not None:
             ser_con.close()
-
-
-
-
+    
 
 if __name__ == "__main__":
     try:
