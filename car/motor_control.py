@@ -1,6 +1,6 @@
 import asyncio
-from car import Car
-from auto_steering import auto_steer_task
+from car.car import Car
+from car.auto_steering import auto_steer_task
 
 def control_car_from_message(rc_car, message):
     try:

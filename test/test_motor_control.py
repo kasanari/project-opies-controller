@@ -1,4 +1,4 @@
-from motor_control import Steering
+from car.motor_control import Steering
 import time
 
 

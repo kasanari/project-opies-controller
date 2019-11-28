@@ -1,5 +1,5 @@
 import pytest
-from tlv_handler import TLVHandler
+from serial_with_dwm.tlv_handler import TLVHandler
 
 
 @pytest.fixture

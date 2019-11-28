@@ -1,7 +1,7 @@
-from motor_control import motor_control_task
+from car.motor_control import motor_control_task
 from web_server import location_server
-from websocket_server import create_websocket_task
-from serial_handler import serial_task
+from websocket_server.websocket_server import create_websocket_task
+from serial_with_dwm.serial_handler import serial_task
 import argparse
 import asyncio
 import subprocess

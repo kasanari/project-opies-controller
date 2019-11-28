@@ -1,13 +1,12 @@
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import asyncio
 import csv
 import argparse
-from motor_control import motor_control_task
-from serial_handler import serial_task
-from location_data_handler import LocationData
+from car.motor_control import motor_control_task
+from serial_with_dwm.serial_handler import serial_task
+from serial_with_dwm.location_data_handler import LocationData
 
 matplotlib.use('Agg')
 sleep_time = 20
