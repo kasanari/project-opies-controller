@@ -21,13 +21,6 @@ def create_plots(dataframe):
     #Line plot
     dataframe.reset_index().plot(x='index', y=['x','y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
 
-    # Fancy scatter
-    fig, ax = plt.subplots(1,1)
-    dataframe.reset_index().plot.scatter(ax=ax, x=['index', 'index'], y=['x', 'y'], marker='o', c=colors, colormap='plasma')
-    dataframe.reset_index().plot.line(ax=ax, x='index', y=['x_kf', 'y_kf', 'target'])
-
-    plt.savefig(f"line_plot_test.png")
-
     plt.savefig(f"line_plot_xy_{timestamp}.png")
 
 
