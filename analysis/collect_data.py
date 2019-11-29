@@ -11,12 +11,13 @@ from serial_with_dwm.location_data_handler import LocationData
 matplotlib.use('Agg')
 sleep_time = 20
 
+
 def create_plots(dataframe):
     dataframe.plot(x=['x', 'x_kf'], y=['y', 'y_kf'], kind='scatter')
     plt.ylim(0, 5)
     plt.xlim(0, 5)
     timestamp = generate_timestamp()
-    plt.savefig(f"scatter_plot_xy_{timestamp}.png")
+    plt.savefig(f"collect_data_scatter_plot_xy_{timestamp}.png")
 
     #Line plot
     dataframe.reset_index().plot(x='index', y=['x','y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
@@ -51,6 +52,7 @@ async def log_task(location_queue):
             }
             print(f"logging task: x is {location.x}")
             print(f"logging task: x_kf is {location_filtered.x}")
+            print(f"quality is {location.quality}")
             time_stamp = pd.Timestamp.utcnow()
             location_df = location_df.append(pd.DataFrame(locations, index=[time_stamp]))
 
@@ -71,7 +73,7 @@ async def main(data_file=None, disable_motor=True, no_saving=False, out_file=Non
         location_task = asyncio.create_task(fake_serial_task(data_file, log_queue, serial_queue)) #get data from file
 
     if not disable_motor:
-        message = {'type': "destination", 'x': 1, 'y': 1.5}
+        message = {'type': "destination", 'x': 0.8, 'y': 10}
         await message_queue.put(message)
         motor_task = asyncio.create_task(motor_control_task(message_queue, serial_queue))
 
