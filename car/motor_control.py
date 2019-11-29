@@ -2,6 +2,7 @@ import asyncio
 from car.car import Car
 from car.auto_steering import auto_steer_task
 
+
 def control_car_from_message(rc_car, message):
     try:
         angle = float(message["angle"])
@@ -16,9 +17,7 @@ def control_car_from_message(rc_car, message):
         print(e)
 
 
-
 async def motor_control_task(web_queue, from_serial_queue):
-
     try:
         rc_car = Car()
     except OSError as e:
@@ -56,12 +55,16 @@ async def motor_control_task(web_queue, from_serial_queue):
                 if auto_steer is not None:
                     auto_steer.cancel()
                 else:
-                    rc_car.stop()
+                    await rc_car.brake()
+
+            elif message_type == 'brake':
+                await rc_car.brake()
+
             else:
                 print("Invalid message type")
-
 
     except asyncio.CancelledError:
         print("Motor task cancelled.")
     finally:
-       rc_car.disable()
+        await rc_car.brake()
+        rc_car.disable()
