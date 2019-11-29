@@ -47,7 +47,7 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
                 collision_imminent = check_for_collision(arduino_connection, limit=60)
                 if collision_imminent:
                     print("Stopping due to wall.")
-                    rc_car.brake()
+                    await rc_car.brake()
                     rc_car.stop()
                     return
 
@@ -61,11 +61,11 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
             if y_diff > 0:
                 acceleration = 0.2
             else:
-                rc_car.brake()
+                await rc_car.brake()
                 return
 
             #acceleration = speed_controller.get_control_signal(y_diff, loop.time(), P=True, D=True, I=False)
-            angle = steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=True) - 9.5
+            angle = steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False) - 9.5
 
             print(f"acceleration: {acceleration}")
             print(f"angle: {angle}")

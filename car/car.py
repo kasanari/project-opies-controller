@@ -38,27 +38,32 @@ class Car:
     def set_acceleration(self, speed):
         if speed < 0:
             speed = speed * 2
+            self.current_direction = -1
+        elif speed > 0:
+            self.current_direction = 1
+        else:
+            self.current_direction = 0
 
         if speed > self.max_speed:
             speed = self.max_speed
-            self.current_direction = 1
 
         elif speed < -2*self.max_speed:
             speed = -2*self.max_speed
-            self.current_direction = -1
 
         self.motor_servo.value = speed
 
-    def brake(self):
+    async def brake(self):
         if self.current_direction > 0:
             print("Braking")
             self.motor_servo.value = -1
+            await asyncio.sleep(1)
+            self.motor_servo.value = 0
         else:
             self.motor_servo.value = 0
         self.current_direction = 0
 
     async def reverse(self):
-        self.brake()
+        await self.brake()
         await asyncio.sleep(1)
         print("Waiting in neutral...")
         self.set_acceleration(0)
