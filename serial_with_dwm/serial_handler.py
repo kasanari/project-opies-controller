@@ -5,6 +5,7 @@ from serial_with_dwm.tlv_handler import TLVHandler
 from serial_with_dwm.location_data_handler import extract_location, extract_distances
 from kalman.kalman_filtering import init_kalman_filter, kalman_updates
 import datetime
+import numpy as np
 
 
 class SerialHandler:
@@ -56,7 +57,8 @@ class SerialHandler:
 async def serial_task(*queues, update_delay=0.1):
     ser_con = None
     getting_responses = True
-    if update_delay < 0.1: # update rate on nodes is 100ms
+    u = np.array([[1]])
+    if update_delay < 0.1:  # update rate on nodes is 100ms
         update_delay = 0.1
         print("Setting update delay to 0.1 (our min value)")
     update_rate = 1/update_delay
@@ -65,7 +67,7 @@ async def serial_task(*queues, update_delay=0.1):
         ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
         ser_handler = SerialHandler(ser_con)
         loc_data = ser_handler.get_location_data()
-        kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0)
+        kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0, dim_u=1)
         anchor_list = ser_handler.get_anchor_distances()
         loc_data_of_anchors = ser_handler.get_anchors(anchor_list)
         # TODO: send loc_data_of_anchors ( list )to web
