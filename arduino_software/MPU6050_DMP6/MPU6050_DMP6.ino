@@ -107,7 +107,7 @@ MPU6050 mpu;
 // not compensated for orientation, so +X is always +X according to the
 // sensor, just without the effects of gravity. If you want acceleration
 // compensated for orientation, us OUTPUT_READABLE_WORLDACCEL instead.
-// #define OUTPUT_READABLE_REALACCEL
+#define OUTPUT_READABLE_REALACCEL
 
 // uncomment "OUTPUT_READABLE_WORLDACCEL" if you want to see acceleration
 // components with gravity removed and adjusted for the world frame of
@@ -187,13 +187,13 @@ void setup() {
   // crystal solution for the UART timer.
 
   // initialize device
-  Serial.println(F("Initializing I2C devices..."));
+  // Serial.println(F("Initializing I2C devices..."));
   mpu.initialize();
   pinMode(INTERRUPT_PIN, INPUT);
 
   // verify connection
-  Serial.println(F("Testing device connections..."));
-  Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
+  //Serial.println(F("Testing device connections..."));
+  //Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 
   // wait for ready
   Serial.println(F("\nSend any character to begin DMP programming and demo: "));
@@ -202,7 +202,7 @@ void setup() {
   while (Serial.available() && Serial.read()); // empty buffer again
 
   // load and configure the DMP
-  Serial.println(F("Initializing DMP..."));
+  //Serial.println(F("Initializing DMP..."));
   devStatus = mpu.dmpInitialize();
 
   // supply your own gyro offsets here, scaled for min sensitivity
@@ -366,13 +366,11 @@ void loop() {
       mpu.dmpGetAccel(&aa, fifoBuffer);
       mpu.dmpGetGravity(&gravity, &q);
       mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-      Serial.print("{type:'areal', x:");
       Serial.print(aaReal.x);
-      Serial.print(", y:");
+      Serial.print(",");
       Serial.print(aaReal.y);
-      Serial.print(", z:");
-      Serial.print(aaReal.z);
-      Serial.println("}")
+      Serial.print(",");
+      Serial.println(aaReal.z);
 #endif
 
 #ifdef OUTPUT_READABLE_WORLDACCEL
