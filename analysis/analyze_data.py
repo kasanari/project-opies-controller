@@ -24,7 +24,8 @@ data.reset_index().plot.scatter(ax=ax, x='index', y=['x'], marker='o', c=colors,
 data.reset_index().plot.scatter(ax=ax, x='index', y=['y'], marker='o', c=colors, colormap='plasma')
 data.reset_index().plot.line(ax=ax, x='index', y=['x_kf', 'y_kf', 'target'])
 plt.savefig(f"line_plot_test.png")
-
+fig.set_size_inches(15, 7, forward=True)
+plt.show()
 #data.reset_index().plot.scatter(ax=ax, x='index', y=['x_kf', 'y_kf', 'target'])
 
 
