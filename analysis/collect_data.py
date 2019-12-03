@@ -9,6 +9,7 @@ from car.motor_control import motor_control_task
 from kalman.kalman_filtering import init_kalman_filter, kalman_updates
 from serial_with_dwm.serial_handler import serial_task
 from serial_with_dwm.location_data_handler import LocationData
+import datetime
 
 matplotlib.use('Agg')
 sleep_time = 20
@@ -41,7 +42,7 @@ async def fake_serial_task(data_file, *queues, update_delay=0.1):
                 await asyncio.sleep(update_delay)
             for row in reversed(rows):
                 location_data = loc_data(row)
-                steering_signal = np.array([1])  # temp
+                steering_signal = np.array([0.2])  # temp
                 loc_data_filtered = kalman_updates(kf, loc_data(row), update_delay, u=steering_signal)
                 tasks = [q.put([location_data, loc_data_filtered]) for q in queues]
                 await asyncio.gather(*tasks)
@@ -49,6 +50,7 @@ async def fake_serial_task(data_file, *queues, update_delay=0.1):
 
 async def log_task(location_queue):
     location_df = pd.DataFrame()
+    start_time = datetime.datetime.now().timestamp()
     try:
         while True:
             location, location_filtered = await location_queue.get()
@@ -65,7 +67,7 @@ async def log_task(location_queue):
             print(f"logging task: x is {location.x}")
             print(f"logging task: x_kf is {location_filtered.x}")
             print(f"quality is {location.quality}")
-            time_stamp = pd.Timestamp.utcnow()
+            time_stamp =  (datetime.datetime.now().timestamp() - start_time)
             location_df = location_df.append(pd.DataFrame(locations, index=[time_stamp]))
 
     except asyncio.CancelledError:
