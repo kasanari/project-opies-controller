@@ -26,13 +26,14 @@ def create_plots(dataframe):
 
 
 
-async def fake_serial_task(data_file, *queues):
+async def fake_serial_task(data_file, *queues, update_delay=1):
     with open(data_file, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            location_data = LocationData(float(row['x']), float(row['y']), float(row['z']), float(row['quality']))
+            location_data = LocationData(float(row['x']), float(row['y']), 0, float(row['quality']))
             tasks = [q.put(location_data) for q in queues]
             await asyncio.gather(*tasks)
+            await asyncio.sleep(update_delay)
 
 
 async def log_task(location_queue):
