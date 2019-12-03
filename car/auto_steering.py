@@ -1,7 +1,9 @@
 from car.pidcontroller import PIDController
 from arduino_interface import arduino_serial
+from serial_with_dwm.location_data_handler import LocationData
 import numpy as np
 import asyncio
+import pandas as pd
 
 def position_error(target_x, target_y, x, y):
     y_diff = target_y - y
@@ -25,6 +27,18 @@ def check_for_collision(connection, limit):
     if distance < limit:
         return True
 
+def approximate_angle(speed, wheel_angle, length = 2.45):
+    return (speed * np.tan(wheel_angle)) / length
+
+
+def approximate_speed(self, current_location: LocationData, current_time):
+    return (self.prev_location.x - current_location.x) / (self.time - current_time)
+
+
+def logger(self, **kwargs):
+    # location = location.get_as_dict()
+    time_stamp = pd.Timestamp.utcnow()
+    self.data_log = self.data_log.append(pd.DataFrame(kwargs, index=[time_stamp]))
 
 async def auto_steer_task(rc_car, destination, from_serial_queue, distance_control = False):
 
