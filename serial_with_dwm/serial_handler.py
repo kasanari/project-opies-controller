@@ -83,7 +83,8 @@ async def serial_task(*queues, update_delay=0.1):
                 delta = b - a
                 seconds = delta.total_seconds()  # ceiling? milliseconds = int(seconds * 1000)
                 dt_measurements = update_delay + seconds
-                loc_data_filtered = kalman_updates(kf, loc_data, dt_measurements)
+                steering_signal = np.array([1])  #temp
+                loc_data_filtered = kalman_updates(kf, loc_data, dt_measurements, u=steering_signal)
                 tasks = [q.put([loc_data, loc_data_filtered]) for q in queues]
                 await asyncio.gather(*tasks)
             await asyncio.sleep(update_delay)
