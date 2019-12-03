@@ -1,6 +1,4 @@
 import serial
-import time
-import json
 import asyncio
 import csv
 import io
@@ -18,8 +16,6 @@ async def calibrate_IMU(connection):
 
     connection.write(b'a\n')
 
-    #await asyncio.sleep(5)
-
     match = None
 
     while (match is None):
@@ -32,26 +28,36 @@ async def calibrate_IMU(connection):
     print("IMU startup complete.")
     return
 
+
 def read_csv_line(connection):
-    line = connection.readline().strip()
-    line = line.replace(b'\x00', b'')
-    line_str = line.decode()
+    values = []
 
-    reader = csv.reader(
-        io.StringIO(line_str),
-        delimiter=',',
-        quotechar='"',
-        skipinitialspace=True,
-    )
+    while len(values) < 3:
 
-    return next(reader)
+        line = connection.readline().strip()
+        line_str = line.decode()
+
+        reader = csv.reader(
+            io.StringIO(line_str),
+            delimiter=',',
+            quotechar='"',
+            skipinitialspace=True,
+        )
+
+        try:
+            values = next(reader)
+        except StopIteration:
+            values = []
+
+    return values
+
 
 def convert_g_to_acceleration(gs):
-
     for key in gs:
-        gs[key] = (float(gs[key])/8192) * 9.82
+        gs[key] = (float(gs[key]) / 8192) * 9.82
 
     return gs
+
 
 def read_IMU(connection):
     msg = "a\n".encode()
@@ -61,23 +67,31 @@ def read_IMU(connection):
     realaccel = read_csv_line(connection)
     worldaccel = read_csv_line(connection)
 
-    ypr_dict = {"yaw":float(ypr[0]), "pitch":float(ypr[1]), "roll":float(ypr[2])}
-    realaccel_dict = {"x":realaccel[0], "y":realaccel[1], "z":realaccel[2]}
-    worldaccel_dict = {"x":worldaccel[0], "y":worldaccel[1], "z":worldaccel[2]}
+    ypr_dict = {"yaw": float(ypr[0]), "pitch": float(ypr[1]), "roll": float(ypr[2])}
+
+    realaccel_dict = {"x": realaccel[0], "y": realaccel[1], "z": realaccel[2]}
+    worldaccel_dict = {"x": worldaccel[0], "y": worldaccel[1], "z": worldaccel[2]}
 
     realaccel_dict = convert_g_to_acceleration(realaccel_dict)
     worldaccel_dict = convert_g_to_acceleration(worldaccel_dict)
 
-    print(ypr_dict)
-    print(realaccel_dict)
-    print(worldaccel_dict)
+    return ypr_dict, realaccel_dict, worldaccel_dict
 
 
 def connect_to_arduino():
+    ser = None
     try:
         ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=2)
     except serial.SerialException:
-        ser = serial.Serial('/dev/ttyUSB2', 115200, timeout=2)
+
+        for i in range(1, 5):
+            try:
+                ser = serial.Serial(f'/dev/ttyUSB{i}', 115200, timeout=2)
+            except serial.SerialException:
+                pass
+
+    if ser is None:
+        raise RuntimeError
 
     return ser
 
@@ -104,11 +118,13 @@ async def start_IMU(connection):
 
 
 async def main(connection):
-
-    success = start_IMU(connection)
+    success = await start_IMU(connection)
 
     while 1:
-        read_IMU(connection)
+        ypr, realaccel, worldaccel = read_IMU(connection)
+        print(f"ypr: {ypr}")
+        print(f"real_accel: {realaccel}")
+        print(f"worl_accel: {worldaccel}")
         print("--------")
 
 
