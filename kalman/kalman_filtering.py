@@ -114,6 +114,8 @@ def kalman_updates(kf, loc_data, timestep, u=0):
     kf.predict(u=u)
     kf.update(z)
 
-    filtered_loc = LocationData(x=kf.x[0], y=kf.x[1], z=0, quality=loc_quality)
+    x_kf = float("{0:.2f}".format(kf.x[0]))
+    y_kf = float("{0:.2f}".format(kf.x[1]))
+    filtered_loc = LocationData(x=x_kf, y=y_kf, z=0, quality=loc_quality)
 
     return filtered_loc  
