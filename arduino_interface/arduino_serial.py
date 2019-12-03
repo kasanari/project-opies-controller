@@ -18,7 +18,7 @@ async def calibrate_IMU(connection):
 
     connection.write(b'a\n')
 
-    await asyncio.sleep(5)
+    #await asyncio.sleep(5)
 
     match = None
 
@@ -73,8 +73,6 @@ def read_IMU(connection):
     print(worldaccel_dict)
 
 
-
-
 def connect_to_arduino():
     try:
         ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=2)
@@ -95,13 +93,19 @@ def measure_distance(connection):
     return int(line)
 
 
+async def start_IMU(connection):
+    try:
+        await asyncio.wait_for(calibrate_IMU(connection), timeout=10)
+    except asyncio.TimeoutError:
+        print("IMU setup timed out.")
+        return False
+
+    return True
+
+
 async def main(connection):
-    calibrate = asyncio.create_task(calibrate_IMU(connection))
 
-    await asyncio.sleep(10)
-
-    if not calibrate.done():
-     calibrate.cancel()
+    success = start_IMU(connection)
 
     while 1:
         read_IMU(connection)
