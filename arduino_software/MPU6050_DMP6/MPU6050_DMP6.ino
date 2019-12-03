@@ -351,13 +351,13 @@ void loop() {
       mpu.dmpGetQuaternion(&q, fifoBuffer);
       mpu.dmpGetGravity(&gravity, &q);
       mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-      Serial.print("{\"type\":\"ypr\", \"yaw\":");
-      Serial.print(ypr[0] * 180 / M_PI);
-      Serial.print(", \"pitch\":");
-      Serial.print(ypr[1] * 180 / M_PI);
-      Serial.print(", \"roll\":");
-      Serial.print(ypr[2] * 180 / M_PI);
-      Serial.println("}");
+
+      Serial.print(ypr[0] * 180 / M_PI); // yaw
+      Serial.print(",");
+      Serial.print(ypr[1] * 180 / M_PI); // pitch
+      Serial.print(",");
+      Serial.println(ypr[2] * 180 / M_PI); // roll
+
 #endif
 
 #ifdef OUTPUT_READABLE_REALACCEL
@@ -383,13 +383,11 @@ void loop() {
       mpu.dmpGetGravity(&gravity, &q);
       mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
       mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-      Serial.print("{\"type\":\"aworld\", \"x\":");
       Serial.print(aaWorld.x);
-      Serial.print(", \"y\":");
+      Serial.print(",");
       Serial.print(aaWorld.y);
-      Serial.print(", \"z\":");
-      Serial.print(aaWorld.z);
-      Serial.println("}");
+      Serial.print(",");
+      Serial.println(aaWorld.z);
 #endif
 
 #ifdef OUTPUT_TEAPOT
