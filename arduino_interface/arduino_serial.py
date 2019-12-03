@@ -3,7 +3,8 @@ import asyncio
 import csv
 import io
 import re
-
+import functools
+import concurrent.futures
 
 async def calibrate_IMU(connection):
     match = None
@@ -121,7 +122,11 @@ async def main(connection):
     success = await start_IMU(connection)
 
     while 1:
-        ypr, realaccel, worldaccel = read_IMU(connection)
+        loop = asyncio.get_running_loop()
+        read_imu = functools.partial(read_IMU, connection=connection)
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            result = await loop.run_in_executor(pool, read_imu)
+        ypr, realaccel, worldaccel = result
         print(f"ypr: {ypr}")
         print(f"real_accel: {realaccel}")
         print(f"worl_accel: {worldaccel}")
