@@ -118,21 +118,3 @@ def generate_timestamp():
     timestamp = str(timestamp).replace(" ", "_")
     timestamp = timestamp.replace(":", "")
     return timestamp
-
-if __name__ == "__main__":
-
-
-    parser = argparse.ArgumentParser(description='Collect location data for analysis.')
-    parser.add_argument('--fake_serial', nargs='?', help='Use saved data instead of serial connection')
-    parser.add_argument('--disable_motor', action='store_true', help='disable the motor control task')
-    parser.add_argument("-o", nargs='?', dest="out_file", help="output file name, in csv format. Defaults to a timestamp.")
-    parser.add_argument("--no_saving", dest='no_saving', action='store_true', help="Disables saving results to a file")
-
-    args = parser.parse_args()
-
-    data_file = args.fake_serial
-    disable_motor = args.disable_motor
-    out_file = args.out_file
-    no_saving = args.no_saving
-
-    asyncio.run(collect_data_task(data_file, disable_motor, no_saving, out_file))
