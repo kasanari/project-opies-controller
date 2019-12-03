@@ -13,7 +13,6 @@ def init_kalman_filter(loc_data, dt, angle_vel=0.0, dim_x=4, dim_z=2, dim_u=0, c
                      [0., 1., 0., 0.]])
     kf.B = set_B(dim_u)
 
-
     distrust_in_value = calculate_distrust(loc_data.quality)
     kf.P *= distrust_in_value
 

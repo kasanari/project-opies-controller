@@ -48,6 +48,3 @@ class PIDController:
         self.prev_e = e
 
         return control_signal
-
-
-

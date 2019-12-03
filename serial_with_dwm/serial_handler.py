@@ -57,27 +57,35 @@ class SerialHandler:
 async def serial_task(*queues, update_delay=0.1):
     ser_con = None
     getting_responses = True
-    u = np.array([[1]])
+
     if update_delay < 0.1:  # update rate on nodes is 100ms
         update_delay = 0.1
         print("Setting update delay to 0.1 (our min value)")
     update_rate = 1/update_delay
     
     try:
+        # Serial connection
         ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
         ser_handler = SerialHandler(ser_con)
+
+        # Initalize Kalman Filter
         loc_data = ser_handler.get_location_data()
         kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0, dim_u=1)
-        anchor_list = ser_handler.get_anchor_distances()
-        loc_data_of_anchors = ser_handler.get_anchors(anchor_list)
+        await speed_control_signal_queue.put(0)  # needed for the first update
+
+        # Send anchor positions to the web
+        # anchor_list = ser_handler.get_anchor_distances()
+        # loc_data_of_anchors = ser_handler.get_anchors(anchor_list)
         # TODO: send loc_data_of_anchors ( list )to web
 
         while getting_responses:
             serial_collect_time_start = datetime.datetime.now()
-            loc_data = ser_handler.get_location_data()
-            if ser_handler.no_response_in_a_row_count > 10:
+            loc_data = ser_handler.get_location_data()  # serial connection with dwm1001, get location data
+
+            if ser_handler.no_response_in_a_row_count > 10:  # ser_handler adds to this count if loc_data is None
                 print(f"No location data from the last {ser_handler.no_response_in_a_row_count} measurements")
                 getting_responses = False
+
             elif loc_data is not None:
                 serial_collect_time_end = datetime.datetime.now()
                 serial_collect_time_total = serial_collect_time_end - serial_collect_time_start
@@ -86,7 +94,9 @@ async def serial_task(*queues, update_delay=0.1):
                 steering_signal = np.array([1])  #temp
                 loc_data_filtered = kalman_updates(kf, loc_data, dt_measurements, u=steering_signal)
                 tasks = [q.put([loc_data, loc_data_filtered]) for q in queues]
+
                 await asyncio.gather(*tasks)
+
             await asyncio.sleep(update_delay)
     except KeyboardInterrupt:
         print("Stopping..")
