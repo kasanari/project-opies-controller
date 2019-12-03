@@ -11,7 +11,7 @@ import csv
 PORT_NUMBER = 8080  # Port for web server
 
 
-async def main_task_handler(ip_addr, serial_data_file=None):
+async def main_task_handler(ip_addr, serial_data_file=None, disable_motor=False):
     message_queue = asyncio.Queue()
     location_queue = asyncio.Queue()
     serial_to_motor_queue = asyncio.LifoQueue()
@@ -23,7 +23,7 @@ async def main_task_handler(ip_addr, serial_data_file=None):
 
     start_server = create_websocket_task(ip_addr, message_queue, location_queue)
 
-    motor_task = asyncio.create_task(motor_control_task(message_queue, serial_to_motor_queue))
+    motor_task = asyncio.create_task(motor_control_task(message_queue, serial_to_motor_queue, debug_no_car=disable_motor))
 
     await asyncio.gather(start_server, motor_task, location_task)
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
         location_server.start_web_client(PORT_NUMBER)
 
-        asyncio.run(main_task_handler(ip, data_file))
+        asyncio.run(main_task_handler(ip, data_file, disable_motor=disable_motor))
 
     except KeyboardInterrupt:
         print("Stopping..")

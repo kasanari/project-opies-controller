@@ -17,9 +17,9 @@ def control_car_from_message(rc_car, message):
         print(e)
 
 
-async def motor_control_task(web_queue, from_serial_queue):
+async def motor_control_task(web_queue, from_serial_queue, debug_no_car=False):
     try:
-        rc_car = Car()
+        rc_car = Car(debug_no_car)
     except OSError as e:
         print(e)
         print("Failed to connect to PIGPIOD")
