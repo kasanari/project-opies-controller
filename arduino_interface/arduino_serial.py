@@ -1,8 +1,5 @@
 import serial
 import asyncio
-import csv
-import io
-import re
 import functools
 import concurrent.futures
 import arduino_interface.imu as imu
@@ -26,18 +23,8 @@ def connect_to_arduino():
     return ser
 
 
-async def start_IMU(connection):
-    try:
-        await asyncio.wait_for(imu.calibrate_IMU(connection), timeout=10)
-    except asyncio.TimeoutError:
-        print("IMU setup timed out.")
-        return False
-
-    return True
-
-
 async def main(connection):
-    success = await start_IMU(connection)
+    success = await imu.start_IMU(connection)
 
     while 1:
         loop = asyncio.get_running_loop()

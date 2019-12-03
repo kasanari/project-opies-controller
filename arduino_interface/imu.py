@@ -3,6 +3,15 @@ import asyncio
 import csv
 import io
 
+async def start_IMU(connection):
+    try:
+        await asyncio.wait_for(calibrate_IMU(connection), timeout=10)
+    except asyncio.TimeoutError:
+        print("IMU setup timed out.")
+        return False
+
+    return True
+
 async def calibrate_IMU(connection):
     match = None
 
