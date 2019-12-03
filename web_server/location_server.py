@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from http.server import HTTPServer, SimpleHTTPRequestHandler
-import websockets
 import threading
 
 DIRECTORY='web_server'
