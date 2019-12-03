@@ -73,15 +73,15 @@ async def serial_task(*queues, update_delay=0.1):
         # TODO: send loc_data_of_anchors ( list )to web
 
         while getting_responses:
-            a = datetime.datetime.now()
+            serial_collect_time_start = datetime.datetime.now()
             loc_data = ser_handler.get_location_data()
             if ser_handler.no_response_in_a_row_count > 10:
                 print(f"No location data from the last {ser_handler.no_response_in_a_row_count} measurements")
                 getting_responses = False
             elif loc_data is not None:
-                b = datetime.datetime.now()
-                delta = b - a
-                seconds = delta.total_seconds()  # ceiling? milliseconds = int(seconds * 1000)
+                serial_collect_time_end = datetime.datetime.now()
+                serial_collect_time_total = serial_collect_time_end - serial_collect_time_start
+                seconds = serial_collect_time_total.total_seconds()  # ceiling? milliseconds = int(seconds * 1000)
                 dt_measurements = update_delay + seconds
                 steering_signal = np.array([1])  #temp
                 loc_data_filtered = kalman_updates(kf, loc_data, dt_measurements, u=steering_signal)
