@@ -26,7 +26,7 @@ def create_plots(dataframe, filename_timestamp):
     plt.savefig(f"{filename_timestamp}_collect_data_line_plot_xy.png")
 
 
-async def fake_serial_task(data_file, *queues, update_delay=1):
+async def fake_serial_task(data_file, *queues, update_delay=0.1):
     loc_data = lambda row: LocationData(float(row['x']), float(row['y']), 0, float(row['quality']))
     with open(data_file, newline='') as csvfile:
         rows = list(csv.DictReader(csvfile))
@@ -46,7 +46,6 @@ async def fake_serial_task(data_file, *queues, update_delay=1):
                 tasks = [q.put([location_data, loc_data_filtered]) for q in queues]
                 await asyncio.gather(*tasks)
                 await asyncio.sleep(update_delay)
-
 
 async def log_task(location_queue):
     location_df = pd.DataFrame()
@@ -79,11 +78,13 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
     serial_queue = asyncio.Queue()
     log_queue = asyncio.Queue()
     motor_task = None
+    fake_serial = False
 
     if data_file is None:
         location_task = asyncio.create_task(serial_task(log_queue, serial_queue)) # use real serial
     else:
         location_task = asyncio.create_task(fake_serial_task(data_file, log_queue, serial_queue)) #get data from file
+        fake_serial = True
 
     if not disable_motor:
         message = {'type': "destination", 'x': 0.8, 'y': 10}
@@ -102,6 +103,10 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
     result : pd.DataFrame = await logging_task
 
     file_timestamp = generate_timestamp()
+
+    if fake_serial:
+        file_timestamp += "_fake"
+
     if not no_saving:
         if out_file is None:
             result.to_csv(f'{file_timestamp}.csv')
