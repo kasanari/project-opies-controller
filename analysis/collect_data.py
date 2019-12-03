@@ -2,9 +2,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import asyncio
+import numpy as np
 import csv
 import argparse
 from car.motor_control import motor_control_task
+from kalman.kalman_filtering import init_kalman_filter, kalman_updates
 from serial_with_dwm.serial_handler import serial_task
 from serial_with_dwm.location_data_handler import LocationData
 
@@ -25,13 +27,25 @@ def create_plots(dataframe, filename_timestamp):
 
 
 async def fake_serial_task(data_file, *queues, update_delay=1):
+    loc_data = lambda row: LocationData(float(row['x']), float(row['y']), 0, float(row['quality']))
     with open(data_file, newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            location_data = LocationData(float(row['x']), float(row['y']), 0, float(row['quality']))
-            tasks = [q.put(location_data) for q in queues]
-            await asyncio.gather(*tasks)
-            await asyncio.sleep(update_delay)
+        rows = list(csv.DictReader(csvfile))
+        kf = init_kalman_filter(loc_data(rows[0]), dt=update_delay, covar_x_y=0, dim_u=1)
+        while True:
+            for row in rows:
+                location_data = loc_data(row)
+                steering_signal = np.array([1])  # temp
+                loc_data_filtered = kalman_updates(kf, loc_data(row), update_delay, u=steering_signal)
+                tasks = [q.put([location_data, loc_data_filtered]) for q in queues]
+                await asyncio.gather(*tasks)
+                await asyncio.sleep(update_delay)
+            for row in reversed(rows):
+                location_data = loc_data(row)
+                steering_signal = np.array([1])  # temp
+                loc_data_filtered = kalman_updates(kf, loc_data(row), update_delay, u=steering_signal)
+                tasks = [q.put([location_data, loc_data_filtered]) for q in queues]
+                await asyncio.gather(*tasks)
+                await asyncio.sleep(update_delay)
 
 
 async def log_task(location_queue):
@@ -60,7 +74,7 @@ async def log_task(location_queue):
         return location_df
 
 
-async def main(data_file=None, disable_motor=True, no_saving=False, out_file=None) :
+async def collect_data_task(data_file=None, disable_motor=True, no_saving=False, out_file=None) :
     message_queue = asyncio.Queue()
     serial_queue = asyncio.Queue()
     log_queue = asyncio.Queue()
@@ -78,11 +92,8 @@ async def main(data_file=None, disable_motor=True, no_saving=False, out_file=Non
 
     logging_task = asyncio.create_task(log_task(log_queue))
 
-    if data_file is None: #If we are using real serial, collect data for 7 seconds and then cancel the task
-        await asyncio.sleep(sleep_time)
-        location_task.cancel()
-    else: #otherwise we just wait for the task to finish reading the file
-        await location_task
+    await asyncio.sleep(sleep_time)
+    location_task.cancel()
 
     if not disable_motor and motor_task is not None:
         motor_task.cancel()
@@ -124,4 +135,4 @@ if __name__ == "__main__":
     out_file = args.out_file
     no_saving = args.no_saving
 
-    asyncio.run(main(data_file, disable_motor, no_saving, out_file))
+    asyncio.run(collect_data_task(data_file, disable_motor, no_saving, out_file))
