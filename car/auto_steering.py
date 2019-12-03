@@ -40,7 +40,7 @@ def logger(self, **kwargs):
     time_stamp = pd.Timestamp.utcnow()
     self.data_log = self.data_log.append(pd.DataFrame(kwargs, index=[time_stamp]))
 
-async def auto_steer_task(rc_car, destination, from_serial_queue, distance_control = False):
+async def auto_steer_task(rc_car, destination, from_serial_queue, control_signal_queue, distance_control = False):
 
     target_x = destination['x']
     target_y = destination['y']
@@ -71,6 +71,8 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
 
             #e_angle = angle_error(target_x, target_y, location.x, location.y)
             y_diff, x_diff = position_error(target_x, target_y, location.x, location.y)
+
+            await control_signal_queue.put_nowait(y_diff)  #put into queue non-blocking
 
             if y_diff > 0:
                 acceleration = 0.2

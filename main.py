@@ -16,15 +16,20 @@ async def main_task_handler(ip_addr, serial_data_file=None, disable_motor=False)
     message_queue = asyncio.Queue()
     location_queue = asyncio.Queue()
     serial_to_motor_queue = asyncio.LifoQueue()
+    motor_to_serial_queue = asyncio.LifoQueue()
 
     if serial_data_file is None:
-        location_task = asyncio.create_task(serial_task(serial_to_motor_queue, location_queue, update_delay=0.3))
+        location_task = asyncio.create_task(serial_task(serial_to_motor_queue, location_queue,
+                                                        speed_control_signal_queue=motor_to_serial_queue, update_delay=0.3))
     else:
-        location_task = asyncio.create_task(fake_serial_task(serial_data_file, serial_to_motor_queue, location_queue, update_delay=0.3))
+        location_task = asyncio.create_task(fake_serial_task(serial_data_file, serial_to_motor_queue, location_queue,
+                                                             update_delay=0.3))
+                        #steering_control_signal_queue=motor_to_serial_queue, update_delay=0.3))
 
     start_server = create_websocket_task(ip_addr, message_queue, location_queue)
 
-    motor_task = asyncio.create_task(motor_control_task(message_queue, serial_to_motor_queue, debug_no_car=disable_motor))
+    motor_task = asyncio.create_task(motor_control_task(message_queue, serial_to_motor_queue,
+                                                        control_signal_queue=motor_to_serial_queue, debug_no_car=disable_motor))
 
     await asyncio.gather(start_server, motor_task, location_task)
 

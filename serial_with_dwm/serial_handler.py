@@ -54,7 +54,7 @@ class SerialHandler:
         return responses
 
 
-async def serial_task(*queues, update_delay=0.1):
+async def serial_task(*queues, speed_control_signal_queue, update_delay=0.1):
     ser_con = None
     getting_responses = True
     u = np.array([[1]])
@@ -68,8 +68,7 @@ async def serial_task(*queues, update_delay=0.1):
         ser_handler = SerialHandler(ser_con)
         loc_data = ser_handler.get_location_data()
         kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0, dim_u=1)
-        anchor_list = ser_handler.get_anchor_distances()
-        loc_data_of_anchors = ser_handler.get_anchors(anchor_list)
+        await speed_control_signal_queue.put(0)  # needed for the first update
         # TODO: send loc_data_of_anchors ( list )to web
 
         while getting_responses:
@@ -83,8 +82,9 @@ async def serial_task(*queues, update_delay=0.1):
                 serial_collect_time_total = serial_collect_time_end - serial_collect_time_start
                 seconds = serial_collect_time_total.total_seconds()  # ceiling? milliseconds = int(seconds * 1000)
                 dt_measurements = update_delay + seconds
-                steering_signal = np.array([1])  #temp
-                loc_data_filtered = kalman_updates(kf, loc_data, dt_measurements, u=steering_signal)
+                speed_control_signal_from_queue = await speed_control_signal_queue.get()  # TODO: this is blocking
+                speed_control_signal = np.array([speed_control_signal_from_queue])
+                loc_data_filtered = kalman_updates(kf, loc_data, dt_measurements, u=speed_control_signal)
                 tasks = [q.put([loc_data, loc_data_filtered]) for q in queues]
                 await asyncio.gather(*tasks)
             await asyncio.sleep(update_delay)
