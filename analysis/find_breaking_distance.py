@@ -74,7 +74,7 @@ async def start_and_brake(reverse=True):
     timestamp = generate_timestamp()
     result.to_csv(f'{timestamp}.csv')
 
-    create_plots(result, brake_time_stamp)
+    create_plots(result, timestamp, brake_time_stamp)
 
     print("Done")
 
