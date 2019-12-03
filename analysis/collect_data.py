@@ -14,6 +14,17 @@ import datetime
 matplotlib.use('Agg')
 sleep_time = 20
 
+def fancy_scatter_plot(data, filename_timestamp):
+    colors = data['quality']
+    fig, ax = plt.subplots(1, 1)
+
+    data.reset_index().plot.scatter(ax=ax, x='index', y=['x'], marker='o', c=colors, colormap='plasma')
+    data.reset_index().plot.scatter(ax=ax, x='index', y=['y'], marker='o', c=colors, colormap='plasma')
+    data.reset_index().plot.line(ax=ax, x='index', y=['x_kf', 'y_kf'])
+    plt.savefig(f"{filename_timestamp}_fancy_line_plot.png")
+    fig.set_size_inches(15, 7, forward=True)
+    plt.show()
+
 
 def create_plots(dataframe, filename_timestamp):
     dataframe.plot(x=['x', 'x_kf'], y=['y', 'y_kf'], kind='scatter')
@@ -26,6 +37,7 @@ def create_plots(dataframe, filename_timestamp):
 
     plt.savefig(f"{filename_timestamp}_collect_data_line_plot_xy.png")
 
+    fancy_scatter_plot(dataframe, filename_timestamp)
 
 async def fake_serial_task(data_file, *queues, update_delay=0.1):
     loc_data = lambda row: LocationData(float(row['x']), float(row['y']), 0, float(row['quality']))
