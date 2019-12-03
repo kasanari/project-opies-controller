@@ -3,7 +3,7 @@ import numpy as np
 from serial_with_dwm.location_data_handler import LocationData
 
 
-# var_x and var_y in meters
+# var_x and var_y in metersvis
 def init_kalman_filter(loc_data, dt, angle_vel=0.0, dim_x=4, dim_z=2, dim_u=0, covar_x_y=0.2):
     kf = KalmanFilter(dim_x=dim_x, dim_z=dim_z, dim_u=dim_u)
     # init state vector x
@@ -11,16 +11,14 @@ def init_kalman_filter(loc_data, dt, angle_vel=0.0, dim_x=4, dim_z=2, dim_u=0, c
     kf.F = set_F(dt)
     kf.H = np.array([[1., 0., 0., 0.],
                      [0., 1., 0., 0.]])
+    kf.B = set_B(dim_u)
 
-    if dim_u == 1:
-        b = np.array([0., 0., 0., -1])
-        kf.B = b.reshape((4, 1))
 
     distrust_in_value = calculate_distrust(loc_data.quality)
     kf.P *= distrust_in_value
 
     kf.R = measurement_noise_update(distrust_value=distrust_in_value, covar_x_y=covar_x_y)  # measurement noise
-    kf.Q = set_Q(dt)  # process noise TODO should probably change this to reflect the covariance i assume elsewhere
+    kf.Q = set_Q(dt)  # process noise
 
     return kf
 
@@ -48,6 +46,25 @@ def set_Q(dt, acceleleration=True, var_x=0.0, var_y=0.0, var_x_dot=0.0, var_y_do
                   [covar_xxdot, covar_yxdot, var_x_dot, covar_xdotydot],
                   [covar_xydot, covar_yydot, covar_xdotydot, var_y_dot]])
     return q
+
+
+def set_B(dim_u):
+    if dim_u == 0:
+        b = None
+    elif dim_u == 1:
+        b = np.array([[0.],
+                     [0.],
+                     [0.],
+                     [-1]])
+    elif dim_u == 2:
+        b = np.array([[0., 0.],
+                     [0., 0.],
+                     [0., 0.],
+                     [-1, 0.]])
+    else:
+        print("I don't have a model for these control signals/this dim_u. Treating dim_u as 0.")
+        b = None
+    return b
 
 
 # calculates the R values. TODO: change this to static error? the quality value is weird.
@@ -96,24 +113,26 @@ def measurement_noise_update(distrust_value, covar_x_y=0.0):  # TODO: changed co
 # If the loc_data is None we keep the last z, but we make the covariance matrix for the measurements
 # have ~infinity numbers, so the prediction is vastly favored over the measurement.
 # Returns: a location estimate as a LocationData
-def kalman_updates(kf, loc_data, timestep, u=0):
+def kalman_updates(kf, loc_data, timestep, u=None):
     kf.F = set_F(timestep)
     kf.Q = set_Q(timestep)
     if loc_data is not None:
         z = measurement_update(loc_data)
         distrust_in_measurement = calculate_distrust(loc_data.quality)
         kf.R = measurement_noise_update(distrust_in_measurement)
-        #kf.R = measurement_noise_update(50)
         loc_quality = loc_data.quality
     else:
         z = kf.z
-        kf.R = measurement_noise_update(0.01)
+        kf.R = measurement_noise_update(1000)  # High value, prefer process model
         loc_quality = -99
-    if u < 0:
-        u = kf.x[3]  # last y_dot
+    if u is not None:
+        if u < 0:
+            u = kf.x[3]  # last y_dot.  # TODO: for u=u_steering, controlling y_dot only. Change if changed!!
     kf.predict(u=u)
     kf.update(z)
 
-    filtered_loc = LocationData(x=kf.x[0], y=kf.x[1], z=0, quality=loc_quality)
+    x_kf = float("{0:.2f}".format(kf.x[0]))
+    y_kf = float("{0:.2f}".format(kf.x[1]))
+    filtered_loc = LocationData(x=x_kf, y=y_kf, z=0, quality=loc_quality)
 
     return filtered_loc  

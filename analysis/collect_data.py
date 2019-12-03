@@ -12,18 +12,16 @@ matplotlib.use('Agg')
 sleep_time = 20
 
 
-def create_plots(dataframe):
+def create_plots(dataframe, filename_timestamp):
     dataframe.plot(x=['x', 'x_kf'], y=['y', 'y_kf'], kind='scatter')
     plt.ylim(0, 5)
     plt.xlim(0, 5)
-    timestamp = generate_timestamp()
-    plt.savefig(f"collect_data_scatter_plot_xy_{timestamp}.png")
+    plt.savefig(f"{filename_timestamp}_collect_data_scatter_plot.png")
 
     #Line plot
     dataframe.reset_index().plot(x='index', y=['x','y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
 
-    plt.savefig(f"line_plot_xy_{timestamp}.png")
-
+    plt.savefig(f"{filename_timestamp}_collect_data_line_plot_xy.png")
 
 
 async def fake_serial_task(data_file, *queues, update_delay=1):
@@ -92,14 +90,14 @@ async def main(data_file=None, disable_motor=True, no_saving=False, out_file=Non
     logging_task.cancel()
     result : pd.DataFrame = await logging_task
 
+    file_timestamp = generate_timestamp()
     if not no_saving:
         if out_file is None:
-            timestamp = generate_timestamp()
-            result.to_csv(f'{timestamp}.csv')
+            result.to_csv(f'{file_timestamp}.csv')
         else:
             result.to_csv(out_file)
 
-    create_plots(result)
+    create_plots(result, file_timestamp)
 
     print("Done")
 
