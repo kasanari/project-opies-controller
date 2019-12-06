@@ -71,7 +71,7 @@ def calculate_distrust(quality):
     if quality == 0:
         quality = 0.01
     accuracy_UWB_localisation = 0.1  # m
-    distrust = accuracy_UWB_localisation + quality/10  # the qualities went higher when we put it in worse conditions??
+    distrust = accuracy_UWB_localisation + (100-quality)/10  # the qualities went higher when we put it in worse conditions??
     # ex measurement: x = 5±0.1 if quality is 100, we want trust_in_measurement to be 1.1
     return distrust
 
