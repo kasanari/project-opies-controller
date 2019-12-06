@@ -44,7 +44,7 @@ def extract_location(tlv_response, n=1, max_index=13):
     list_starts_at_zero_offset = 1
     max_index = max_index - list_starts_at_zero_offset
     quality = tlv_response[n].tlv_value[max_index]  # 13 bytes, little endian. quality is at index = 12
-    actualquality = 100-quality  # decawave gives us an inverted quality..
+    actualquality = 100-value_in_float(quality)  # decawave gives us an inverted quality..
     # initialize y, x, z
     z = tlv_response[n].tlv_value[max_index-1]
     y = tlv_response[n].tlv_value[max_index-5]
@@ -56,7 +56,7 @@ def extract_location(tlv_response, n=1, max_index=13):
         x = x + tlv_response[n].tlv_value[i-8]
 
     c = LocationData(value_in_float(x, millimeter_to_meter=1), value_in_float(y, millimeter_to_meter=1),
-                     value_in_float(z, millimeter_to_meter=1), value_in_float(actualquality))
+                     value_in_float(z, millimeter_to_meter=1), actualquality)
 
     return c
 
