@@ -71,7 +71,7 @@ async def serial_task(*queues, update_delay=0.1):
         # Initalize Kalman Filter
         loc_data = ser_handler.get_location_data()
         kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0, dim_u=1)
-        await speed_control_signal_queue.put(0)  # needed for the first update
+        #await speed_control_signal_queue.put(0)  # needed for the first update
 
         # Send anchor positions to the web
         # anchor_list = ser_handler.get_anchor_distances()
