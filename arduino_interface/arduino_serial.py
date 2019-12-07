@@ -18,7 +18,7 @@ def connect_to_arduino():
                 pass
 
     if ser is None:
-        raise RuntimeError
+        raise serial.SerialException
 
     return ser
 
