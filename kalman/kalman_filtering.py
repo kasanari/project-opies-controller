@@ -54,12 +54,12 @@ def set_B(dim_u):
         b = np.array([[0.],
                      [0.],
                      [0.],
-                     [-1]])
+                     [1]])
     elif dim_u == 2:
         b = np.array([[0., 0.],
                      [0., 0.],
                      [0., 0.],
-                     [-1, 0.]])
+                     [1, 0.]])
     else:
         print("I don't have a model for these control signals/this dim_u. Treating dim_u as 0.")
         b = None
