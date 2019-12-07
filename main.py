@@ -62,15 +62,14 @@ if __name__ == "__main__":
     collect_data = args.collect_data
 
 
-    if not disable_motor:
-        kill_pigpiod()
-        subprocess.run("sudo pigpiod", shell=True, check=True)
+   # if not disable_motor:
+        #kill_pigpiod()
+        #subprocess.run("sudo pigpiod", shell=True, check=True)
 
     try:
 
-        location_server.start_web_client(PORT_NUMBER)
-
         if not collect_data:
+            location_server.start_web_client(PORT_NUMBER)
             asyncio.run(main_task_handler(ip, data_file, disable_motor=disable_motor))
         else:
             asyncio.run(collect_data_task(data_file, disable_motor=disable_motor, no_saving=args.no_saving, out_file=args.out_file))
@@ -79,6 +78,6 @@ if __name__ == "__main__":
         print("Stopping..")
 
     finally:
-        if not disable_motor:
-            kill_pigpiod()
+        #if not disable_motor:
+            #kill_pigpiod()
         pass
