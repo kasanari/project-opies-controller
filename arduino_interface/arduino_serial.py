@@ -30,11 +30,10 @@ async def main(connection):
         loop = asyncio.get_running_loop()
         read_imu = functools.partial(imu.read_IMU, connection=connection)
         with concurrent.futures.ThreadPoolExecutor() as pool:
-            result = await loop.run_in_executor(pool, read_imu)
-        ypr, realaccel, worldaccel = result
-        print(f"ypr: {ypr}")
-        print(f"real_accel: {realaccel}")
-        print(f"worl_accel: {worldaccel}")
+            result: imu.IMUData = await loop.run_in_executor(pool, read_imu)
+        print(f"ypr: {result.rotation}")
+        print(f"real_accel: {result.real_acceleration}")
+        print(f"worl_accel: {result.world_acceleration}")
         print("--------")
 
 

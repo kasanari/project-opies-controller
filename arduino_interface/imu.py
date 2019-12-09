@@ -2,6 +2,29 @@ import re
 import asyncio
 import csv
 import io
+from dataclasses import dataclass
+
+
+@dataclass
+class Transform:
+    x: float
+    y: float
+    z: float
+
+
+@dataclass
+class Rotation:
+    yaw: float
+    pitch: float
+    roll: float
+
+
+@dataclass
+class IMUData:
+    rotation: Rotation
+    real_acceleration: Transform
+    world_acceleration: Transform
+
 
 async def start_IMU(connection):
     try:
@@ -74,7 +97,7 @@ def read_IMU(connection):
     realaccel = read_csv_line(connection)
     worldaccel = read_csv_line(connection)
 
-    ypr_dict = {"yaw": float(ypr[0]), "pitch": float(ypr[1]), "roll": float(ypr[2])}
+    rotation = Rotation(float(ypr[0]), float(ypr[1]), float(ypr[2]))
 
     realaccel_dict = {"x": realaccel[0], "y": realaccel[1], "z": realaccel[2]}
     worldaccel_dict = {"x": worldaccel[0], "y": worldaccel[1], "z": worldaccel[2]}
@@ -82,4 +105,7 @@ def read_IMU(connection):
     realaccel_dict = convert_g_to_acceleration(realaccel_dict)
     worldaccel_dict = convert_g_to_acceleration(worldaccel_dict)
 
-    return ypr_dict, realaccel_dict, worldaccel_dict
+    real_accel = Transform(realaccel_dict["x"], realaccel_dict["y"], realaccel_dict["z"])
+    world_accel = Transform(worldaccel_dict["x"], worldaccel_dict["y"], worldaccel_dict["z"])
+
+    return IMUData(rotation, real_accel, world_accel)
