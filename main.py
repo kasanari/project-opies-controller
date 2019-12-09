@@ -1,32 +1,37 @@
 from web_server import location_server
 from websocket_server.websocket_server import create_websocket_task
-from serial_with_dwm.serial_handler import serial_task
 from analysis.collect_data import fake_serial_task
 from car.motor_control import motor_control_task
 import argparse
 import asyncio
 import subprocess
 from analysis.collect_data import collect_data_task
+from serial_with_dwm.serial_manager import serial_man
+from kalman.kalman_man import kalman_man
 import csv
+from websocket_server.websocket_server import ToWeb
 
 PORT_NUMBER = 8080  # Port for web server
 
 
-async def main_task_handler(ip_addr, serial_data_file=None, disable_motor=False):
-    message_queue = asyncio.Queue()
-    location_queue = asyncio.Queue()
-    serial_to_motor_queue = asyncio.LifoQueue()
+async def main_task_handler(ip_addr: str, serial_data_file: str = None, disable_motor: bool = False):
+    message_queue: asyncio.Queue = asyncio.Queue()
+    estimated_state_queue: asyncio.Queue = asyncio.Queue()
+    measurement_queue: asyncio.Queue = asyncio.Queue()
+    to_web_queue: asyncio.Queue[ToWeb] = asyncio.Queue()
 
     if serial_data_file is None:
-        location_task = asyncio.create_task(serial_task(serial_to_motor_queue, location_queue, update_delay=0.3))
+        serial_man_task = asyncio.create_task(serial_man(measurement_queue, update_delay=0.3))
     else:
-        location_task = asyncio.create_task(fake_serial_task(serial_data_file, serial_to_motor_queue, location_queue, update_delay=0.3))
+        serial_man_task = asyncio.create_task(fake_serial_task(serial_data_file, measurement_queue, update_delay=0.3))
 
-    start_server = create_websocket_task(ip_addr, message_queue, location_queue)
+    kalman_task = asyncio.create_task(kalman_man(measurement_queue, estimated_state_queue, to_web_queue=to_web_queue))
 
-    motor_task = asyncio.create_task(motor_control_task(message_queue, serial_to_motor_queue, debug_no_car=disable_motor))
+    motor_task = asyncio.create_task(motor_control_task(message_queue, measurement_queue, estimated_state_queue, debug_no_car=disable_motor))
 
-    await asyncio.gather(start_server, motor_task, location_task)
+    websocket_task = create_websocket_task(ip_addr, message_queue, to_web_queue)
+
+    await asyncio.gather(serial_man_task, kalman_task, motor_task, websocket_task)
 
 
 def start_pigpiod():

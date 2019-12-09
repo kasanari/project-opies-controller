@@ -4,6 +4,7 @@ from serial_with_dwm.location_data_handler import LocationData
 import numpy as np
 import asyncio
 import pandas as pd
+from asyncio import Queue
 
 def position_error(target_x, target_y, x, y):
     y_diff = target_y - y
@@ -40,7 +41,7 @@ def logger(self, **kwargs):
     time_stamp = pd.Timestamp.utcnow()
     self.data_log = self.data_log.append(pd.DataFrame(kwargs, index=[time_stamp]))
 
-async def auto_steer_task(rc_car, destination, from_serial_queue, distance_control = False):
+async def auto_steer_task(rc_car, destination, measurement_queue: Queue, estimated_state_queue: Queue, distance_control = False):
 
     target_x = destination['x']
     target_y = destination['y']
@@ -66,11 +67,12 @@ async def auto_steer_task(rc_car, destination, from_serial_queue, distance_contr
                     return
 
 
-            _, location = await from_serial_queue.get()  # location = location_filtered
-
+            measurements = await measurement_queue.get()  # location = location_filtered
+            await measurement_queue.put(measurements)
+            loc_data, imu_data = measurements
 
             #e_angle = angle_error(target_x, target_y, location.x, location.y)
-            y_diff, x_diff = position_error(target_x, target_y, location.x, location.y)
+            y_diff, x_diff = position_error(target_x, target_y, loc_data.x, loc_data.y)
 
             if y_diff > 0:
                 acceleration = 0.2

@@ -5,6 +5,30 @@ import json
 import random
 import datetime
 import functools
+from serial_with_dwm.location_data_handler import LocationData
+from arduino_interface.imu import IMUData
+from dataclasses import dataclass, asdict
+
+
+@dataclass
+class ToWeb:
+    type: str
+    estimated_state: LocationData
+    location_measurements: LocationData
+    imu_measurements: IMUData
+    anchors = None
+
+    def generate_json_msg(self):
+        msg_dict = {'type': self.type,
+                    'estimation': self.estimated_state.get_as_dict(),
+                    'location': self.location_measurements.get_as_dict(),
+                    'imu': asdict(self.imu_measurements),
+                    }
+
+        if self.anchors is not None:
+            msg_dict['anchors'] = [asdict(anchor) for anchor in self.anchors]
+
+        return json.dumps(msg_dict)
 
 
 async def time():  # TODO change this to send location info as well as time
@@ -19,26 +43,19 @@ async def time():  # TODO change this to send location info as well as time
     return json.dumps(data_to_send)
 
 
-def create_websocket_task(ip_addr, message_queue, location_queue):
+def create_websocket_task(ip_addr, message_queue, to_web_queue):
     """Creates a task for running the websocket server"""
-    handler_func = functools.partial(handler, message_queue=message_queue, location_queue=location_queue)
+    handler_func = functools.partial(handler, message_queue=message_queue, to_web_queue = to_web_queue)
 
     return websockets.serve(handler_func, ip_addr, 5678)
 
 
-async def send_handler(websocket, path, location_queue):
+async def send_handler(websocket, path, send_queue):
     """ Sends location data (only time currently) to client """
     print("Client Connected!")
     while True:
-        loc_message, loc_filtered_message = await location_queue.get()
-        loc_dict = {
-            'x': loc_message.x,
-            'x_kf': loc_filtered_message.x,
-            'y': loc_message.y,
-            'y_kf': loc_filtered_message.y,
-            'quality': loc_message.quality
-        }
-        await websocket.send(json.dumps(loc_dict)) #filtered_message.get_as_dict()))
+        message: ToWeb = await send_queue.get()
+        await websocket.send(message.generate_json_msg())  # filtered_message.get_as_dict()))
 
 
 async def receive_handler(websocket, path, queue):
@@ -53,10 +70,10 @@ async def receive_handler(websocket, path, queue):
         return
 
 
-async def handler(websocket: WebSocketServerProtocol, path: str, message_queue, location_queue):
+async def handler(websocket: WebSocketServerProtocol, path: str, message_queue, to_web_queue):
     """ Starts all tasks related to websockets and motor control"""
     receive_msg_task = asyncio.create_task(receive_handler(websocket, path, message_queue))
-    send_msg_task = asyncio.create_task(send_handler(websocket, path, location_queue))
+    send_msg_task = asyncio.create_task(send_handler(websocket, path, to_web_queue))
 
     done, pending = await asyncio.wait([receive_msg_task, send_msg_task], return_when=asyncio.FIRST_COMPLETED)
     print("Client Disconnected!")
