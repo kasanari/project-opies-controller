@@ -19,14 +19,27 @@ class ToWeb:
     anchors = None
 
     def generate_json_msg(self):
-        msg_dict = {'type': self.type,
-                    'estimation': self.estimated_state.get_as_dict(),
-                    'location': self.location_measurements.get_as_dict(),
-                    'imu': asdict(self.imu_measurements),
-                    }
+        msg_dict = {'type': self.type}
+
+        if self.location_measurements is not None:
+            msg_dict['estimation'] = self.estimated_state.get_as_dict()
+        else:
+            msg_dict['estimation'] = {}
+
+        if self.location_measurements.get_as_dict() is not None:
+            msg_dict['location'] = self.location_measurements.get_as_dict()
+        else:
+            msg_dict['location'] = {}
+
+        if self.location_measurements.get_as_dict() is not None:
+            msg_dict['imu'] = asdict(self.imu_measurements)
+        else:
+            msg_dict['imu'] = {}
 
         if self.anchors is not None:
             msg_dict['anchors'] = [asdict(anchor) for anchor in self.anchors]
+        else:
+            msg_dict['anchors'] = {}
 
         return json.dumps(msg_dict)
 
