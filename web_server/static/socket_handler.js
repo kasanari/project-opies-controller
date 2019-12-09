@@ -16,13 +16,14 @@ function eventHandler(event) {
     addMessage(event.data);
     var data = JSON.parse(event.data);
 
-    position = {'x':data.x, 'y':data.y};
+    position = {'x':data.location.x, 'y':data.location.y};
 
     //myLineChart.data.datasets[0].data.shift();
 
         if (graph_index % 40 === 0) {
             graph_index = 0;
             myLineChart.data.datasets[0].data[graph_index] = position;
+            graph_index++;
         } else {
             myLineChart.data.datasets[0].data[graph_index] = position;
             graph_index++;
