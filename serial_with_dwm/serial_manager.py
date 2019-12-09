@@ -47,8 +47,8 @@ async def serial_man(state_queue: Queue, update_delay: float = 0.3):
                 result_tag_task = event_loop.run_in_executor(pool, read_tag)
                 result_imu, result_tag = await asyncio.gather(result_imu_task, result_tag_task)
 
-            print(result_imu)
-            print(result_tag)
+            # print(result_imu)
+            # print(result_tag)
             state_queue.put_nowait([result_tag, result_imu])
 
             #print(result_tag)
