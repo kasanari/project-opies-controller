@@ -6,6 +6,9 @@ import functools
 import datetime
 import serial
 from serial_with_dwm.serial_handler import SerialHandler
+from asyncio import Queue
+from arduino_interface.imu import IMUData
+from serial_with_dwm.location_data_handler import LocationData
 
 
 def fetch_location_data(ser_handler):
@@ -15,43 +18,47 @@ def fetch_location_data(ser_handler):
     return loc_data
 
 
-async def serial_man():
+async def serial_man(state_queue: Queue, update_delay: float = 0.3):
     ser_con = None
     arduino_con = None
 
     try:
+        arduino_con = arduino.connect_to_arduino()
+        success = await imu.start_IMU(arduino_con)
+
+        if not success:
+            print("Failed to setup IMU")
+
+        try:
+            ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
+
+        except serial.SerialException:
+            print("Failed to connect to tag")
+
+        ser_handler = SerialHandler(ser_con)
+        read_imu = functools.partial(imu.read_IMU, connection=arduino_con)
+        read_tag = functools.partial(fetch_location_data, ser_handler=ser_handler)
+        event_loop = asyncio.get_running_loop()
+
         while True:
-            arduino_con = arduino.connect_to_arduino()
 
-            try:
-                ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
-            except serial.SerialException:
-                print("Failed to connect to tag")
-
-            success = await imu.start_IMU(arduino_con)
-
-            ser_handler = SerialHandler(ser_con)
-
-            read_imu = functools.partial(imu.read_IMU, connection=arduino_con)
-            read_tag = functools.partial(fetch_location_data, ser_handler=ser_handler)
-
-            event_loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
-
-
                 result_imu_task = event_loop.run_in_executor(pool, read_imu)
                 result_tag_task = event_loop.run_in_executor(pool, read_tag)
                 result_imu, result_tag = await asyncio.gather(result_imu_task, result_tag_task)
 
-
-
+            print(result_imu)
             print(result_tag)
+            state_queue.put_nowait([result_tag, result_imu])
 
-            ypr, realaccel, worldaccel = result_imu
-            print(f"ypr: {ypr}")
-            print(f"real_accel: {realaccel}")
-            print(f"worl_accel: {worldaccel}")
-            print("--------")
+            #print(result_tag)
+
+            #ypr, realaccel, worldaccel = result_imu
+            #print(f"ypr: {ypr}")
+            #print(f"real_accel: {realaccel}")
+            #print(f"worl_accel: {worldaccel}")
+            #print("--------")
+            await asyncio.sleep(update_delay)
 
             #dt_measurements = update_delay + seconds
             #steering_signal = np.array([1])  # temp
@@ -67,4 +74,5 @@ async def serial_man():
             arduino_con.close()
 
 if __name__ == "__main__":
-     asyncio.run(serial_man())
+     state_queue = Queue()
+     asyncio.run(serial_man(state_queue, update_delay=0.3))
