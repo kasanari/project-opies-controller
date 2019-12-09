@@ -90,22 +90,28 @@ def convert_g_to_acceleration(gs):
 
 
 def read_IMU(connection):
-    msg = "a\n".encode()
-    connection.write(msg)
+    try:
+        msg = "a\n".encode()
+        connection.write(msg)
 
-    ypr = read_csv_line(connection)
-    realaccel = read_csv_line(connection)
-    worldaccel = read_csv_line(connection)
+        ypr = read_csv_line(connection)
+        realaccel = read_csv_line(connection)
+        worldaccel = read_csv_line(connection)
 
-    rotation = Rotation(float(ypr[0]), float(ypr[1]), float(ypr[2]))
+        rotation = Rotation(float(ypr[0]), float(ypr[1]), float(ypr[2]))
 
-    realaccel_dict = {"x": realaccel[0], "y": realaccel[1], "z": realaccel[2]}
-    worldaccel_dict = {"x": worldaccel[0], "y": worldaccel[1], "z": worldaccel[2]}
+        realaccel_dict = {"x": realaccel[0], "y": realaccel[1], "z": realaccel[2]}
+        worldaccel_dict = {"x": worldaccel[0], "y": worldaccel[1], "z": worldaccel[2]}
 
-    realaccel_dict = convert_g_to_acceleration(realaccel_dict)
-    worldaccel_dict = convert_g_to_acceleration(worldaccel_dict)
+        realaccel_dict = convert_g_to_acceleration(realaccel_dict)
+        worldaccel_dict = convert_g_to_acceleration(worldaccel_dict)
 
-    real_accel = Transform(realaccel_dict["x"], realaccel_dict["y"], realaccel_dict["z"])
-    world_accel = Transform(worldaccel_dict["x"], worldaccel_dict["y"], worldaccel_dict["z"])
+        real_accel = Transform(realaccel_dict["x"], realaccel_dict["y"], realaccel_dict["z"])
+        world_accel = Transform(worldaccel_dict["x"], worldaccel_dict["y"], worldaccel_dict["z"])
+        return IMUData(rotation, real_accel, world_accel)
+    except RuntimeError as e:
+        print(e)
+        print("IMU read failed.")
+        return None
 
-    return IMUData(rotation, real_accel, world_accel)
+
