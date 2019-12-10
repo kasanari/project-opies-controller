@@ -5,14 +5,14 @@ import numpy as np
 from websocket_server.websocket_server import ToWeb
 
 
-async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_web_queue=None, control_queue=None, update_delay=0.1, dim_u=0, use_acc=True):
+async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_web_queue=None, control_queue=None, update_delay=0.1, dim_u=0, dim_x = 6, use_acc=True):
 
     # Initalize Kalman Filter
     measurements = await measurement_queue.get()
     await measurement_queue.put(measurements)
     loc_data, imu_data = measurements
 
-    kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0, dim_u=dim_u)
+    kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0, dim_x=dim_x, dim_u=dim_u, use_acc=use_acc)
 
     while True:
         try:

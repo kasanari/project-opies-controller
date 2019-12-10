@@ -18,7 +18,7 @@ def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0, co
     kf = KalmanFilter(dim_x=dim_x, dim_z=dim_z, dim_u=dim_u)
 
     # init state vector x
-    kf.x = set_x(loc_data, dim_x)
+    kf.x = set_x(loc_data, use_acc=use_acc)
     kf.F = set_F(dt, use_acc=use_acc)
     kf.H = set_H(use_acc=use_acc)
     kf.B = set_B(dim_u)  # only functional for x_dim = 4 right now
@@ -32,13 +32,11 @@ def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0, co
     return kf
 
 
-def set_x(loc_data, dim_x: float):
-    if dim_x == 4:
-        x = np.array([loc_data.x, loc_data.y, 0.0, 0.0])  # initialize with first loc_data x and y, 0 in v and a
-    else:
-        if dim_x != 6:
-            print("Unrecognised amount of state variables. Setting x_dim=6")
+def set_x(loc_data, use_acc):
+    if use_acc:
         x = np.array([loc_data.x, loc_data.y, 0.0, 0.0, 0.0, 0.0])
+    else:
+        x = np.array([loc_data.x, loc_data.y, 0.0, 0.0])  # initialize with first loc_data x and y, 0 in v and a
     return x
 
 
