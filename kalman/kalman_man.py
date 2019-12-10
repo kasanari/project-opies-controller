@@ -5,7 +5,7 @@ import numpy as np
 from websocket_server.websocket_server import ToWeb
 
 
-async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_web_queue=None, control_queue=None, update_delay=0.1, dim_u=0):
+async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_web_queue=None, control_queue=None, update_delay=0.1, dim_u=0, use_acc=True):
 
     # Initalize Kalman Filter
     measurements = await measurement_queue.get()
@@ -25,7 +25,7 @@ async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_
             steering_signal = control_queue.get_nowait()
         else:
             steering_signal = np.array([0])
-        loc_data_filtered = kalman_updates(kf, loc_data, timestep=0.1, u=steering_signal)
+        loc_data_filtered = kalman_updates(kf, loc_data, imu_data, timestep=0.1, use_acc=use_acc)
         estimated_state_queue.put_nowait(loc_data_filtered)
 
         if to_web_queue is not None:

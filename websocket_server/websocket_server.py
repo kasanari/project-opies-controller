@@ -6,6 +6,7 @@ import random
 import datetime
 import functools
 from serial_with_dwm.location_data_handler import LocationData
+from kalman.kalman_filtering import EstimatedState
 from arduino_interface.imu import IMUData
 from dataclasses import dataclass, asdict
 
@@ -13,7 +14,7 @@ from dataclasses import dataclass, asdict
 @dataclass
 class ToWeb:
     type: str
-    estimated_state: LocationData
+    estimated_state: EstimatedState
     location_measurements: LocationData
     imu_measurements: IMUData
     anchors = None
@@ -22,7 +23,7 @@ class ToWeb:
         msg_dict = {'type': self.type}
 
         if self.location_measurements is not None:
-            msg_dict['estimation'] = self.estimated_state.get_as_dict()
+            msg_dict['estimation'] = asdict(self.estimated_state)
         else:
             msg_dict['estimation'] = {}
 
