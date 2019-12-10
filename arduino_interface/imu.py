@@ -60,31 +60,22 @@ async def calibrate_IMU(connection):
 
 
 def read_csv_line(connection):
-    values = []
-
-    while len(values) < 3:
+    matches = []
+    retries = 0
+    while len(matches) < 3 and retries < 10:
 
         line = connection.readline().strip()
         line_str = line.decode()
 
-        reader = csv.reader(
-            io.StringIO(line_str),
-            delimiter=',',
-            quotechar='"',
-            skipinitialspace=True,
-        )
+        matches = re.findall(r"(-?\d+\.?\d*)", line_str)
 
-        try:
-            values = next(reader)
-        except StopIteration:
-            values = []
-
+    values = [float(x) for x in matches]
     return values
 
 
 def convert_g_to_acceleration(gs):
     for key in gs:
-        gs[key] = (float(gs[key]) / 8192) * 9.82
+        gs[key] = (gs[key] / 8192) * 9.82
 
     return gs
 
@@ -98,7 +89,7 @@ def read_IMU(connection):
         realaccel = read_csv_line(connection)
         worldaccel = read_csv_line(connection)
 
-        rotation = Rotation(float(ypr[0]), float(ypr[1]), float(ypr[2]))
+        rotation = Rotation(ypr[0], ypr[1], ypr[2])
 
         realaccel_dict = {"x": realaccel[0], "y": realaccel[1], "z": realaccel[2]}
         worldaccel_dict = {"x": worldaccel[0], "y": worldaccel[1], "z": worldaccel[2]}
