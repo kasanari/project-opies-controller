@@ -5,6 +5,13 @@ import numpy as np
 import asyncio
 import pandas as pd
 from asyncio import Queue
+from dataclasses import dataclass
+
+@dataclass
+class Target:
+    x: float
+    y: float
+    yaw: float
 
 def position_error(target_x, target_y, x, y):
     y_diff = target_y - y
