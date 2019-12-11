@@ -19,6 +19,7 @@ class Target:
     x: float
     y: float
     yaw: float
+    velocity: float
 
 @dataclass
 class ControlSignal:
@@ -26,7 +27,7 @@ class ControlSignal:
     steering: float
 
     def to_numpy(self):
-        return np.array([[self.velocity], [self.steering]])
+        return np.array([self.velocity, self.steering])
 
 
 def position_error(target_x, target_y, x, y):
@@ -68,13 +69,12 @@ def calculate_lyapunov_errors(target: Target, position: LocationData, angle):
 
 
 async def auto_steer_task(rc_car,
-                          destination,
+                          target: Target,
                           measurement_queue: Queue,
                           estimated_state_queue: Queue,
                           control_signal_queue: Queue = None,
                           distance_control=False):
 
-    target: Target = Target(destination['x'], destination['y'], 0)
     loc_data: LocationData
     imu_data: IMUData
     arduino_connection: Serial
@@ -83,9 +83,7 @@ async def auto_steer_task(rc_car,
 
     control_signal = ControlSignal(0, 0)
 
-    await control_signal_queue.put(control_signal)
-
-    speed_controller = PIDController(K_p=0.2, K_d=0.05, K_i=0.0002)
+    speed_controller = PIDController(K_p=0.2, K_d=0.02, K_i=0.0002)
     steering_controller = SteeringController()
 
     if distance_control:
@@ -103,10 +101,10 @@ async def auto_steer_task(rc_car,
                     return
 
             measurements = await measurement_queue.get()  # location = location_filtered
-            await measurement_queue.put(measurements)
+            measurement_queue.put_nowait(measurements)
             loc_data, imu_data = measurements
             estimated_state: EstimatedState = await estimated_state_queue.get()
-            await estimated_state_queue.put(estimated_state)
+            estimated_state_queue.put_nowait(estimated_state)
 
             # e_angle = angle_error(target_x, target_y, location.x, location.y)
             # y_diff, x_diff = position_error(target_x, target_y, loc_data.x, loc_data.y)
@@ -119,11 +117,13 @@ async def auto_steer_task(rc_car,
                 await rc_car.brake()
                 return
 
-            target_v_y = 2
+            target_v_y = target.velocity
             e_v_y = target_v_y - estimated_state.y_v_est
-            acceleration = speed_controller.get_control_signal(e_v_y, time.time(), P=True, D=True, I=True)
+            acceleration = speed_controller.get_control_signal(e_v_y, time.time(), P=True, D=True, I=False)
             u_angle = steering_controller.get_control_signal(speed, e_angle, e_x,
                                                              time.time())  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
+
+            acceleration = 0 if acceleration < 0 else acceleration
 
             print(f"acceleration: {acceleration}")
             print(f"u_angle: {u_angle}")
@@ -135,7 +135,7 @@ async def auto_steer_task(rc_car,
             rc_car.set_acceleration(acceleration)
 
             print(f"---- {time.time()} ----")
-            await control_signal_queue.put(control_signal)
+            control_signal_queue.put_nowait(control_signal)
             await asyncio.sleep(0.05)
 
     except asyncio.CancelledError as e:

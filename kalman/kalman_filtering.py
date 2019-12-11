@@ -150,8 +150,8 @@ def measurement_noise_update(distrust_value, use_acc=False):
     var_y = distrust_value
 
     if use_acc:
-        var_acc_y = 0.001
-        var_acc_x = 0.001
+        var_acc_y = 0.5
+        var_acc_x = 0.5
         r = np.array([[var_x, 0., 0., 0.],
                       [0., var_y, 0., 0.],
                       [0., 0., var_acc_x, 0.],

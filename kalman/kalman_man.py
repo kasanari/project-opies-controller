@@ -22,8 +22,15 @@ async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_
         except asyncio.TimeoutError:
             print("Dead reckoning")
         if control_queue is not None:
-            steering_signal_object = control_queue.get_nowait()
-            steering_signal = steering_signal_object.to_numpy()
+
+            try:
+                steering_signal = await control_queue.get()
+                control_queue.put_nowait(steering_signal)
+                steering_signal = steering_signal.to_numpy()
+            except asyncio.QueueEmpty:
+                print("No control signal!")
+                steering_signal = np.array([0, 0])
+
         else:
             steering_signal = np.array([0, 0])
         estimated_state = kalman_updates(kf, loc_data, imu_data, u=steering_signal, timestep=0.1, use_acc=use_acc)

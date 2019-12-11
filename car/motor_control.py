@@ -1,6 +1,6 @@
 import asyncio
 from car.car import Car
-from car.auto_steering import auto_steer_task
+from car.auto_steering import auto_steer_task, Target
 
 
 def control_car_from_message(rc_car, message):
@@ -46,11 +46,23 @@ async def motor_control_task(web_queue, measurement_queue, estimated_state_queue
             elif message_type == "destination":
                 x_destination = message["x"]
                 y_destination = message["y"]
-                destination = {'x': float(x_destination), 'y': float(y_destination)}
+
+                try:
+                    yaw = message["yaw"]
+                except KeyError:
+                    yaw = 0
+
+                try:
+                    speed = message["speed"]
+                except KeyError:
+                    speed = 2
+
                 if auto_steer is not None:
                     auto_steer.cancel()
+
+                target = Target(x_destination, y_destination, yaw, speed)
                 auto_steer = asyncio.create_task(auto_steer_task(rc_car,
-                                                                 destination,
+                                                                 target,
                                                                  measurement_queue,
                                                                  estimated_state_queue,
                                                                  control_signal_queue))

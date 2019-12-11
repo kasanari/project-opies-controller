@@ -32,7 +32,7 @@ async def main_task_handler(ip_addr: str, serial_data_file: str = None, disable_
                                                  to_web_queue=to_web_queue,
                                                  control_queue=control_signal_queue,
                                                  dim_x=6,
-                                                 dim_u = 2
+                                                 dim_u = 2,
                                                  use_acc=True))
 
     motor_task = asyncio.create_task(motor_control_task(message_queue,

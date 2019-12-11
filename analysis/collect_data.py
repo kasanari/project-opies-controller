@@ -10,7 +10,7 @@ import os
 import argparse
 
 from arduino_interface.imu import IMUData
-from car.auto_steering import Target
+from car.auto_steering import Target, ControlSignal
 from car.motor_control import motor_control_task
 from kalman.kalman_filtering import init_kalman_filter, kalman_updates, EstimatedState
 from kalman.kalman_man import kalman_man
@@ -58,6 +58,13 @@ def create_plots(dataframe, filename_timestamp):
     dataframe.reset_index().plot(x='index', y=['a_y', 'a_x'])
     plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration.png"))
 
+    # Control
+    dataframe.reset_index().plot(x='index', y=['u_v', 'target_v', 'y_dot'])
+    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity_control.png"))
+
+    dataframe.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw'])
+    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_steering_control.png"))
+
 async def fake_serial_task(data_file, *queues, update_delay=0.1):
     loc_data = lambda row: LocationData(float(row['x']), float(row['y']), 0, float(row['quality']))
     with open(data_file, newline='') as csvfile:
@@ -79,16 +86,20 @@ async def fake_serial_task(data_file, *queues, update_delay=0.1):
                 await asyncio.gather(*tasks)
                 await asyncio.sleep(update_delay)
 
-async def log_task(measurement_queue, estimated_state_queue: Queue, target: Target):
+async def log_task(measurement_queue,
+                   estimated_state_queue: Queue,
+                   control_signal_queue: Queue,
+                   target: Target):
     location_df = pd.DataFrame()
     start_time = time.time()
     imu_data: IMUData
     try:
         while True:
-            measurements = await measurement_queue.get()
-            loc_data, imu_data = measurements
-
             estimated_state: EstimatedState = await estimated_state_queue.get()
+            measurements = await measurement_queue.get()
+            #control_signal: ControlSignal = await control_signal_queue.get()
+            control_signal = ControlSignal(0, 0)
+            loc_data, imu_data = measurements
 
             locations = {
                 'x': loc_data.x,
@@ -102,11 +113,15 @@ async def log_task(measurement_queue, estimated_state_queue: Queue, target: Targ
                 'x_dot': estimated_state.x_v_est,
                 'a_x': imu_data.real_acceleration.x,
                 'a_y': imu_data.real_acceleration.y,
-                'yaw': imu_data.rotation.yaw
+                'yaw': imu_data.rotation.yaw,
+                'u_v': control_signal.velocity,
+                'u_yaw': control_signal.steering,
+                'target_yaw': target.yaw,
+                'target_v': target.velocity
             }
-            print(f"logging task: x is {loc_data.x}")
-            print(f"logging task: x_kf is {estimated_state.location_est.x}")
-            print(f"quality is {loc_data.quality}")
+            #print(f"logging task: x is {loc_data.x}")
+            #print(f"logging task: x_kf is {estimated_state.location_est.x}")
+            #print(f"quality is {loc_data.quality}")
             time_stamp = (time.time() - start_time)
             location_df = location_df.append(pd.DataFrame(locations, index=[time_stamp]))
 
@@ -119,8 +134,11 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
     message_queue = asyncio.Queue()
     measurement_queue = asyncio.Queue()
     estimated_state_queue = asyncio.Queue()
+    control_queue = asyncio.Queue()
     motor_task = None
     fake_serial = False
+
+    control_queue.put_nowait(ControlSignal(0, 0))
 
     if data_file is None:
         location_task = asyncio.create_task(serial_man(measurement_queue)) # use real serial
@@ -128,16 +146,19 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
         location_task = asyncio.create_task(fake_serial_task(data_file, measurement_queue)) #get data from file
         fake_serial = True
 
-    kalman_task = asyncio.create_task(kalman_man(measurement_queue, estimated_state_queue, dim_x=6, use_acc=True))
+    kalman_task = asyncio.create_task(kalman_man(measurement_queue, estimated_state_queue, control_queue=control_queue, dim_u=2, use_acc=True))
 
-    target = Target(0.8, 1.7, 0)
+    target = Target(0.8, 1.7, 0, 2)
 
     if not disable_motor:
-        message = {'type': "destination", 'x': target.x, 'y': target.y}
+        message = {'type': "destination", 'x': target.x, 'y': target.y, "yaw": target.yaw, "speed": target.velocity}
         await message_queue.put(message)
-        motor_task = asyncio.create_task(motor_control_task(message_queue, measurement_queue, estimated_state_queue))
+        motor_task = asyncio.create_task(motor_control_task(message_queue,
+                                                            measurement_queue,
+                                                            estimated_state_queue,
+                                                            control_signal_queue=control_queue))
 
-    logging_task = asyncio.create_task(log_task(measurement_queue, estimated_state_queue, target))
+    logging_task = asyncio.create_task(log_task(measurement_queue, estimated_state_queue, control_queue, target))
 
     await asyncio.sleep(sleep_time)
     location_task.cancel()
