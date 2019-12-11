@@ -96,6 +96,7 @@ async def auto_steer_task(rc_car, destination, measurement_queue: Queue, estimat
             rc_car.set_wheel_angle(angle)
             rc_car.set_acceleration(acceleration)
             print(f"---- {loop.time()} ----")
+            await asyncio.sleep(0.1)
 
     except asyncio.CancelledError as e:
         print(e)
