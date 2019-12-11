@@ -9,12 +9,14 @@ class EstimatedState:
     location_est: LocationData
     x_v_est: float
     y_v_est: float
+    log_likelihood: float
+    likelihood: float
 #    x_acc_est: float
 #    y_acc_est: float
 
 
 # var_x and var_y in meters
-def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0, covar_x_y=0.2):
+def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0):
     kf = KalmanFilter(dim_x=dim_x, dim_z=dim_z, dim_u=dim_u)
 
     # init state vector x
@@ -23,10 +25,10 @@ def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0, co
     kf.H = set_H(use_acc=use_acc)
     kf.B = set_B(dim_u)  # only functional for x_dim = 4 right now
 
-    distrust_in_value = calculate_distrust(loc_data.quality)
-    kf.P *= distrust_in_value
+    measurement_variance = 0.007
+    kf.P *= measurement_variance  # add offset?
 
-    kf.R = measurement_noise_update(distrust_value=distrust_in_value, covar_x_y=covar_x_y, use_acc=use_acc)  # measurement noise
+    kf.R = measurement_noise_update(distrust_value=measurement_variance, use_acc=use_acc)  # measurement noise
     kf.Q = set_Q(dt, use_acc=use_acc)  # process noise
 
     return kf
@@ -142,20 +144,20 @@ def measurement_update(loc_data, imu_data: IMUData, use_acc=False):
     return z
 
 
-def measurement_noise_update(distrust_value, covar_x_y=0.0, use_acc=False):  # TODO: changed covar to 0.0, does this affect the result positively?
+def measurement_noise_update(distrust_value, use_acc=False):
     var_x = distrust_value
     var_y = distrust_value
 
     if use_acc:
-        var_acc_y = 0.8
-        var_acc_x = 0.8
+        var_acc_y = 0.001
+        var_acc_x = 0.001
         r = np.array([[var_x, 0., 0., 0.],
                       [0., var_y, 0., 0.],
                       [0., 0., var_acc_x, 0.],
                       [0., 0., 0., var_acc_y]])
     else:
-        r = np.array([[var_x, covar_x_y],
-                      [covar_x_y, var_y]])
+        r = np.array([[var_x, 0.],
+                      [0., var_y]])
     return r
 
 # # #
@@ -169,7 +171,7 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     if loc_data is not None:
         z = measurement_update(loc_data, imu_data, use_acc=use_acc)
         distrust_in_measurement = calculate_distrust(loc_data.quality)
-        kf.R = measurement_noise_update(0.068, use_acc=use_acc)
+        kf.R = measurement_noise_update(0.007, use_acc=use_acc)
         loc_quality = loc_data.quality
     else:
         z = kf.z
@@ -185,7 +187,10 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     y_kf = float("{0:.2f}".format(kf.x[1]))
     x_velocity = float("{0:.2f}".format(kf.x[2]))
     y_velocity = float("{0:.2f}".format(kf.x[3]))
+    log_likelihood = float("{0:.2f}".format(kf.log_likelihood))
+    likelihood = float("{0:.2f}".format(kf.likelihood))
     filtered_loc = LocationData(x=x_kf, y=y_kf, z=0, quality=loc_quality)
-    estimated_state = EstimatedState(filtered_loc, x_v_est=x_velocity, y_v_est=y_velocity)
+    estimated_state = EstimatedState(filtered_loc, x_v_est=x_velocity, y_v_est=y_velocity,
+                                     log_likelihood=log_likelihood, likelihood=likelihood)
 
     return estimated_state

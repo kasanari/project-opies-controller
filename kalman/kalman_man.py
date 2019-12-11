@@ -12,7 +12,7 @@ async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_
     await measurement_queue.put(measurements)
     loc_data, imu_data = measurements
 
-    kf = init_kalman_filter(loc_data, dt=update_delay, covar_x_y=0, dim_x=dim_x, dim_u=dim_u, use_acc=use_acc)
+    kf = init_kalman_filter(loc_data, dt=update_delay, dim_x=dim_x, dim_u=dim_u, use_acc=use_acc)
 
     while True:
         try:
