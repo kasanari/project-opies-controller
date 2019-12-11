@@ -100,7 +100,7 @@ def set_Q(dt, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_d
     return q
 
 
-def set_B(dim_u):
+def set_B(dim_u, use_acc=True):
     if dim_u == 0:
         b = None
     elif dim_u == 1:
@@ -108,11 +108,22 @@ def set_B(dim_u):
                      [0.],
                      [0.],
                      [1]])
+
     elif dim_u == 2:
+        if use_acc:
         b = np.array([[0., 0.],
                      [0., 0.],
                      [0., 0.],
+                         [1., 0.],
+                          [0., 0.],
+                          [0., 0.]])
+
+        else:
+            b = np.array([[0., 0.],
+                         [0., 0.],
+                         [0., 0.],
                      [1, 0.]])
+
     else:
         print("I don't have a model for these control signals/this dim_u. Treating dim_u as 0.")
         b = None
@@ -178,7 +189,7 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
         kf.R = measurement_noise_update(500, use_acc=use_acc)  # High value, prefer process model
         loc_quality = -99
     if u is not None:
-        if u < 0:
+        if u[0, 0] < 0:
             u = kf.x[3]  # last y_dot.  # TODO: for u=u_steering, controlling y_dot only. Change if changed!!
     kf.predict(u=u)
     kf.update(z)

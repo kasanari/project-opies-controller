@@ -26,11 +26,13 @@ async def main_task_handler(ip_addr: str, serial_data_file: str = None, disable_
     else:
         serial_man_task = asyncio.create_task(fake_serial_task(serial_data_file, measurement_queue, update_delay=0.3))
 
+
     kalman_task = asyncio.create_task(kalman_man(measurement_queue,
                                                  estimated_state_queue,
                                                  to_web_queue=to_web_queue,
                                                  control_queue=control_signal_queue,
                                                  dim_x=6,
+                                                 dim_u = 2
                                                  use_acc=True))
 
     motor_task = asyncio.create_task(motor_control_task(message_queue,
