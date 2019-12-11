@@ -25,10 +25,10 @@ def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0):
     kf.H = set_H(use_acc=use_acc)
     kf.B = set_B(dim_u)  # only functional for x_dim = 4 right now
 
-    distrust_in_value = calculate_distrust(loc_data.quality)
-    kf.P *= distrust_in_value
+    measurement_variance = 0.007
+    kf.P *= measurement_variance  # add offset?
 
-    kf.R = measurement_noise_update(distrust_value=distrust_in_value, use_acc=use_acc)  # measurement noise
+    kf.R = measurement_noise_update(distrust_value=measurement_variance, use_acc=use_acc)  # measurement noise
     kf.Q = set_Q(dt, use_acc=use_acc)  # process noise
 
     return kf
@@ -149,8 +149,8 @@ def measurement_noise_update(distrust_value, use_acc=False):
     var_y = distrust_value
 
     if use_acc:
-        var_acc_y = 0.8
-        var_acc_x = 0.8
+        var_acc_y = 0.001
+        var_acc_x = 0.001
         r = np.array([[var_x, 0., 0., 0.],
                       [0., var_y, 0., 0.],
                       [0., 0., var_acc_x, 0.],
@@ -171,7 +171,7 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     if loc_data is not None:
         z = measurement_update(loc_data, imu_data, use_acc=use_acc)
         distrust_in_measurement = calculate_distrust(loc_data.quality)
-        kf.R = measurement_noise_update(0.068, use_acc=use_acc)
+        kf.R = measurement_noise_update(0.007, use_acc=use_acc)
         loc_quality = loc_data.quality
     else:
         z = kf.z
