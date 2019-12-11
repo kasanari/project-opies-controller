@@ -20,7 +20,6 @@ import time
 from serial_with_dwm.serial_manager import serial_man
 
 matplotlib.use('Agg')
-sleep_time = 120
 
 def fancy_scatter_plot(data, filename_timestamp):
     colors = data['quality']
@@ -116,7 +115,7 @@ async def log_task(measurement_queue, estimated_state_queue: Queue, target: Targ
         return location_df
 
 
-async def collect_data_task(data_file=None, disable_motor=True, no_saving=False, out_file=None) :
+async def collect_data_task(data_file=None, disable_motor=True, no_saving=False, out_file=None, sleep_time=10):
     message_queue = asyncio.Queue()
     measurement_queue = asyncio.Queue()
     estimated_state_queue = asyncio.Queue()

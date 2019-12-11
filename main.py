@@ -58,6 +58,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", nargs='?', dest="out_file", help="output file name, in csv format. Defaults to a timestamp.")
     parser.add_argument("--no-saving", dest='no_saving', action='store_true', help="Disables saving results to a file")
     parser.add_argument("--collect-data", action="store_true")
+    parser.add_argument("--sleep-time", nargs='?')
 
     args = parser.parse_args()
 
@@ -65,6 +66,7 @@ if __name__ == "__main__":
     data_file = args.fake_serial
     disable_motor = args.disable_motor
     collect_data = args.collect_data
+    sleep_time = args.sleep_time
 
 
    # if not disable_motor:
@@ -77,7 +79,7 @@ if __name__ == "__main__":
             location_server.start_web_client(PORT_NUMBER)
             asyncio.run(main_task_handler(ip, data_file, disable_motor=disable_motor))
         else:
-            asyncio.run(collect_data_task(data_file, disable_motor=disable_motor, no_saving=args.no_saving, out_file=args.out_file))
+            asyncio.run(collect_data_task(data_file, disable_motor=disable_motor, no_saving=args.no_saving, out_file=args.out_file, sleep_time=sleep_time))
 
     except KeyboardInterrupt:
         print("Stopping..")
