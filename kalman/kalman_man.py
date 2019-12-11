@@ -16,10 +16,10 @@ async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_
 
     while True:
         try:
-            measurements = measurement_queue.get_nowait()
+            measurements = await asyncio.wait_for(measurement_queue.get(), timeout=1)
             loc_data, imu_data = measurements
-            measurement_queue.put_nowait(measurements)
-        except asyncio.QueueEmpty:
+            await measurement_queue.put(measurements)
+        except asyncio.TimeoutError:
             print("Dead reckoning")
         if control_queue is not None:
             steering_signal = control_queue.get_nowait()
