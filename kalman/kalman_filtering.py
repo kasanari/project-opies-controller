@@ -178,8 +178,8 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
         kf.R = measurement_noise_update(500, use_acc=use_acc)  # High value, prefer process model
         loc_quality = -99
     if u is not None:
-        if u[0, 0] < 0:
-            u = kf.x[3]  # last y_dot.  # TODO: for u=u_steering, controlling y_dot only. Change if changed!!
+        if u[0] < 0:
+            u[0] = kf.x[3]  # last y_dot.  # TODO: for u=u_steering, controlling y_dot only. Change if changed!!
     kf.predict(u=u)
     kf.update(z)
 
