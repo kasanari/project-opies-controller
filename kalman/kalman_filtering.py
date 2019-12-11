@@ -147,8 +147,8 @@ def measurement_noise_update(distrust_value, covar_x_y=0.0, use_acc=False):  # T
     var_y = distrust_value
 
     if use_acc:
-        var_acc_y = 10
-        var_acc_x = 10
+        var_acc_y = 0.8
+        var_acc_x = 0.8
         r = np.array([[var_x, 0., 0., 0.],
                       [0., var_y, 0., 0.],
                       [0., 0., var_acc_x, 0.],
@@ -169,11 +169,11 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     if loc_data is not None:
         z = measurement_update(loc_data, imu_data, use_acc=use_acc)
         distrust_in_measurement = calculate_distrust(loc_data.quality)
-        kf.R = measurement_noise_update(distrust_in_measurement, use_acc=use_acc)
+        kf.R = measurement_noise_update(0.068, use_acc=use_acc)
         loc_quality = loc_data.quality
     else:
         z = kf.z
-        kf.R = measurement_noise_update(1000)  # High value, prefer process model
+        kf.R = measurement_noise_update(500, use_acc=use_acc)  # High value, prefer process model
         loc_quality = -99
     if u is not None:
         if u < 0:
