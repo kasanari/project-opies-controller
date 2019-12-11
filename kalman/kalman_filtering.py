@@ -9,6 +9,8 @@ class EstimatedState:
     location_est: LocationData
     x_v_est: float
     y_v_est: float
+    log_likelihood: float
+    likelihood: float
 #    x_acc_est: float
 #    y_acc_est: float
 
@@ -185,7 +187,10 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     y_kf = float("{0:.2f}".format(kf.x[1]))
     x_velocity = float("{0:.2f}".format(kf.x[2]))
     y_velocity = float("{0:.2f}".format(kf.x[3]))
+    log_likelihood = float("{0:.2f}".format(kf.log_likelihood))
+    likelihood = float("{0:.2f}".format(kf.likelihood))
     filtered_loc = LocationData(x=x_kf, y=y_kf, z=0, quality=loc_quality)
-    estimated_state = EstimatedState(filtered_loc, x_v_est=x_velocity, y_v_est=y_velocity)
+    estimated_state = EstimatedState(filtered_loc, x_v_est=x_velocity, y_v_est=y_velocity,
+                                     log_likelihood=log_likelihood, likelihood=likelihood)
 
     return estimated_state
