@@ -5,6 +5,14 @@ import numpy as np
 import asyncio
 import pandas as pd
 from asyncio import Queue
+from car.car import Car
+from dataclasses import dataclass
+
+@dataclass
+class Target:
+    x: float
+    y: float
+    yaw: float
 
 def position_error(target_x, target_y, x, y):
     y_diff = target_y - y
@@ -41,7 +49,11 @@ def logger(self, **kwargs):
     time_stamp = pd.Timestamp.utcnow()
     self.data_log = self.data_log.append(pd.DataFrame(kwargs, index=[time_stamp]))
 
-async def auto_steer_task(rc_car, destination, measurement_queue: Queue, estimated_state_queue: Queue, distance_control = False):
+async def auto_steer_task(rc_car: Car,
+                          destination,
+                          measurement_queue: Queue,
+                          estimated_state_queue: Queue,
+                          distance_control = False):
 
     target_x = destination['x']
     target_y = destination['y']
@@ -89,6 +101,7 @@ async def auto_steer_task(rc_car, destination, measurement_queue: Queue, estimat
             rc_car.set_wheel_angle(angle)
             rc_car.set_acceleration(acceleration)
             print(f"---- {loop.time()} ----")
+            await asyncio.sleep(0.1)
 
     except asyncio.CancelledError as e:
         print(e)

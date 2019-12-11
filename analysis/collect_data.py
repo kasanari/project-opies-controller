@@ -1,18 +1,26 @@
+from asyncio import Queue
+
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import asyncio
 import numpy as np
 import csv
+import os
 import argparse
+
+from arduino_interface.imu import IMUData
+from car.auto_steering import Target
 from car.motor_control import motor_control_task
-from kalman.kalman_filtering import init_kalman_filter, kalman_updates
-from serial_with_dwm.serial_handler import serial_task
+from kalman.kalman_filtering import init_kalman_filter, kalman_updates, EstimatedState
+from kalman.kalman_man import kalman_man
 from serial_with_dwm.location_data_handler import LocationData
-import datetime
+import time
+
+from serial_with_dwm.serial_manager import serial_man
 
 matplotlib.use('Agg')
-sleep_time = 20
+sleep_time = 120
 
 def fancy_scatter_plot(data, filename_timestamp):
     colors = data['quality']
@@ -32,12 +40,24 @@ def create_plots(dataframe, filename_timestamp):
     plt.xlim(0, 5)
     plt.savefig(f"{filename_timestamp}_collect_data_scatter_plot.png")
 
-    #Line plot
-    dataframe.reset_index().plot(x='index', y=['x','y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
+    # line plot
+    dataframe.reset_index().plot(x='index', y=['x', 'y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
 
-    plt.savefig(f"{filename_timestamp}_collect_data_line_plot_xy.png")
+    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_collect_data_line_plot_xy.png"))
 
     fancy_scatter_plot(dataframe, filename_timestamp)
+
+    # velocity
+    dataframe.reset_index().plot(x='index', y=['y_dot', 'x_dot'])
+    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity.png"))
+
+    # yaw
+    dataframe.reset_index().plot(x='index', y='yaw')
+    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_yaw.png"))
+
+    # acceleration
+    dataframe.reset_index().plot(x='index', y=['a_y', 'a_x'])
+    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration.png"))
 
 async def fake_serial_task(data_file, *queues, update_delay=0.1):
     loc_data = lambda row: LocationData(float(row['x']), float(row['y']), 0, float(row['quality']))
@@ -60,26 +80,35 @@ async def fake_serial_task(data_file, *queues, update_delay=0.1):
                 await asyncio.gather(*tasks)
                 await asyncio.sleep(update_delay)
 
-async def log_task(location_queue):
+async def log_task(measurement_queue, estimated_state_queue: Queue, target: Target):
     location_df = pd.DataFrame()
-    start_time = datetime.datetime.now().timestamp()
+    start_time = time.time()
+    imu_data: IMUData
     try:
         while True:
-            location, location_filtered = await location_queue.get()
+            measurements = await measurement_queue.get()
+            loc_data, imu_data = measurements
+
+            estimated_state: EstimatedState = await estimated_state_queue.get()
 
             locations = {
-                'x': location.x,
-                'y': location.y,
-                'target_y': 2.5,
-                'target_x': 1.8,
-                'quality': location.quality,
-                'x_kf': location_filtered.x,
-                'y_kf': location_filtered.y
+                'x': loc_data.x,
+                'y': loc_data.y,
+                'target_y': target.y,
+                'target_x': target.x,
+                'quality': loc_data.quality,
+                'x_kf': estimated_state.location_est.x,
+                'y_kf': estimated_state.location_est.y,
+                'y_dot': estimated_state.y_v_est,
+                'x_dot': estimated_state.x_v_est,
+                'a_x': imu_data.real_acceleration.x,
+                'a_y': imu_data.real_acceleration.y,
+                'yaw': imu_data.rotation.yaw
             }
-            print(f"logging task: x is {location.x}")
-            print(f"logging task: x_kf is {location_filtered.x}")
-            print(f"quality is {location.quality}")
-            time_stamp =  (datetime.datetime.now().timestamp() - start_time)
+            print(f"logging task: x is {loc_data.x}")
+            print(f"logging task: x_kf is {estimated_state.location_est.x}")
+            print(f"quality is {loc_data.quality}")
+            time_stamp = (time.time() - start_time)
             location_df = location_df.append(pd.DataFrame(locations, index=[time_stamp]))
 
     except asyncio.CancelledError:
@@ -89,41 +118,48 @@ async def log_task(location_queue):
 
 async def collect_data_task(data_file=None, disable_motor=True, no_saving=False, out_file=None) :
     message_queue = asyncio.Queue()
-    serial_queue = asyncio.Queue()
-    log_queue = asyncio.Queue()
+    measurement_queue = asyncio.Queue()
+    estimated_state_queue = asyncio.Queue()
     motor_task = None
     fake_serial = False
 
     if data_file is None:
-        location_task = asyncio.create_task(serial_task(log_queue, serial_queue)) # use real serial
+        location_task = asyncio.create_task(serial_man(measurement_queue)) # use real serial
     else:
-        location_task = asyncio.create_task(fake_serial_task(data_file, log_queue, serial_queue)) #get data from file
+        location_task = asyncio.create_task(fake_serial_task(data_file, measurement_queue)) #get data from file
         fake_serial = True
 
-    if not disable_motor:
-        message = {'type': "destination", 'x': 0.8, 'y': 10}
-        await message_queue.put(message)
-        motor_task = asyncio.create_task(motor_control_task(message_queue, serial_queue))
+    kalman_task = asyncio.create_task(kalman_man(measurement_queue, estimated_state_queue, dim_x=6, use_acc=True))
 
-    logging_task = asyncio.create_task(log_task(log_queue))
+    target = Target(0.8, 1.7, 0)
+
+    if not disable_motor:
+        message = {'type': "destination", 'x': target.x, 'y': target.y}
+        await message_queue.put(message)
+        motor_task = asyncio.create_task(motor_control_task(message_queue, measurement_queue, estimated_state_queue))
+
+    logging_task = asyncio.create_task(log_task(measurement_queue, estimated_state_queue, target))
 
     await asyncio.sleep(sleep_time)
     location_task.cancel()
+    kalman_task.cancel()
 
     if not disable_motor and motor_task is not None:
         motor_task.cancel()
 
     logging_task.cancel()
-    result : pd.DataFrame = await logging_task
+    result: pd.DataFrame = await logging_task
 
     file_timestamp = generate_timestamp()
+
+    os.mkdir(file_timestamp)
 
     if fake_serial:
         file_timestamp += "_fake"
 
     if not no_saving:
         if out_file is None:
-            result.to_csv(f'{file_timestamp}.csv')
+            result.to_csv(os.path.join(f'{file_timestamp}', f'{file_timestamp}.csv'))
         else:
             result.to_csv(out_file)
 
