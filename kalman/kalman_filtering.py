@@ -111,9 +111,9 @@ def set_B(dim_u, use_acc=True):
 
     elif dim_u == 2:
         if use_acc:
-        b = np.array([[0., 0.],
-                     [0., 0.],
-                     [0., 0.],
+            b = np.array([[0., 0.],
+                         [0., 0.],
+                         [0., 0.],
                          [1., 0.],
                           [0., 0.],
                           [0., 0.]])
@@ -122,22 +122,12 @@ def set_B(dim_u, use_acc=True):
             b = np.array([[0., 0.],
                          [0., 0.],
                          [0., 0.],
-                     [1, 0.]])
+                         [1, 0.]])
 
     else:
         print("I don't have a model for these control signals/this dim_u. Treating dim_u as 0.")
         b = None
     return b
-
-
-# calculates the R values. TODO: change this to static error? the quality value is weird.
-def calculate_distrust(quality):
-    if quality == 0:
-        quality = 0.01
-    accuracy_UWB_localisation = 0.1  # m
-    distrust = accuracy_UWB_localisation + (100-quality)/10  # the qualities went higher when we put it in worse conditions??
-    # ex measurement: x = 5±0.1 if quality is 100, we want trust_in_measurement to be 1.1
-    return distrust
 
 
 def measurement_update(loc_data, imu_data: IMUData, use_acc=False):
@@ -181,7 +171,6 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     kf.Q = set_Q(timestep, use_acc=use_acc)
     if loc_data is not None:
         z = measurement_update(loc_data, imu_data, use_acc=use_acc)
-        distrust_in_measurement = calculate_distrust(loc_data.quality)
         kf.R = measurement_noise_update(0.007, use_acc=use_acc)
         loc_quality = loc_data.quality
     else:
