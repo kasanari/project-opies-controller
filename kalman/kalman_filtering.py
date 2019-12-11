@@ -16,7 +16,7 @@ class EstimatedState:
 
 
 # var_x and var_y in meters
-def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0, covar_x_y=0.2):
+def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0):
     kf = KalmanFilter(dim_x=dim_x, dim_z=dim_z, dim_u=dim_u)
 
     # init state vector x
@@ -28,7 +28,7 @@ def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0, co
     distrust_in_value = calculate_distrust(loc_data.quality)
     kf.P *= distrust_in_value
 
-    kf.R = measurement_noise_update(distrust_value=distrust_in_value, covar_x_y=covar_x_y, use_acc=use_acc)  # measurement noise
+    kf.R = measurement_noise_update(distrust_value=distrust_in_value, use_acc=use_acc)  # measurement noise
     kf.Q = set_Q(dt, use_acc=use_acc)  # process noise
 
     return kf
@@ -144,7 +144,7 @@ def measurement_update(loc_data, imu_data: IMUData, use_acc=False):
     return z
 
 
-def measurement_noise_update(distrust_value, covar_x_y=0.0, use_acc=False):  # TODO: changed covar to 0.0, does this affect the result positively?
+def measurement_noise_update(distrust_value, use_acc=False):
     var_x = distrust_value
     var_y = distrust_value
 
@@ -156,8 +156,8 @@ def measurement_noise_update(distrust_value, covar_x_y=0.0, use_acc=False):  # T
                       [0., 0., var_acc_x, 0.],
                       [0., 0., 0., var_acc_y]])
     else:
-        r = np.array([[var_x, covar_x_y],
-                      [covar_x_y, var_y]])
+        r = np.array([[var_x, 0.],
+                      [0., var_y]])
     return r
 
 # # #
