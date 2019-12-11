@@ -63,7 +63,7 @@ async def fake_serial_task(data_file, *queues, update_delay=0.1):
     loc_data = lambda row: LocationData(float(row['x']), float(row['y']), 0, float(row['quality']))
     with open(data_file, newline='') as csvfile:
         rows = list(csv.DictReader(csvfile))
-        kf = init_kalman_filter(loc_data(rows[0]), dt=update_delay, covar_x_y=0, dim_u=1)
+        kf = init_kalman_filter(loc_data(rows[0]), dt=update_delay, dim_u=1)
         while True:
             for row in rows:
                 location_data = loc_data(row)
