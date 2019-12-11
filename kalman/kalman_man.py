@@ -25,11 +25,11 @@ async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_
             steering_signal = control_queue.get_nowait()
         else:
             steering_signal = np.array([0])
-        loc_data_filtered = kalman_updates(kf, loc_data, imu_data, timestep=0.1, use_acc=use_acc)
-        estimated_state_queue.put_nowait(loc_data_filtered)
+        estimated_state = kalman_updates(kf, loc_data, imu_data, timestep=0.1, use_acc=use_acc)
+        estimated_state_queue.put_nowait(estimated_state)
 
         if to_web_queue is not None:
-            to_web = ToWeb("measurements", loc_data_filtered, loc_data, imu_data)
+            to_web = ToWeb("measurements", estimated_state, loc_data, imu_data)
             to_web_queue.put_nowait(to_web)
 
         await asyncio.sleep(0.1)
