@@ -14,6 +14,7 @@ class Car:
 
         self.current_direction = 0
         self.max_speed = 0.2
+        self.steering_offset = -9.5
         motor_max_duty = 0.1
         motor_min_duty = 0.05
         min_pulse_width = motor_min_duty * 20/1000
@@ -32,7 +33,7 @@ class Car:
         self.motor_servo.detach()
 
     def set_wheel_angle(self, angle):
-
+        angle += self.steering_offset
         if angle < -34.5:
             angle = -34.5
         if angle > 17.5:
