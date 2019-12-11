@@ -13,11 +13,18 @@ from dataclasses import dataclass
 from serial import Serial
 import time
 
+
 @dataclass
 class Target:
     x: float
     y: float
     yaw: float
+
+@dataclass
+class ControlSignal:
+    velocity: float
+    steering: float
+
 
 def position_error(target_x, target_y, x, y):
     y_diff = target_y - y
@@ -30,7 +37,7 @@ def angle_error(target_x, target_y, x, y):
     y_diff = target_y - y
     print(f"x_diff: {x_diff}")
     print(f"y_diff: {y_diff}")
-    angle = (np.arctan2(y_diff, x_diff) - np.pi/2)*-1
+    angle = (np.arctan2(y_diff, x_diff) - np.pi / 2) * -1
     return np.rad2deg(angle)
 
 
@@ -40,7 +47,6 @@ def check_for_collision(connection, limit):
 
     if distance < limit:
         return True
-
 
 
 def logger(self, **kwargs):
@@ -57,7 +63,13 @@ def calculate_lyapunov_errors(target: Target, position: LocationData, angle):
     theta = target.yaw - angle
     return x_diff, y_diff, theta
 
-async def auto_steer_task(rc_car, destination, measurement_queue: Queue, estimated_state_queue: Queue, distance_control = False):
+
+async def auto_steer_task(rc_car,
+                          destination,
+                          measurement_queue: Queue,
+                          estimated_state_queue: Queue,
+                          control_signal_queue: Queue = None,
+                          distance_control=False):
 
     target: Target = Target(destination['x'], destination['y'], 0)
     loc_data: LocationData
@@ -66,9 +78,9 @@ async def auto_steer_task(rc_car, destination, measurement_queue: Queue, estimat
 
     print(f"Going to ({target.x}, {target.y}) Angle: {target.yaw}")
 
-    speed_controller = PIDController(K_p=0.2, K_d=0.02, K_i=0.00005)
+    speed_controller = PIDController(K_p=0.2, K_d=0.05, K_i=0.0002)
     steering_controller = SteeringController()
-    
+
     if distance_control:
         arduino_connection: Serial = arduino_serial.connect_to_arduino()
 
@@ -89,29 +101,30 @@ async def auto_steer_task(rc_car, destination, measurement_queue: Queue, estimat
             estimated_state: EstimatedState = await estimated_state_queue.get()
             await estimated_state_queue.put(estimated_state)
 
-            #e_angle = angle_error(target_x, target_y, location.x, location.y)
-            #y_diff, x_diff = position_error(target_x, target_y, loc_data.x, loc_data.y)
+            # e_angle = angle_error(target_x, target_y, location.x, location.y)
+            # y_diff, x_diff = position_error(target_x, target_y, loc_data.x, loc_data.y)
 
             e_x, e_y, e_angle = calculate_lyapunov_errors(target, estimated_state.location_est, imu_data.rotation.yaw)
-            speed = np.sqrt(np.square(estimated_state.x_v_est)+np.square(estimated_state.y_v_est))
+            speed = np.sqrt(np.square(estimated_state.x_v_est) + np.square(estimated_state.y_v_est))
 
-            if e_y > 0:
-                acceleration = 0.2
-            else:
+            if e_y < 0:
                 print("Done")
                 await rc_car.brake()
                 return
 
-            #acceleration = speed_controller.get_control_signal(y_diff, loop.time(), P=True, D=True, I=False)
-            u_angle = steering_controller.get_control_signal(speed, e_angle, e_x, time.time())#steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
+            target_v_y = 2
+            e_v_y = target_v_y - estimated_state.y_v_est
+            acceleration = speed_controller.get_control_signal(e_v_y, time.time(), P=True, D=True, I=True)
+            u_angle = steering_controller.get_control_signal(speed, e_angle, e_x,
+                                                             time.time())  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
 
-            #print(f"acceleration: {acceleration}")
+            print(f"acceleration: {acceleration}")
             print(f"u_angle: {u_angle}")
 
             rc_car.set_wheel_angle(u_angle)
             rc_car.set_acceleration(acceleration)
             print(f"---- {time.time()} ----")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
     except asyncio.CancelledError as e:
         print(e)
