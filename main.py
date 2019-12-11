@@ -19,15 +19,25 @@ async def main_task_handler(ip_addr: str, serial_data_file: str = None, disable_
     estimated_state_queue: asyncio.Queue = asyncio.Queue()
     measurement_queue: asyncio.Queue = asyncio.Queue()
     to_web_queue: asyncio.Queue[ToWeb] = asyncio.Queue()
+    control_signal_queue: asyncio.Queue = asyncio.Queue()
 
     if serial_data_file is None:
         serial_man_task = asyncio.create_task(serial_man(measurement_queue, update_delay=0.3))
     else:
         serial_man_task = asyncio.create_task(fake_serial_task(serial_data_file, measurement_queue, update_delay=0.3))
 
-    kalman_task = asyncio.create_task(kalman_man(measurement_queue, estimated_state_queue, to_web_queue=to_web_queue, dim_x=6, use_acc=True))
+    kalman_task = asyncio.create_task(kalman_man(measurement_queue,
+                                                 estimated_state_queue,
+                                                 to_web_queue=to_web_queue,
+                                                 control_queue=control_signal_queue,
+                                                 dim_x=6,
+                                                 use_acc=True))
 
-    motor_task = asyncio.create_task(motor_control_task(message_queue, measurement_queue, estimated_state_queue, debug_no_car=disable_motor))
+    motor_task = asyncio.create_task(motor_control_task(message_queue,
+                                                        measurement_queue,
+                                                        estimated_state_queue,
+                                                        control_signal_queue,
+                                                        debug_no_car=disable_motor))
 
     websocket_task = create_websocket_task(ip_addr, message_queue, to_web_queue)
 

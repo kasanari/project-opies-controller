@@ -25,6 +25,9 @@ class ControlSignal:
     velocity: float
     steering: float
 
+    def to_numpy(self):
+        return np.array([[self.velocity], [self.steering]])
+
 
 def position_error(target_x, target_y, x, y):
     y_diff = target_y - y
@@ -78,6 +81,10 @@ async def auto_steer_task(rc_car,
 
     print(f"Going to ({target.x}, {target.y}) Angle: {target.yaw}")
 
+    control_signal = ControlSignal(0, 0)
+
+    await control_signal_queue.put(control_signal)
+
     speed_controller = PIDController(K_p=0.2, K_d=0.05, K_i=0.0002)
     steering_controller = SteeringController()
 
@@ -121,9 +128,14 @@ async def auto_steer_task(rc_car,
             print(f"acceleration: {acceleration}")
             print(f"u_angle: {u_angle}")
 
+            control_signal.steering = u_angle
+            control_signal.velocity = acceleration
+
             rc_car.set_wheel_angle(u_angle)
             rc_car.set_acceleration(acceleration)
+
             print(f"---- {time.time()} ----")
+            await control_signal_queue.put(control_signal)
             await asyncio.sleep(0.05)
 
     except asyncio.CancelledError as e:

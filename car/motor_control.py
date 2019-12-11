@@ -17,7 +17,7 @@ def control_car_from_message(rc_car, message):
         print(e)
 
 
-async def motor_control_task(web_queue, measurement_queue, estimated_state_queue, debug_no_car=False):
+async def motor_control_task(web_queue, measurement_queue, estimated_state_queue, control_signal_queue=None, debug_no_car=False):
     try:
         rc_car = Car(debug_no_car)
     except OSError as e:
@@ -49,7 +49,11 @@ async def motor_control_task(web_queue, measurement_queue, estimated_state_queue
                 destination = {'x': float(x_destination), 'y': float(y_destination)}
                 if auto_steer is not None:
                     auto_steer.cancel()
-                auto_steer = asyncio.create_task(auto_steer_task(rc_car, destination, measurement_queue, estimated_state_queue))
+                auto_steer = asyncio.create_task(auto_steer_task(rc_car,
+                                                                 destination,
+                                                                 measurement_queue,
+                                                                 estimated_state_queue,
+                                                                 control_signal_queue))
 
             elif message_type == 'stop':
                 if auto_steer is not None:
