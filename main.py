@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", nargs='?', dest="out_file", help="output file name, in csv format. Defaults to a timestamp.")
     parser.add_argument("--no-saving", dest='no_saving', action='store_true', help="Disables saving results to a file")
     parser.add_argument("--collect-data", action="store_true")
-    parser.add_argument("--sleep-time", nargs='?')
+    parser.add_argument("--sleep-time", nargs='?', type=int)
 
     args = parser.parse_args()
 
