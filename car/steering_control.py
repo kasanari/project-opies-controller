@@ -7,7 +7,7 @@ class SteeringController:
         self.K_2 = K_2
         self.K_3 = K_3
         self.K_4 = K_4
-        self.time = 0
+        self.time = time.time()
 
 
     def get_control_signal(self, speed, angle_error, lateral_error, current_time):

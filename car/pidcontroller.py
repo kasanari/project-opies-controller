@@ -1,3 +1,5 @@
+import time
+
 class PIDController:
     def __init__(self, K_p=1, K_d=1, K_i=1):
         self.prev_e = 0
@@ -5,7 +7,7 @@ class PIDController:
         self.K_p = K_p
         self.K_d = K_d
         self.K_i = K_i
-        self.time = 0
+        self.time = time.time()
 
     def get_constant_control_signal(self, error, current_time):
 
