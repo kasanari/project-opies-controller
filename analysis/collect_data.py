@@ -28,7 +28,7 @@ def fancy_scatter_plot(data, filename_timestamp):
     data.reset_index().plot.scatter(ax=ax, x='index', y=['x'], marker='o', c=colors, colormap='plasma')
     data.reset_index().plot.scatter(ax=ax, x='index', y=['y'], marker='o', c=colors, colormap='plasma')
     data.reset_index().plot.line(ax=ax, x='index', y=['x_kf', 'y_kf'])
-    plt.savefig(f"{filename_timestamp}_fancy_line_plot.png")
+    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_fancy_line_plot.png"))
     fig.set_size_inches(15, 7, forward=True)
     plt.show()
 
@@ -37,7 +37,7 @@ def create_plots(dataframe, filename_timestamp):
     dataframe.plot(x=['x', 'x_kf'], y=['y', 'y_kf'], kind='scatter')
     plt.ylim(0, 5)
     plt.xlim(0, 5)
-    plt.savefig(f"{filename_timestamp}_collect_data_scatter_plot.png")
+    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_collect_data_scatter_plot.png"))
 
     # line plot
     dataframe.reset_index().plot(x='index', y=['x', 'y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
@@ -151,7 +151,7 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
 
     kalman_task = asyncio.create_task(kalman_man(measurement_queue, estimated_state_queue, control_queue=control_queue, dim_u=2, use_acc=True))
 
-    target = Target(0.8, 7, 0, 2)
+    target = Target(0.8, 7, 0, 2.5)
 
     if not disable_motor:
         message = {'type': "destination", 'x': target.x, 'y': target.y, "yaw": target.yaw, "speed": target.velocity}
@@ -182,9 +182,9 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
 
     if not no_saving:
         if out_file is None:
-            result.to_csv(os.path.join(f'{file_timestamp}', f'{file_timestamp}.csv'))
+            result.to_csv(os.path.join(f'{file_timestamp}', f'{file_timestamp}.csv'), index_label='time')
         else:
-            result.to_csv(out_file)
+            result.to_csv(out_file, index_label='time')
 
     create_plots(result, file_timestamp)
 
