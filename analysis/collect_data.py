@@ -101,6 +101,9 @@ async def log_task(measurement_queue,
             control_signal = ControlSignal(0, 0)
             loc_data, imu_data = measurements
 
+            if loc_data is None:
+                loc_data = LocationData(0, 0, 0, 0)
+
             locations = {
                 'x': loc_data.x,
                 'y': loc_data.y,
@@ -148,7 +151,7 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
 
     kalman_task = asyncio.create_task(kalman_man(measurement_queue, estimated_state_queue, control_queue=control_queue, dim_u=2, use_acc=True))
 
-    target = Target(0.8, 1.7, 0, 2)
+    target = Target(0.8, 7, 0, 2)
 
     if not disable_motor:
         message = {'type': "destination", 'x': target.x, 'y': target.y, "yaw": target.yaw, "speed": target.velocity}
