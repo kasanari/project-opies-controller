@@ -76,16 +76,16 @@ def set_H(use_acc=False):
     return h
 
 
-def set_Q(dt, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_dot=0.0, var_y_dot=0.0,
-          covar_xy=0.0, covar_xxdot=0.0, covar_xydot=0.0, covar_yxdot=0.0,
-          covar_yydot=0.0, covar_xdotydot=0.0):
+def set_Q(dt, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_dot=0.0, var_y_dot=0.0):
     if use_acc:
         var_acc_x = 0.5
         var_acc_y = var_acc_x
+        var_v_x = var_acc_x
+        var_v_y = var_acc_x
         q = np.array([[var_x, 0., 0., 0., 0., 0.],
                       [0., var_y, 0., 0., 0., 0.],
-                      [0., 0., dt * dt, 0., 0., 0.],
-                      [0., 0., 0., dt * dt, 0., 0.],
+                      [0., 0., var_v_x, 0., 0., 0.],
+                      [0., 0., 0., var_v_y, 0., 0.],
                       [0., 0., 0., 0., var_acc_x, 0.],
                       [0., 0., 0., 0., 0., var_acc_y]
                       ])
@@ -93,10 +93,10 @@ def set_Q(dt, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_d
         if acceleleration:
             var_x_dot = np.square(dt)
             var_y_dot = np.square(dt)
-        q = np.array([[var_x, covar_xy, covar_xxdot, covar_xydot],
-                      [covar_xy, var_y, covar_yxdot, covar_yydot],
-                      [covar_xxdot, covar_yxdot, var_x_dot, covar_xdotydot],
-                      [covar_xydot, covar_yydot, covar_xdotydot, var_y_dot]])
+        q = np.array([[var_x, 0., 0., 0.],
+                      [0., var_y, 0., 0.],
+                      [0., 0., var_x_dot, 0.],
+                      [0., 0., 0., var_y_dot]])
     return q
 
 
