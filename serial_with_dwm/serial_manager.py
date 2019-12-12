@@ -18,7 +18,7 @@ def fetch_location_data(ser_handler):
     return loc_data
 
 
-async def serial_man(state_queue: Queue, update_delay: float = 0.3):
+async def serial_man(measurement_queue: Queue, update_delay: float = 0.3):
     ser_con = None
     arduino_con = None
 
@@ -49,7 +49,7 @@ async def serial_man(state_queue: Queue, update_delay: float = 0.3):
 
             # print(result_imu)
             # print(result_tag)
-            state_queue.put_nowait([result_tag, result_imu])
+            measurement_queue.put_nowait([result_tag, result_imu])
 
             #print(result_tag)
 
