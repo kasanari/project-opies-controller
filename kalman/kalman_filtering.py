@@ -171,7 +171,7 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     kf.Q = set_Q(timestep, use_acc=use_acc)
     if loc_data is not None:
         z = measurement_update(loc_data, imu_data, use_acc=use_acc)
-        kf.R = measurement_noise_update(0.007, use_acc=use_acc)
+        kf.R = measurement_noise_update(0.014, use_acc=use_acc)
         loc_quality = loc_data.quality
     else:
         z = kf.z
