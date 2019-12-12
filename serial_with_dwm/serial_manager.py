@@ -12,10 +12,12 @@ from serial_with_dwm.location_data_handler import LocationData
 
 
 def fetch_location_data(ser_handler):
-
+    serial_collect_time_start = datetime.datetime.now()
     loc_data = ser_handler.get_location_data()  # serial connection with dwm1001, get location data
-
-    return loc_data
+    serial_collect_time_end = datetime.datetime.now()
+    serial_collect_time_total = serial_collect_time_end - serial_collect_time_start
+    seconds = serial_collect_time_total.total_seconds()  # ceiling? milliseconds = int(seconds * 1000)
+    return loc_data, seconds
 
 
 async def serial_man(state_queue: Queue, update_delay: float = 0.3):
@@ -38,6 +40,7 @@ async def serial_man(state_queue: Queue, update_delay: float = 0.3):
         ser_handler = SerialHandler(ser_con)
         read_imu = functools.partial(imu.read_IMU, connection=arduino_con)
         read_tag = functools.partial(fetch_location_data, ser_handler=ser_handler)
+
         event_loop = asyncio.get_running_loop()
 
         while True:
@@ -46,10 +49,12 @@ async def serial_man(state_queue: Queue, update_delay: float = 0.3):
                 result_imu_task = event_loop.run_in_executor(pool, read_imu)
                 result_tag_task = event_loop.run_in_executor(pool, read_tag)
                 result_imu, result_tag = await asyncio.gather(result_imu_task, result_tag_task)
+            print(result_tag[0])
+            print(result_tag[1])
 
             # print(result_imu)
             # print(result_tag)
-            state_queue.put_nowait([result_tag, result_imu])
+            state_queue.put_nowait([result_tag[0], result_imu])
 
             #print(result_tag)
 
