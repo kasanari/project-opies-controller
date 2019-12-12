@@ -75,7 +75,7 @@ def read_csv_line(connection):
 
 def convert_g_to_acceleration(gs):
     for key in gs:
-        gs[key] = (gs[key] / 8192) * 9.82
+        gs[key] = (gs[key] / 4096) * 9.82 # IMU set to +- 8G resolution
 
     return gs
 
