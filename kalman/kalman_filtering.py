@@ -183,17 +183,24 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     kf.predict(u=u)
     kf.update(z)
 
-    x_kf = float("{0:.2f}".format(kf.x[0]))
-    y_kf = float("{0:.2f}".format(kf.x[1]))
-    x_velocity = float("{0:.2f}".format(kf.x[2]))
-    y_velocity = float("{0:.2f}".format(kf.x[3]))
-    log_likelihood = float("{0:.2f}".format(kf.log_likelihood))
-    likelihood = float("{0:.2f}".format(kf.likelihood))
-    x_acceleration = float("{0:.2f}".format(kf.x[4]))
-    y_acceleration = float("{0:.2f}".format(kf.x[5]))
+    # Values for estimated state as floats, showing two decimals
+    x_kf = float_with_2_decimals(kf.x[0])
+    y_kf = float_with_2_decimals(kf.x[1])
+    x_velocity = float_with_2_decimals(kf.x[2])
+    y_velocity = float_with_2_decimals(kf.x[3])
+    log_likelihood = float_with_2_decimals(kf.log_likelihood)
+    likelihood = float_with_2_decimals(kf.likelihood)
+    x_acceleration = float_with_2_decimals(kf.x[4])
+    y_acceleration = float_with_2_decimals(kf.x[5])
+
     filtered_loc = LocationData(x=x_kf, y=y_kf, z=0, quality=loc_quality)
     estimated_state = EstimatedState(filtered_loc, x_v_est=x_velocity, y_v_est=y_velocity,
                                      log_likelihood=log_likelihood, likelihood=likelihood,
                                      x_acc_est=x_acceleration, y_acc_est=y_acceleration)
 
     return estimated_state
+
+
+def float_with_2_decimals(value):
+    two_decimal_float = float("{0:.2f}".format(value))
+    return two_decimal_float
