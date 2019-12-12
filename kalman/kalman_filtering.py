@@ -85,7 +85,7 @@ def set_Q(dt, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_d
         q = np.array([[var_x, 0., 0., 0., 0., 0.],
                       [0., var_y, 0., 0., 0., 0.],
                       [0., 0., dt * dt, 0., 0., 0.],
-                      [0., 0., 0., dt * dt, 0., 1.],
+                      [0., 0., 0., dt * dt, 0., 0.],
                       [0., 0., 0., 0., var_acc_x, 0.],
                       [0., 0., 0., 0., 0., var_acc_y]
                       ])
