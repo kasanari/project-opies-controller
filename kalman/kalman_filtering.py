@@ -85,7 +85,7 @@ def set_Q(dt, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_d
         q = np.array([[var_x, 0., 0., 0., 0., 0.],
                       [0., var_y, 0., 0., 0., 0.],
                       [0., 0., dt * dt, 0., 0., 0.],
-                      [0., 0., 0., dt * dt, 0., 1.],
+                      [0., 0., 0., dt * dt, 0., 0.],
                       [0., 0., 0., 0., var_acc_x, 0.],
                       [0., 0., 0., 0., 0., var_acc_y]
                       ])
@@ -171,7 +171,7 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     kf.Q = set_Q(timestep, use_acc=use_acc)
     if loc_data is not None:
         z = measurement_update(loc_data, imu_data, use_acc=use_acc)
-        kf.R = measurement_noise_update(0.007, use_acc=use_acc)
+        kf.R = measurement_noise_update(0.014, use_acc=use_acc)
         loc_quality = loc_data.quality
     else:
         z = kf.z
