@@ -54,7 +54,7 @@ async def serial_man(measurement_queue: Queue, update_delay: float = 0.3):
 
             # print(result_imu)
             # print(result_tag)
-            state_queue.put_nowait([result_tag[0], result_imu])
+            measurement_queue.put_nowait([result_tag[0], result_imu])
 
             #print(result_tag)
 
