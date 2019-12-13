@@ -55,7 +55,7 @@ def create_plots(dataframe, filename_timestamp):
     plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_yaw.png"))
 
     # acceleration
-    dataframe.reset_index().plot(x='index', y=['a_y', 'a_x'])
+    dataframe.reset_index().plot(x='index', y=['a_y', 'a_x', 'a_x_kf', 'a_y_kf'])
     plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration.png"))
 
     # Control
@@ -116,6 +116,8 @@ async def log_task(measurement_queue,
                 'x_dot': estimated_state.x_v_est,
                 'a_x': imu_data.real_acceleration.x,
                 'a_y': imu_data.real_acceleration.y,
+                'a_x_kf': estimated_state.x_acc_est,
+                'a_y_kf': estimated_state.y_acc_est,
                 'yaw': imu_data.rotation.yaw,
                 'u_v': control_signal.velocity,
                 'u_yaw': control_signal.steering,
