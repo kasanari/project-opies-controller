@@ -1,8 +1,11 @@
-from filterpy.kalman import KalmanFilter
-import numpy as np
-from serial_with_dwm.location_data_handler import LocationData
 from dataclasses import dataclass
-from arduino_interface.imu import IMUData, Transform
+
+import numpy as np
+from filterpy.kalman import KalmanFilter
+
+from arduino_interface.imu import IMUData
+from serial_with_dwm.location_data_handler import LocationData
+
 
 @dataclass
 class EstimatedState:
@@ -44,8 +47,8 @@ def set_x(loc_data, use_acc):
 
 def set_F(dt, use_acc=False):
     if use_acc:  # dim_x = 6, dim_z = 4
-        f = np.array([[1., 0., dt, 0, (dt * dt)/2, 0],
-                      [0., 1., 0., dt, 0., (dt * dt)/2],
+        f = np.array([[1., 0., dt, 0, (dt * dt) / 2, 0],
+                      [0., 1., 0., dt, 0., (dt * dt) / 2],
                       [0., 0., 1., 0., dt, 0.],
                       [0., 0., 0., 1., 0., dt],
                       [0., 0., 0., 0., 1., 0.],
@@ -76,7 +79,7 @@ def set_H(use_acc=False):
     return h
 
 
-def set_Q(dt, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_dot=0.0, var_y_dot=0.0):
+def set_Q(dt, use_acc=True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_dot=0.0, var_y_dot=0.0):
     if use_acc:
         var_acc_x = 0.5
         var_acc_y = var_acc_x
@@ -89,7 +92,7 @@ def set_Q(dt, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_d
                       [0., 0., 0., 0., var_acc_x, 0.],
                       [0., 0., 0., 0., 0., var_acc_y]
                       ])
-    else: # remove this if acc is good
+    else:  # remove this if acc is good
         if acceleleration:
             var_x_dot = np.square(dt)
             var_y_dot = np.square(dt)
@@ -105,24 +108,24 @@ def set_B(dim_u, use_acc=True):
         b = None
     elif dim_u == 1:
         b = np.array([[0.],
-                     [0.],
-                     [0.],
-                     [1]])
+                      [0.],
+                      [0.],
+                      [1]])
 
     elif dim_u == 2:
         if use_acc:
             b = np.array([[0., 0.],
-                         [0., 0.],
-                         [0., 0.],
-                         [1., 0.],
+                          [0., 0.],
+                          [0., 0.],
+                          [1., 0.],
                           [0., 0.],
                           [0., 0.]])
 
         else:
             b = np.array([[0., 0.],
-                         [0., 0.],
-                         [0., 0.],
-                         [1, 0.]])
+                          [0., 0.],
+                          [0., 0.],
+                          [1, 0.]])
 
     else:
         print("I don't have a model for these control signals/this dim_u. Treating dim_u as 0.")
@@ -160,6 +163,7 @@ def measurement_noise_update(distrust_value, use_acc=False):
         r = np.array([[var_x, 0.],
                       [0., var_y]])
     return r
+
 
 # # #
 # kalman_updates: performs the prediction and update of the Kalman filter

@@ -1,4 +1,6 @@
 import asyncio
+
+from application import Context
 from car.car import Car
 from car.auto_steering import auto_steer_task, Target
 
@@ -17,7 +19,7 @@ def control_car_from_message(rc_car, message):
         print(e)
 
 
-async def motor_control_task(web_queue, measurement_queue, estimated_state_queue, control_signal_queue=None, debug_no_car=False):
+async def motor_control_task(context: Context, debug_no_car=False):
     try:
         rc_car = Car(debug_no_car)
     except OSError as e:
@@ -35,7 +37,7 @@ async def motor_control_task(web_queue, measurement_queue, estimated_state_queue
 
     try:
         while True:
-            message = await web_queue.get()
+            message = await context.from_web_queue.get()
             message_type = message["type"]
 
             if message_type == "car_control":
@@ -61,11 +63,7 @@ async def motor_control_task(web_queue, measurement_queue, estimated_state_queue
                     auto_steer.cancel()
 
                 target = Target(x_destination, y_destination, yaw, speed)
-                auto_steer = asyncio.create_task(auto_steer_task(rc_car,
-                                                                 target,
-                                                                 measurement_queue,
-                                                                 estimated_state_queue,
-                                                                 control_signal_queue))
+                auto_steer = asyncio.create_task(auto_steer_task(context, rc_car, target))
 
             elif message_type == 'stop':
                 if auto_steer is not None:

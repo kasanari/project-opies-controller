@@ -1,7 +1,5 @@
-import re
 import asyncio
-import csv
-import io
+import re
 from dataclasses import dataclass
 
 
@@ -35,10 +33,11 @@ async def start_IMU(connection):
 
     return True
 
+
 async def calibrate_IMU(connection):
     match = None
 
-    while (match is None):
+    while match is None:
         line = connection.readline().strip()
         line = line.decode()
         match = re.match("Send any character to begin DMP programming and demo:", line)
@@ -48,7 +47,7 @@ async def calibrate_IMU(connection):
 
     match = None
 
-    while (match is None):
+    while match is None:
         line = connection.readline().strip()
         line = line.decode()
         match = re.match("DMP ready! Waiting for first interrupt...", line)
@@ -63,7 +62,6 @@ def read_csv_line(connection):
     matches = []
     retries = 0
     while len(matches) < 3 and retries < 10:
-
         line = connection.readline().strip()
         line_str = line.decode()
 
@@ -75,7 +73,7 @@ def read_csv_line(connection):
 
 def convert_g_to_acceleration(gs):
     for key in gs:
-        gs[key] = (gs[key] / 4096) * 9.82 # IMU set to +- 8G resolution
+        gs[key] = (gs[key] / 4096) * 9.82  # IMU set to +- 8G resolution
 
     return gs
 
@@ -104,5 +102,3 @@ def read_IMU(connection):
         print(e)
         print("IMU read failed.")
         return None
-
-

@@ -9,6 +9,7 @@ from serial_with_dwm.location_data_handler import LocationData
 
 sleep_time = 3
 
+
 def create_plots(dataframe, timestamp, brake_time_stamp):
     dataframe.plot(x=['x', 'x_kf'], y=['y', 'y_kf'], kind='scatter')
     plt.ylim(0, 5)
@@ -21,7 +22,6 @@ def create_plots(dataframe, timestamp, brake_time_stamp):
     plt.axvline(brake_time_stamp)
 
     plt.savefig(f"{timestamp}_line_plot.png")
-
 
 
 async def start_and_brake(reverse=True):
@@ -43,7 +43,6 @@ async def start_and_brake(reverse=True):
     logging_task = asyncio.create_task(log_task(log_queue, file_timestamp=timestamp, asyncio=asyncio, pd=pd))
     await asyncio.sleep(7)
 
-
     go_forward_message = {
         'type': 'brake',
     }
@@ -62,7 +61,6 @@ async def start_and_brake(reverse=True):
         await message_queue.put(message2)
         await asyncio.sleep(2)
         await message_queue.put(go_forward_message)
-
 
     location_task.cancel()
 
@@ -131,6 +129,7 @@ async def start_and_stop_and_start():
 
     print("Done")
 
+
 async def log_task(location_queue, file_timestamp, asyncio, pd, target_y=2.5, target_x=1.8):
     location_df = pd.DataFrame()
     try:
@@ -148,7 +147,7 @@ async def log_task(location_queue, file_timestamp, asyncio, pd, target_y=2.5, ta
             }
 
             time_stamp = pd.Timestamp.utcnow()
-            #time_stamp = generate_timestamp(pd)
+            # time_stamp = generate_timestamp(pd)
             location_df = location_df.append(pd.DataFrame(locations, index=[time_stamp]))
 
     except asyncio.CancelledError:
@@ -170,6 +169,7 @@ def generate_timestamp(pd):
     timestamp = str(timestamp).replace(" ", "_")
     timestamp = timestamp.replace(":", "")
     return timestamp
+
 
 if __name__ == "__main__":
     asyncio.run(start_and_brake())

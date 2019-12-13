@@ -2,7 +2,8 @@
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import threading
 
-DIRECTORY='web_server'
+DIRECTORY = 'web_server'
+
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):

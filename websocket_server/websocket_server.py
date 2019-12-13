@@ -57,9 +57,9 @@ async def time():  # TODO change this to send location info as well as time
     return json.dumps(data_to_send)
 
 
-def create_websocket_task(ip_addr, message_queue, to_web_queue):
+def create_websocket_task(context, ip_addr):
     """Creates a task for running the websocket server"""
-    handler_func = functools.partial(handler, message_queue=message_queue, to_web_queue = to_web_queue)
+    handler_func = functools.partial(handler, context=context)
 
     return websockets.serve(handler_func, ip_addr, 5678)
 
@@ -84,10 +84,10 @@ async def receive_handler(websocket, path, queue):
         return
 
 
-async def handler(websocket: WebSocketServerProtocol, path: str, message_queue, to_web_queue):
+async def handler(websocket: WebSocketServerProtocol, path: str, context):
     """ Starts all tasks related to websockets and motor control"""
-    receive_msg_task = asyncio.create_task(receive_handler(websocket, path, message_queue))
-    send_msg_task = asyncio.create_task(send_handler(websocket, path, to_web_queue))
+    receive_msg_task = asyncio.create_task(receive_handler(websocket, path, context.from_web_queue))
+    send_msg_task = asyncio.create_task(send_handler(websocket, path, context.to_web_queue))
 
     done, pending = await asyncio.wait([receive_msg_task, send_msg_task], return_when=asyncio.FIRST_COMPLETED)
     print("Client Disconnected!")

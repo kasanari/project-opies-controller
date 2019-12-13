@@ -1,17 +1,18 @@
-from arduino_interface.imu import IMUData
-from car.pidcontroller import PIDController
-from arduino_interface import arduino_serial
-from car.steering_control import SteeringController
-from kalman.kalman_filtering import EstimatedState
-from serial_with_dwm.location_data_handler import LocationData
-import numpy as np
 import asyncio
-import pandas as pd
-from asyncio import Queue
-from car.car import Car
-from dataclasses import dataclass
-from serial import Serial
 import time
+from dataclasses import dataclass
+
+import numpy as np
+import pandas as pd
+from serial import Serial
+
+from application import Context
+from arduino_interface import arduino_serial
+from arduino_interface.imu import IMUData
+from arduino_interface.ultrasonic import measure_distance
+from car.pidcontroller import PIDController
+from car.steering_control import SteeringController
+from serial_with_dwm.location_data_handler import LocationData
 
 
 @dataclass
@@ -25,6 +26,7 @@ class Target:
 class ControlSignal:
     velocity: float
     steering: float
+    target: Target = None
 
     def to_numpy(self):
         return np.array([self.velocity, self.steering])
@@ -46,7 +48,7 @@ def angle_error(target_x, target_y, x, y):
 
 
 def check_for_collision(connection, limit):
-    distance = arduino_serial.measure_distance(connection)
+    distance = measure_distance(connection)
     print(f"Distance in CM: {distance}")
 
     if distance < limit:
@@ -68,11 +70,9 @@ def calculate_lyapunov_errors(target: Target, position: LocationData, angle):
     return x_diff, y_diff, theta
 
 
-async def auto_steer_task(rc_car,
+async def auto_steer_task(context: Context,
+                          rc_car,
                           target: Target,
-                          measurement_queue: Queue,
-                          estimated_state_queue: Queue,
-                          control_signal_queue: Queue = None,
                           distance_control=False):
 
     loc_data: LocationData
@@ -80,8 +80,6 @@ async def auto_steer_task(rc_car,
     arduino_connection: Serial
 
     print(f"Going to ({target.x}, {target.y}) Angle: {target.yaw}")
-
-    control_signal = ControlSignal(0, 0)
 
     speed_controller = PIDController(K_p=0.2, K_d=0.02, K_i=0.0002)
     steering_controller = SteeringController()
@@ -100,14 +98,11 @@ async def auto_steer_task(rc_car,
                     rc_car.stop()
                     return
 
-            measurements = await measurement_queue.get()  # location = location_filtered
-            measurement_queue.put_nowait(measurements)
-            loc_data, imu_data = measurements
-            estimated_state: EstimatedState = await estimated_state_queue.get()
-            estimated_state_queue.put_nowait(estimated_state)
 
-            # e_angle = angle_error(target_x, target_y, location.x, location.y)
-            # y_diff, x_diff = position_error(target_x, target_y, loc_data.x, loc_data.y)
+            await context.new_estimated_state_event.wait()
+            estimated_state = context.estimated_state
+            measurements = context.measurement
+            loc_data, imu_data = measurements
 
             e_x, e_y, e_angle = calculate_lyapunov_errors(target, estimated_state.location_est, imu_data.rotation.yaw)
             speed = np.sqrt(np.square(estimated_state.x_v_est) + np.square(estimated_state.y_v_est))
@@ -128,15 +123,13 @@ async def auto_steer_task(rc_car,
             print(f"acceleration: {acceleration}")
             print(f"u_angle: {u_angle}")
 
-            control_signal.steering = u_angle
-            control_signal.velocity = acceleration
+            context.control_signal.steering = u_angle
+            context.control_signal.velocity = acceleration
+            context.control_signal.target = target
+            context.new_control_signal_event.set()
 
             rc_car.set_wheel_angle(u_angle)
             rc_car.set_acceleration(acceleration)
-
-            print(f"---- {time.time()} ----")
-            control_signal_queue.put_nowait(control_signal)
-            await asyncio.sleep(0.05)
 
     except asyncio.CancelledError as e:
         print(e)
