@@ -81,7 +81,7 @@ def set_H(use_acc=False):
 
 def set_Q(dt, use_acc=True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_dot=0.0, var_y_dot=0.0):
     if use_acc:
-        var_acc_x = 0.5
+        var_acc_x = 0.8
         var_acc_y = var_acc_x
         var_v_x = var_acc_x
         var_v_y = var_acc_x
@@ -175,7 +175,7 @@ def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
     kf.Q = set_Q(timestep, use_acc=use_acc)
     if loc_data is not None:
         z = measurement_update(loc_data, imu_data, use_acc=use_acc)
-        kf.R = measurement_noise_update(0.014, use_acc=use_acc)
+        kf.R = measurement_noise_update(0.2, use_acc=use_acc)
         loc_quality = loc_data.quality
     else:
         z = kf.z
