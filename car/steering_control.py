@@ -21,7 +21,7 @@ class SteeringController:
         control_signal += self.K_1 * angle_error
 
         try:
-            control_signal += (self.K_2 * lateral_error) / speed
+            control_signal += (self.K_2 * lateral_error)
         except RuntimeWarning:
             pass
 
