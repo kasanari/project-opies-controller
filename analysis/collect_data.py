@@ -10,7 +10,7 @@ from kalman.kalman_filtering import init_kalman_filter, kalman_updates
 from kalman.kalman_man import kalman_man
 from serial_with_dwm.location_data_handler import LocationData
 from serial_with_dwm.serial_manager import serial_man
-
+import logging
 
 async def fake_serial_task(context, data_file, update_delay=0.1):
     loc_data = lambda row: LocationData(float(row['x']), float(row['y']), 0, float(row['quality']))
@@ -36,13 +36,9 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
     message_task = None
 
     context = Context()
-
-    try:
-        rc_car = Car(disable_motor)
-    except OSError as e:
-        print(e)
-        print("Failed to connect to PIGPIOD")
-        return
+    logging.basicConfig(level=logging.NOTSET)
+    asyncio.get_event_loop().set_debug(True)
+    logging.getLogger('asyncio').setLevel(logging.DEBUG)
 
     if data_file is None:
         location_task = asyncio.create_task(serial_man(context)) # use real serial
@@ -51,12 +47,12 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
 
     kalman_task = asyncio.create_task(kalman_man(context, dim_u=2, use_acc=True))
 
-    target = Target(0.8, 7, 0, 2.5)
+    target = Target(1.8, 2, 0, 2.5)
 
     if not disable_motor:
         message = {'type': "destination", 'x': target.x, 'y': target.y, "yaw": target.yaw, "speed": target.velocity}
         await context.from_web_queue.put(message)
-        message_task = asyncio.create_task(motor_control_task(context, rc_car))
+        message_task = asyncio.create_task(motor_control_task(context))
 
     await asyncio.sleep(sleep_time)
     kalman_task.cancel()
