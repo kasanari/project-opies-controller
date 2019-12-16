@@ -9,40 +9,43 @@ from websocket_server.websocket_server import ToWeb
 
 
 async def kalman_man(context: Context, update_delay=0.1, dim_u=0, dim_x=6, use_acc=True):
-    # Initalize Kalman Filter
-    measurements = await context.new_measurement_event.wait()
-    loc_data, imu_data = context.measurement
+    try:
+        # Initalize Kalman Filter
+        logging.getLogger('asyncio').info("Kalman Man: Initializing.")
+        await context.new_measurement_event.wait()
+        measurements = context.measurement
+        loc_data, imu_data = measurements
+        context.new_measurement_event.clear()
 
-    kf = init_kalman_filter(loc_data, dt=update_delay, dim_x=dim_x, dim_u=dim_u, use_acc=use_acc)
+        kf = init_kalman_filter(loc_data, dt=update_delay, dim_x=dim_x, dim_u=dim_u, use_acc=use_acc)
 
-    rc_car = Car()
+        data_logger = DataLogger()
 
-    auto_pilot = AutoPilot(rc_car)
+        while True:
 
-    data_logger = DataLogger()
+            try:
+                logging.getLogger('asyncio').info("Kalman Man: Waiting for new measurements.")
+                await context.new_measurement_event.wait()
+                measurements = context.measurement
+                loc_data, imu_data = context.measurement
 
-    while True:
+            except asyncio.TimeoutError:
+                print("Dead reckoning")
 
-        try:
-            logging.getLogger('asyncio').info("Waiting for new measurements.")
-            measurements = await context.new_measurement_event.wait()
-            loc_data, imu_data = context.measurement
+            logging.getLogger('asyncio').info("Kalman Man: Waiting for control signal.")
+            await context.new_control_signal_event.wait()
+            control_signal = context.control_signal
+            context.new_control_signal_event.clear()
 
-        except asyncio.TimeoutError:
-            print("Dead reckoning")
+            estimated_state = kalman_updates(kf, loc_data, imu_data, u=control_signal.to_numpy(), timestep=update_delay, use_acc=use_acc)
 
-        await context.new_control_signal_event.wait()
-        control_signal = context.control_signal
+            context.estimated_state = estimated_state
+            context.new_estimated_state_event.set()
 
-        estimated_state = kalman_updates(kf, loc_data, imu_data, u=control_signal, timestep=0.1, use_acc=use_acc)
+            data_logger.log_data(measurements, estimated_state, control_signal)
 
-        context.estimated_state = estimated_state
-        context.new_measurement_event.set()
+            to_web = ToWeb("measurements", estimated_state, loc_data, imu_data)
+            context.to_web_queue.put_nowait(to_web)
 
-        data_logger.log_data(measurements, estimated_state, control_signal)
-
-        to_web = ToWeb("measurements", estimated_state, loc_data, imu_data)
-        context.to_web_queue.put_nowait(to_web)
-
-        logging.getLogger('asyncio').info("Sleeping.")
-        await asyncio.sleep(0.1)
+    except asyncio.CancelledError:
+        logging.getLogger('asyncio').info(f"Serial Man: Cancelled.")

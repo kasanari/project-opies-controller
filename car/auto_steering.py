@@ -13,7 +13,7 @@ from arduino_interface.ultrasonic import measure_distance
 from car.pidcontroller import PIDController
 from car.steering_control import SteeringController
 from serial_with_dwm.location_data_handler import LocationData
-
+import logging
 
 
 
@@ -65,9 +65,11 @@ async def auto_steer_task(context: Context,
     imu_data: IMUData
     arduino_connection: Serial
 
-    print(f"Going to ({target.x}, {target.y}) Angle: {target.yaw}")
+    log = logging.getLogger('asyncio')
+    log.debug("Going to (%d, %d) Angle: %d", target.x, target.y, target.yaw)
 
     speed_controller = PIDController(K_p=0.2, K_d=0.02, K_i=0.0002)
+
     steering_controller = SteeringController()
 
     if distance_control:
@@ -85,37 +87,47 @@ async def auto_steer_task(context: Context,
                     return
 
 
+            log.info("Auto Steering: Waiting for estimated state and measurements")
             await context.new_estimated_state_event.wait()
             estimated_state = context.estimated_state
             measurements = context.measurement
             loc_data, imu_data = measurements
+            log.info("Auto Steering: Calculating control signal.")
+
+            context.new_measurement_event.clear()
+            context.new_estimated_state_event.clear()
 
             e_x, e_y, e_angle = calculate_lyapunov_errors(target, estimated_state.location_est, imu_data.rotation.yaw)
             speed = np.sqrt(np.square(estimated_state.x_v_est) + np.square(estimated_state.y_v_est))
 
             if e_y < 0:
-                print("Done")
+                log.info("Auto Steering: Done")
                 await rc_car.brake()
                 return
 
             target_v_y = target.velocity
             e_v_y = target_v_y - estimated_state.y_v_est
-            acceleration = speed_controller.get_control_signal(e_v_y, time.time(), P=True, D=True, I=False)
+            acceleration = 0.16#speed_controller.get_control_signal(e_v_y, time.time(), P=True, D=True, I=False)
             u_angle = steering_controller.get_control_signal(speed, e_angle, e_x,
                                                              time.time())  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
 
             acceleration = 0 if acceleration < 0 else acceleration
 
-            print(f"acceleration: {acceleration}")
-            print(f"u_angle: {u_angle}")
+
+            log.debug(f"acceleration: {acceleration}")
+            log.debug(f"u_angle: {u_angle}")
 
             context.control_signal.steering = u_angle
             context.control_signal.velocity = acceleration
             context.control_signal.target = target
-            context.new_control_signal_event.set()
 
             rc_car.set_wheel_angle(u_angle)
             rc_car.set_acceleration(acceleration)
+
+            context.new_control_signal_event.set()
+
+
+            #log.info("Auto Steering: Done for now.")
 
     except asyncio.CancelledError as e:
         print(e)
