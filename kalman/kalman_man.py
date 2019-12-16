@@ -1,14 +1,15 @@
 import logging
 
 from analysis.data_logger import DataLogger
-from kalman.kalman_filtering import init_kalman_filter, kalman_updates
+
+from kalman.PositionEstimator import PositionEstimator
 import asyncio
 
 from application import Context
 from websocket_server.websocket_server import ToWeb
 
 
-async def kalman_man(context: Context, update_delay=0.1, dim_u=0, dim_x=6, use_acc=True):
+async def kalman_man(context: Context):
     try:
         # Initalize Kalman Filter
         logging.getLogger('asyncio').info("Kalman Man: Initializing.")
@@ -17,9 +18,11 @@ async def kalman_man(context: Context, update_delay=0.1, dim_u=0, dim_x=6, use_a
         loc_data, imu_data = measurements
         context.new_measurement_event.clear()
 
-        kf = init_kalman_filter(loc_data, dt=update_delay, dim_x=dim_x, dim_u=dim_u, use_acc=use_acc)
-
         data_logger = DataLogger()
+        position_estimator = PositionEstimator(std_dev_acc=0.8, std_dev_position=0.2, std_dev_velocity=0.8, dim_u=2,
+                                           dim_x=6, update_delay=0.1)
+
+        position_estimator.start_kalman_filter(loc_data)
 
         while True:
 
@@ -37,12 +40,13 @@ async def kalman_man(context: Context, update_delay=0.1, dim_u=0, dim_x=6, use_a
             control_signal = context.control_signal
             context.new_control_signal_event.clear()
 
-            estimated_state = kalman_updates(kf, loc_data, imu_data, u=control_signal.to_numpy(), timestep=update_delay, use_acc=use_acc)
+            estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data, control_signal=control_signal.to_numpy())
 
             context.estimated_state = estimated_state
             context.new_estimated_state_event.set()
 
             data_logger.log_data(measurements, estimated_state, control_signal)
+
 
             to_web = ToWeb("measurements", estimated_state, loc_data, imu_data)
             context.to_web_queue.put_nowait(to_web)

@@ -45,7 +45,9 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
     else:
         location_task = asyncio.create_task(fake_serial_task(context, data_file)) #get data from file
 
-    kalman_task = asyncio.create_task(kalman_man(context, dim_u=2, use_acc=True))
+
+    kalman_task = asyncio.create_task(kalman_man(context))
+
 
     target = Target(1.8, 2, 0, 2.5)
 

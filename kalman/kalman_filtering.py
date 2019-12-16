@@ -19,7 +19,8 @@ class EstimatedState:
 
 
 # var_x and var_y in meters
-def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0):
+def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0, variance_position=0.2,
+                       variance_acc=0.8, variance_velocity=0.8):
     kf = KalmanFilter(dim_x=dim_x, dim_z=dim_z, dim_u=dim_u)
 
     # init state vector x
@@ -28,11 +29,10 @@ def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0):
     kf.H = set_H(use_acc=use_acc)
     kf.B = set_B(dim_u)  # only functional for x_dim = 4 right now
 
-    measurement_variance = 0.007
-    kf.P *= measurement_variance  # add offset?
+    kf.P *= variance_position
 
-    kf.R = measurement_noise_update(distrust_value=measurement_variance, use_acc=use_acc)  # measurement noise
-    kf.Q = set_Q(dt, use_acc=use_acc)  # process noise
+    kf.R = measurement_noise_update(var_acc=variance_acc, var_position=variance_position, use_acc=use_acc)  # measurement noise
+    kf.Q = set_Q(dt, var_velocity=variance_velocity, var_acc=variance_acc, use_acc=use_acc)  # process noise
 
     return kf
 
@@ -79,12 +79,13 @@ def set_H(use_acc=False):
     return h
 
 
-def set_Q(dt, use_acc=True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_dot=0.0, var_y_dot=0.0):
+def set_Q(dt, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0, var_x_dot=0.0, var_y_dot=0.0,
+          var_acc=0.5, var_velocity=0.5):  # TODO: prune
     if use_acc:
-        var_acc_x = 0.8
-        var_acc_y = var_acc_x
-        var_v_x = var_acc_x
-        var_v_y = var_acc_x
+        var_acc_x = var_acc
+        var_acc_y = var_acc
+        var_v_x = var_velocity
+        var_v_y = var_velocity
         q = np.array([[var_x, 0., 0., 0., 0., 0.],
                       [0., var_y, 0., 0., 0., 0.],
                       [0., 0., var_v_x, 0., 0., 0.],
@@ -115,9 +116,9 @@ def set_B(dim_u, use_acc=True):
     elif dim_u == 2:
         if use_acc:
             b = np.array([[0., 0.],
-                          [0., 0.],
-                          [0., 0.],
-                          [1., 0.],
+                         [0., 0.],
+                         [0., 0.],
+                         [10, 0.],  # estimate_y_dot = estimate_y_dot + 10 * u_speed (0.16 ≤ u_speed ≤ 0.18)
                           [0., 0.],
                           [0., 0.]])
 
@@ -148,13 +149,13 @@ def measurement_update(loc_data, imu_data: IMUData, use_acc=False):
     return z
 
 
-def measurement_noise_update(distrust_value, use_acc=False):
-    var_x = distrust_value
-    var_y = distrust_value
+def measurement_noise_update(var_position, var_acc, use_acc=False):  # TODO: call this function set_R ?
+    var_x = var_position
+    var_y = var_position
 
     if use_acc:
-        var_acc_y = 0.5
-        var_acc_x = 0.5
+        var_acc_y = var_acc
+        var_acc_x = var_acc
         r = np.array([[var_x, 0., 0., 0.],
                       [0., var_y, 0., 0.],
                       [0., 0., var_acc_x, 0.],
@@ -170,16 +171,18 @@ def measurement_noise_update(distrust_value, use_acc=False):
 # If the loc_data is None we keep the last z, but we make the covariance matrix for the measurements
 # have ~infinity numbers, so the prediction is vastly favored over the measurement.
 # Returns: a location estimate as a LocationData
-def kalman_updates(kf, loc_data, imu_data, timestep, u=None, use_acc=True):
+def kalman_updates(kf, loc_data, imu_data, timestep, variance_position, variance_acceleration,
+                   u=None, use_acc=True):
     kf.F = set_F(timestep, use_acc=use_acc)
     kf.Q = set_Q(timestep, use_acc=use_acc)
     if loc_data is not None:
         z = measurement_update(loc_data, imu_data, use_acc=use_acc)
-        kf.R = measurement_noise_update(0.2, use_acc=use_acc)
+        kf.R = measurement_noise_update(var_position=variance_position, var_acc=variance_acceleration,
+                                        use_acc=use_acc)
         loc_quality = loc_data.quality
     else:
         z = kf.z
-        kf.R = measurement_noise_update(500, use_acc=use_acc)  # High value, prefer process model
+        kf.R = measurement_noise_update(var_position=500, var_acc=500, use_acc=use_acc)  # High value, prefer process model
         loc_quality = -99
     if u is not None:
         if u[0] < 0:
