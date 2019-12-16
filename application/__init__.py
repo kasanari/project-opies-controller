@@ -23,15 +23,25 @@ class ControlSignal:
 
 @dataclass
 class Context:
+    new_measurement_event: Event
+    new_estimated_state_event: Event
+    new_control_signal_event: Event
+    to_web_queue: Queue
+    from_web_queue: Queue
     measurement: (LocationData, IMUData) = None
-    control_signal = ControlSignal(0, 0)
+    control_signal = ControlSignal(0, 0, Target(0, 0, 0, 0))
     estimated_state: EstimatedState = None
     auto_steering = False
-    new_measurement_event: Event = Event()
-    new_estimated_state_event: Event = Event()
-    new_control_signal_event: Event = Event()
-    to_web_queue: Queue = Queue()
-    from_web_queue: Queue = Queue()
+
+    def __init__(self):
+        self.new_control_signal_event = Event()
+        self.new_estimated_state_event = Event()
+        self.new_measurement_event = Event()
+        self.to_web_queue = Queue()
+        self.from_web_queue = Queue()
+
+        self.new_control_signal_event.set()
+
 
     async def get_estimated_state(self):
         await self.new_estimated_state_event.wait()
