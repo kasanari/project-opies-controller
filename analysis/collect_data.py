@@ -36,9 +36,9 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
     message_task = None
 
     context = Context()
-    logging.basicConfig(level=logging.NOTSET)
+    logging.basicConfig(level=logging.INFO)
     asyncio.get_event_loop().set_debug(True)
-    logging.getLogger('asyncio').setLevel(logging.DEBUG)
+    logging.getLogger('asyncio').setLevel(logging.NOTSET)
 
     if data_file is None:
         location_task = asyncio.create_task(serial_man(context)) # use real serial
