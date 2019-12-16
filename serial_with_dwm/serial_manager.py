@@ -65,8 +65,8 @@ async def serial_man(context: Context, update_delay: float = 0.3):
             # print(f"real_accel: {realaccel}")
             # print(f"worl_accel: {worldaccel}")
             # print("--------")
-            logging.getLogger('asyncio').info(f"Serial Man: Sleeping for {update_delay} seconds.")
-            await asyncio.sleep(update_delay)
+            # logging.getLogger('asyncio').info(f"Serial Man: Sleeping for {update_delay} seconds.")
+            #await asyncio.sleep(update_delay)
 
             # dt_measurements = update_delay + seconds
             # steering_signal = np.array([1])  # temp
