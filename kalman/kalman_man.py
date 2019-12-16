@@ -1,18 +1,21 @@
-from kalman.kalman_filtering import init_kalman_filter, kalman_updates
+from kalman.PositionEstimator import PositionEstimator
 import asyncio
 from asyncio import Queue
 import numpy as np
 from websocket_server.websocket_server import ToWeb
 
 
-async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_web_queue=None, control_queue=None, update_delay=0.1, dim_u=0, dim_x = 6, use_acc=True):
+async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_web_queue=None, control_queue=None):
 
     # Initalize Kalman Filter
     measurements = await measurement_queue.get()
     await measurement_queue.put(measurements)
     loc_data, imu_data = measurements
 
-    kf = init_kalman_filter(loc_data, dt=update_delay, dim_x=dim_x, dim_u=dim_u, use_acc=use_acc)
+    position_estimator = PositionEstimator(std_dev_acc=0.8, std_dev_position=0.2, std_dev_velocity=0.8, dim_u=2,
+                                           dim_x=6, update_delay=0.1)
+
+    position_estimator.start_kalman_filter(loc_data)
 
     while True:
         try:
@@ -33,7 +36,8 @@ async def kalman_man(measurement_queue: Queue, estimated_state_queue: Queue, to_
 
         else:
             steering_signal = np.array([0, 0])
-        estimated_state = kalman_updates(kf, loc_data, imu_data, u=steering_signal, timestep=0.1, use_acc=use_acc)
+        estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data, control_signal=steering_signal)
+
         estimated_state_queue.put_nowait(estimated_state)
 
         if to_web_queue is not None:

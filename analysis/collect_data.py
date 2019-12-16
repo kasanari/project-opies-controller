@@ -151,7 +151,7 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
         location_task = asyncio.create_task(fake_serial_task(data_file, measurement_queue)) #get data from file
         fake_serial = True
 
-    kalman_task = asyncio.create_task(kalman_man(measurement_queue, estimated_state_queue, control_queue=control_queue, dim_u=2, use_acc=True))
+    kalman_task = asyncio.create_task(kalman_man(measurement_queue, estimated_state_queue, control_queue=control_queue))
 
     target = Target(0.8, 7, 0, 2.5)
 
