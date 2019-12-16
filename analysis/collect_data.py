@@ -3,8 +3,7 @@ import csv
 
 import numpy as np
 
-from application import Context
-from car.auto_steering import Target
+from application import Context, Target
 from car.car import Car
 from car.motor_control import motor_control_task
 from kalman.kalman_filtering import init_kalman_filter, kalman_updates

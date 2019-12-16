@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from serial import Serial
 
-from application import Context
+from application import Context, Target
 from arduino_interface import arduino_serial
 from arduino_interface.imu import IMUData
 from arduino_interface.ultrasonic import measure_distance
@@ -15,21 +15,7 @@ from car.steering_control import SteeringController
 from serial_with_dwm.location_data_handler import LocationData
 
 
-@dataclass
-class Target:
-    x: float
-    y: float
-    yaw: float
-    velocity: float
 
-@dataclass
-class ControlSignal:
-    velocity: float
-    steering: float
-    target: Target = None
-
-    def to_numpy(self):
-        return np.array([self.velocity, self.steering])
 
 
 def position_error(target_x, target_y, x, y):

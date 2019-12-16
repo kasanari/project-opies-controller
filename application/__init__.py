@@ -1,11 +1,25 @@
 from dataclasses import dataclass
-
+import numpy as np
 from arduino_interface.imu import IMUData
-from car.auto_steering import ControlSignal
 from kalman.kalman_filtering import EstimatedState
 from serial_with_dwm.location_data_handler import LocationData
 from asyncio import Event, Queue
 
+@dataclass
+class Target:
+    x: float
+    y: float
+    yaw: float
+    velocity: float
+
+@dataclass
+class ControlSignal:
+    velocity: float
+    steering: float
+    target: Target = None
+
+    def to_numpy(self):
+        return np.array([self.velocity, self.steering])
 
 @dataclass
 class Context:

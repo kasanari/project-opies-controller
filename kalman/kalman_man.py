@@ -1,8 +1,6 @@
 import logging
 
 from analysis.data_logger import DataLogger
-from car.auto_steering import ControlSignal
-from car.car import Car
 from kalman.kalman_filtering import init_kalman_filter, kalman_updates
 import asyncio
 
