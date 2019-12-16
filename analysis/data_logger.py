@@ -36,6 +36,10 @@ class DataLogger:
         self.start_time = time.time()
         self.filename_prefix = generate_timestamp()
 
+
+    def make_directory(self):
+        os.mkdir(self.filename_prefix)
+
     def log_data(self, measurements, estimated_state: EstimatedState, control_signal: ControlSignal):
         imu_data: IMUData
         loc_data, imu_data = measurements
@@ -67,10 +71,13 @@ class DataLogger:
         time_stamp = (time.time() - self.start_time)
         self.df = self.df.append(pd.DataFrame(locations, index=[time_stamp]))
 
-    def create_plots(self, filename_timestamp):
+    def create_plots(self):
         self.df.plot(x=['x', 'x_kf'], y=['y', 'y_kf'], kind='scatter')
         plt.ylim(0, 5)
         plt.xlim(0, 5)
+
+        filename_timestamp = self.filename_prefix
+
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_collect_data_scatter_plot.png"))
 
         # line plot

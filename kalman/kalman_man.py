@@ -52,4 +52,8 @@ async def kalman_man(context: Context):
             context.to_web_queue.put_nowait(to_web)
 
     except asyncio.CancelledError:
+
         logging.getLogger('asyncio').info(f"Serial Man: Cancelled.")
+        data_logger.make_directory()
+        data_logger.save_csv()
+        data_logger.create_plots()
