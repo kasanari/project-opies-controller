@@ -1,5 +1,5 @@
 from kalman.kalman_filtering import init_kalman_filter, kalman_updates
-
+import time
 
 class PositionEstimator:
 
@@ -13,16 +13,23 @@ class PositionEstimator:
         self.update_delay = update_delay
         self.kf = None
         self.estimated_state = None
+        self.time = time.time()
 
     def start_kalman_filter(self, loc_data):
         self.kf = init_kalman_filter(loc_data, dt=self.update_delay, dim_x=self.dim_x, dim_u=self.dim_u, use_acc=True,
                                      variance_acc=self.std_dev_acc, variance_position=self.std_dev_position,
                                      variance_velocity=self.std_dev_velocity)
 
-    def do_kalman_updates(self, loc_data, imu_data, control_signal):
+    def do_kalman_updates(self, loc_data, imu_data, control_signal, variable_dt=False):
+        if variable_dt:
+            d_t = time.time() - self.time
+        else:
+            d_t = self.update_delay
+
         self.estimated_state = kalman_updates(self.kf, loc_data, imu_data, variance_position=self.std_dev_position,
                                               variance_acceleration=self.std_dev_acc, u=control_signal,
-                                              timestep=self.update_delay, use_acc=True)
+                                              timestep=d_t, use_acc=True)
+        self.time = time.time()
         return self.estimated_state
 
     # TODO fundera på tidsstegen här. vi kollar tiden det tar att läsa location, används den?
