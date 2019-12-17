@@ -86,16 +86,16 @@ async def receive_handler(websocket, path, queue):
 
 async def handler(websocket: WebSocketServerProtocol, path: str, context):
     """ Starts all tasks related to websockets and motor control"""
+    pending = None
     try:
         receive_msg_task = asyncio.create_task(receive_handler(websocket, path, context.from_web_queue))
         send_msg_task = asyncio.create_task(send_handler(websocket, path, context.to_web_queue))
 
         done, pending = await asyncio.wait([receive_msg_task, send_msg_task], return_when=asyncio.FIRST_COMPLETED)
         print("Client Disconnected!")
-        for task in pending:
-            task.cancel()
     except asyncio.CancelledError:
         logging.getLogger('asyncio').info("Cancelling websocket tasks")
     finally:
-        for task in pending:
-            task.cancel()
+        if pending is not None:
+            for task in pending:
+                task.cancel()
