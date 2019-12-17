@@ -12,7 +12,7 @@ from websocket_server.websocket_server import ToWeb
 async def kalman_man(context: Context):
     try:
         # Initalize Kalman Filter
-        logging.getLogger('asyncio').info("Kalman Man: Initializing.")
+        logging.getLogger('asyncio').info("Initializing.")
         await context.new_measurement_event.wait()
         measurements = context.measurement
         loc_data, imu_data = measurements
@@ -53,7 +53,7 @@ async def kalman_man(context: Context):
 
     except asyncio.CancelledError:
 
-        logging.getLogger('asyncio').info(f"Serial Man: Cancelled.")
+        logging.getLogger('asyncio').info(f"Cancelled.")
         data_logger.make_directory()
         data_logger.save_csv()
         data_logger.create_plots()

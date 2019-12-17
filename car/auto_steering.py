@@ -87,12 +87,12 @@ async def auto_steer_task(context: Context,
                     return
 
 
-            log.info("Auto Steering: Waiting for estimated state and measurements")
+            log.info("Waiting for estimated state and measurements")
             await context.new_estimated_state_event.wait()
             estimated_state = context.estimated_state
             measurements = context.measurement
             loc_data, imu_data = measurements
-            log.info("Auto Steering: Calculating control signal.")
+            log.info("Calculating control signal.")
 
             context.new_measurement_event.clear()
             context.new_estimated_state_event.clear()
@@ -101,7 +101,7 @@ async def auto_steer_task(context: Context,
             speed = np.sqrt(np.square(estimated_state.x_v_est) + np.square(estimated_state.y_v_est))
 
             if e_y < 0:
-                log.info("Auto Steering: Done")
+                log.info("Done")
                 await rc_car.brake()
                 return
 

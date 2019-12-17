@@ -36,9 +36,9 @@ async def collect_data_task(serial_data_file=None, disable_motor=True, no_saving
     message_task = None
 
     context = Context()
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(format='%(levelname)s:%(created)f:%(funcName)s:%(message)s', level=logging.INFO)
     asyncio.get_event_loop().set_debug(True)
-    logging.getLogger('asyncio').setLevel(logging.NOTSET)
+    logging.getLogger('asyncio').setLevel(logging.INFO)
 
 
 

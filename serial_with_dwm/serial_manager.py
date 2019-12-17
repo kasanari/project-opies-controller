@@ -33,12 +33,12 @@ async def serial_man(context: Context, update_delay: float = 0.3):
         success = await imu.start_IMU(arduino_con)
 
         if not success:
-            logging.getLogger('asyncio').warning("Serial Man: Failed to setup IMU")
+            logging.getLogger('asyncio').warning("Failed to setup IMU")
         try:
             ser_con = serial.Serial(port='/dev/serial0', baudrate=115200, timeout=1)
 
         except serial.SerialException:
-            logging.getLogger('asyncio').warning("Serial Man: Failed to connect to tag")
+            logging.getLogger('asyncio').warning("Failed to connect to tag")
 
         ser_handler = SerialHandler(ser_con)
         read_imu = functools.partial(imu.read_IMU, connection=arduino_con)
@@ -50,7 +50,7 @@ async def serial_man(context: Context, update_delay: float = 0.3):
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 result_imu_task = event_loop.run_in_executor(pool, read_imu)
                 result_tag_task = event_loop.run_in_executor(pool, read_tag)
-                logging.getLogger('asyncio').info("Serial Man: Waiting for tag and IMU.")
+                logging.getLogger('asyncio').info("Waiting for tag and IMU.")
                 result_imu, result_tag = await asyncio.gather(result_imu_task, result_tag_task)
             # print(result_tag[0])
             # print(result_tag[1])
@@ -76,7 +76,7 @@ async def serial_man(context: Context, update_delay: float = 0.3):
             # tasks = [q.put([loc_data, loc_data_filtered]) for q in queues]
 
     except asyncio.CancelledError:
-        logging.getLogger('asyncio').info(f"Serial Man: Cancelled.")
+        logging.getLogger('asyncio').info(f"Cancelled.")
     finally:
         if ser_con is not None:
             ser_con.close()
