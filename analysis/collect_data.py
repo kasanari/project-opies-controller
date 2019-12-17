@@ -49,7 +49,7 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
     kalman_task = asyncio.create_task(kalman_man(context))
 
 
-    target = Target(1.8, 2, 0, 2.5)
+    target = Target(1.8, 2, 0, 0.4)
 
     if not disable_motor:
         message = {'type': "destination", 'x': target.x, 'y': target.y, "yaw": target.yaw, "speed": target.velocity}
