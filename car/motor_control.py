@@ -62,6 +62,7 @@ async def motor_control_task(context: Context, debug_no_car=False):
                 if auto_steer is not None:
                     auto_steer.cancel()
 
+                context.auto_steering = True
                 target = Target(x_destination, y_destination, yaw, speed)
                 auto_steer = asyncio.create_task(auto_steer_task(context, rc_car, target))
 

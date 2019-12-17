@@ -5,7 +5,7 @@ from analysis.data_logger import DataLogger
 from kalman.PositionEstimator import PositionEstimator
 import asyncio
 
-from application import Context
+from application import Context, ControlSignal
 from websocket_server.websocket_server import ToWeb
 
 
@@ -27,7 +27,7 @@ async def kalman_man(context: Context):
         while True:
 
             try:
-                logging.getLogger('asyncio').info("Kalman Man: Waiting for new measurements.")
+                logging.getLogger('asyncio').info("Waiting for new measurements.")
                 await context.new_measurement_event.wait()
                 measurements = context.measurement
                 loc_data, imu_data = context.measurement
@@ -35,12 +35,19 @@ async def kalman_man(context: Context):
             except asyncio.TimeoutError:
                 print("Dead reckoning")
 
-            logging.getLogger('asyncio').info("Kalman Man: Waiting for control signal.")
-            await context.new_control_signal_event.wait()
-            control_signal = context.control_signal
-            context.new_control_signal_event.clear()
+            if context.auto_steering:
+                logging.getLogger('asyncio').info("Waiting for control signal.")
+                await context.new_control_signal_event.wait()
+                control_signal = context.control_signal
+                context.new_control_signal_event.clear()
+            else:
+                control_signal = ControlSignal()
+                context.new_measurement_event.clear()
+                context.new_estimated_state_event.clear()
 
-            estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data, control_signal=control_signal.to_numpy(), variable_dt=True)
+            estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data,
+                                                                   control_signal=control_signal.to_numpy(),
+                                                                   variable_dt=True)
 
             context.estimated_state = estimated_state
             context.new_estimated_state_event.set()

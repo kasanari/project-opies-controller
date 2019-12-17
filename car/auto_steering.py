@@ -102,6 +102,7 @@ async def auto_steer_task(context: Context,
 
             if e_y < 0:
                 log.info("Done")
+                context.auto_steering = False
                 await rc_car.brake()
                 return
 
