@@ -23,14 +23,9 @@ async def main_task_handler(ip_addr: str, serial_data_file: str = None, disable_
     else:
         serial_man_task = asyncio.create_task(fake_serial_task(context, serial_data_file, update_delay=0.3))
 
+    kalman_task = asyncio.create_task(kalman_man(context))
 
-    kalman_task = asyncio.create_task(kalman_man(context,
-                                                 dim_x=6,
-                                                 dim_u = 2,
-                                                 use_acc=True))
-
-    motor_task = asyncio.create_task(motor_control_task(context,
-                                                          debug_no_car=disable_motor))
+    motor_task = asyncio.create_task(motor_control_task(context, debug_no_car=disable_motor))
 
     websocket_task = create_websocket_task(context, ip_addr)
 
@@ -50,44 +45,38 @@ def kill_pigpiod():
     except subprocess.CalledProcessError:
         pass
 
+def start_collect_data(args):
+    args = vars(args)
+    del args["func"]
+    asyncio.run(
+        collect_data_task(**args)
+    )
+
+def start_gui(args):
+    args = vars(args)
+    del args["func"]
+    location_server.start_web_client(PORT_NUMBER)
+    asyncio.run(main_task_handler(**args))
+
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Start the car control server.')
-    parser.add_argument('ip_addr', metavar='IP', type=str, nargs='?',
-                        help='The IP address to use.', default='localhost')
-    parser.add_argument('--fake-serial', nargs='?', help='Use saved data instead of serial connection')
+    parser.add_argument('--fake-serial', nargs='?', dest='serial_data_file', help='Use saved data instead of serial connection')
     parser.add_argument('--disable-motor', action='store_true', help='Do not use motor')
-    parser.add_argument("-o", nargs='?', dest="out_file", help="output file name, in csv format. Defaults to a timestamp.")
-    parser.add_argument("--no-saving", dest='no_saving', action='store_true', help="Disables saving results to a file")
-    parser.add_argument("--collect-data", action="store_true")
-    parser.add_argument("--sleep-time", nargs='?', type=int)
+
+    subparsers = parser.add_subparsers(help='subcommands help')
+
+    gui_parser = subparsers.add_parser("gui", help='Start the car control server.')
+    gui_parser.add_argument('ip_addr', metavar='IP', type=str, nargs='?',
+                 help='The IP address to use.', default='localhost')
+    gui_parser.set_defaults(func=start_gui)
+
+    collect_data_parser = subparsers.add_parser("collect-data", help="automatically run the car and log data")
+    collect_data_parser.add_argument("--sleep-time", nargs='?', dest='sleep_time', type=int)
+    collect_data_parser.add_argument("-o", nargs='?', dest="out_file", help="output file name, in csv format. Defaults to a timestamp.")
+    collect_data_parser.add_argument("--no-saving", dest='no_saving', action='store_true', help="Disables saving results to a file")
+    collect_data_parser.set_defaults(func=start_collect_data)
 
     args = parser.parse_args()
-
-    ip = args.ip_addr
-    data_file = args.fake_serial
-    disable_motor = args.disable_motor
-    collect_data = args.collect_data
-    sleep_time = args.sleep_time
-
-
-   # if not disable_motor:
-        #kill_pigpiod()
-        #subprocess.run("sudo pigpiod", shell=True, check=True)
-
-    try:
-
-        if not collect_data:
-            location_server.start_web_client(PORT_NUMBER)
-            asyncio.run(main_task_handler(ip, data_file, disable_motor=disable_motor))
-        else:
-            asyncio.run(collect_data_task(data_file, disable_motor=disable_motor, no_saving=args.no_saving, out_file=args.out_file, sleep_time=sleep_time))
-
-    except KeyboardInterrupt:
-        print("Stopping..")
-
-    finally:
-        #if not disable_motor:
-            #kill_pigpiod()
-        pass
+    args.func(args)

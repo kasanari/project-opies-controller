@@ -31,7 +31,7 @@ async def fake_serial_task(context, data_file, update_delay=0.1):
                 await asyncio.sleep(update_delay)
 
 
-async def collect_data_task(data_file=None, disable_motor=True, no_saving=False, out_file=None, sleep_time=10):
+async def collect_data_task(serial_data_file=None, disable_motor=True, no_saving=False, out_file=None, sleep_time=10):
 
     message_task = None
 
@@ -40,10 +40,12 @@ async def collect_data_task(data_file=None, disable_motor=True, no_saving=False,
     asyncio.get_event_loop().set_debug(True)
     logging.getLogger('asyncio').setLevel(logging.NOTSET)
 
-    if data_file is None:
+
+
+    if serial_data_file is None:
         location_task = asyncio.create_task(serial_man(context)) # use real serial
     else:
-        location_task = asyncio.create_task(fake_serial_task(context, data_file)) #get data from file
+        location_task = asyncio.create_task(fake_serial_task(context, serial_data_file)) #get data from file
 
 
     kalman_task = asyncio.create_task(kalman_man(context))
