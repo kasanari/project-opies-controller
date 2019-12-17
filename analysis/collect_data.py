@@ -59,8 +59,8 @@ async def collect_data_task(serial_data_file=None, disable_motor=True, no_saving
         message_task = asyncio.create_task(motor_control_task(context))
 
     await asyncio.sleep(sleep_time)
-    kalman_task.cancel()
     location_task.cancel()
+    kalman_task.cancel()
 
     if not disable_motor and message_task is not None:
         message_task.cancel()
