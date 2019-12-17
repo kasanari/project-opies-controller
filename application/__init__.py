@@ -14,9 +14,9 @@ class Target:
 
 @dataclass
 class ControlSignal:
-    velocity: float
-    steering: float
-    target: Target = None
+    velocity: float = 0
+    steering: float = 0
+    target: Target = Target(0, 0, 0, 0)
 
     def to_numpy(self):
         return np.array([self.velocity, self.steering])
