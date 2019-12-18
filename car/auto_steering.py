@@ -121,6 +121,10 @@ async def auto_steer_task(context: Context,
             context.control_signal.steering = u_angle
             context.control_signal.velocity = acceleration
             context.control_signal.target = target
+            context.control_signal.error.x = e_x
+            context.control_signal.error.y = e_y
+            context.control_signal.error.yaw = e_angle
+            context.control_signal.error.velocity = e_v_y
 
             rc_car.set_wheel_angle(u_angle)
             rc_car.set_acceleration(acceleration)

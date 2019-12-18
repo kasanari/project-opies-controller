@@ -65,20 +65,24 @@ class DataLogger:
             'u_v': control_signal.velocity,
             'u_yaw': control_signal.steering,
             'target_yaw': control_signal.target.yaw,
-            'target_v': control_signal.target.velocity
+            'target_v': control_signal.target.velocity,
+            'e_y': control_signal.error.y,
+            'e_x': control_signal.error.x,
+            'e_yaw': control_signal.error.yaw,
+            'e_v': control_signal.error.velocity
         }
 
         time_stamp = (time.time() - self.start_time)
         self.df = self.df.append(pd.DataFrame(locations, index=[time_stamp]))
 
     def create_plots(self):
-        self.df.plot(x=['x', 'x_kf'], y=['y', 'y_kf'], kind='scatter')
-        plt.ylim(0, 5)
-        plt.xlim(0, 5)
-
+        # self.df.plot(x=['x', 'x_kf'], y=['y', 'y_kf'], kind='scatter')
+        # plt.ylim(0, 5)
+        # plt.xlim(0, 5)
+        #
         filename_timestamp = self.filename_prefix
-
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_collect_data_scatter_plot.png"))
+        #
+        # plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_collect_data_scatter_plot.png"))
 
         # line plot
         self.df.reset_index().plot(x='index', y=['x', 'y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
@@ -91,10 +95,6 @@ class DataLogger:
         self.df.reset_index().plot(x='index', y=['y_dot', 'x_dot'])
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity.png"))
 
-        # yaw
-        self.df.reset_index().plot(x='index', y='yaw')
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_yaw.png"))
-
         # acceleration
         self.df.reset_index().plot(x='index', y=['a_y', 'a_x', 'a_x_kf', 'a_y_kf'])
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration.png"))
@@ -103,8 +103,13 @@ class DataLogger:
         self.df.reset_index().plot(x='index', y=['u_v', 'target_v', 'y_dot'])
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity_control.png"))
 
-        self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw'])
+        # Steering control
+        self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw'])
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_steering_control.png"))
+
+        # Errors
+        self.df.reset_index().plot(x='index', y=['e_x', 'e_y', 'x_kf', 'y_kf'])
+        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_control_error.png"))
 
     def get_file_name(self, suffix, extension='png'):
         filename_timestamp = self.filename_prefix
