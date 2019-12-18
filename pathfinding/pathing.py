@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from dataclasses import dataclass
+
+from matplotlib.animation import MovieWriter, FFMpegWriter
+
 import pathfinding.pure_pursuit as pp
 import math
 
@@ -81,35 +84,35 @@ def create_path_from_points(x_points, y_points):
     total_path_x = np.array([])
     total_path_y = np.array([])
 
+
+
     for n in range(0, len(x_points)-1):
 
         path_x, path_y = plot_line(x_points[n], y_points[n], x_points[n+1], y_points[n+1])
-        plt.plot(path_x, path_y, 'x')
 
         total_path_x = np.concatenate((total_path_x, path_x), axis=None)
         total_path_y = np.concatenate((total_path_y, path_y), axis=None)
 
-    plt.plot(x_points, y_points, 'o')
 
     path = Path(total_path_x, total_path_y)
 
-    x, y = 0.5, 1.25
-    yaw = np.deg2rad(0)
-    l = 0.5
 
-    tx, ty = pp.find_nearest_point(x, y, l, path)
-    alpha = pp.get_alpha(x, y, yaw, tx, ty)
-    print(alpha)
-    circle1 = plt.Circle((x, y), l, color='r', fill=False)
-    plt.gcf().gca().add_artist(circle1)
-
-
-
-    plt.plot(x,y,'o')
-    plt.plot([x, tx], [y, ty])
-    plt.show()
 
     return path
+
+def plot_path(ax, x_points, y_points, path):
+    ax.plot(x_points, y_points, 'ro')
+    ax.plot(path.x, path.y, 'bx')
+
+def create_circle(x, y, l):
+    circle1 = plt.Circle((x, y), l, color='r', fill=False)
+    plt.gcf().gca().add_artist(circle1)
+    return circle1
+
+def update_graph(x, y, tx, ty, target_line, car, circle):
+    target_line.set_data([x,tx], [y,ty])
+    car.set_data(x, y)
+    circle.center = (x,y)
 
 
 np.random.seed(int(time.time()))
@@ -117,11 +120,49 @@ np.random.seed(int(time.time()))
 #path_x = np.linspace(0, 2*np.pi, 10)
 #path_y = np.sin(path_x)
 
-path_x = [0, 1, 2]
-path_y = [1.5, 2, 1.5]
+points_x = [0, 1.5, 3]
+points_y = [1.5, 2, 1.5]
 
+fig, ax = plt.subplots(1,1)
+ax.set_aspect('equal')
 plt.xlim([0, 3])
 plt.ylim([0, 3])
 
 
-create_path_from_points(path_x, path_y)
+path = create_path_from_points(points_x, points_y, ax)
+
+x, y = 0.5, 1.25
+yaw = np.deg2rad(0)
+l = 0.75
+
+tx, ty = pp.find_nearest_point(x, y, l, path, ax)
+
+alpha = pp.get_alpha(x, y, yaw, tx, ty)
+print(np.rad2deg(alpha))
+
+moviewriter = FFMpegWriter(fps=30)
+avail = moviewriter.isAvailable()
+moviewriter.setup(fig, 'my_movie.mp4', dpi=100)
+
+plot_path(ax, points_x, points_y, path)
+target_line, = ax.plot([x, tx], [y, ty], 'g')
+car, = ax.plot(x, y, 'o')
+circle = create_circle(x,y,l)
+
+while x < 3:
+
+    tx, ty = pp.find_nearest_point(x, y, l, path, ax)
+
+    alpha = pp.get_alpha(x, y, yaw, tx, ty)
+    print(np.rad2deg(alpha))
+
+    update_graph(x, y, tx, ty, target_line, car, circle)
+
+    moviewriter.grab_frame()
+    x += 0.05 * np.cos(alpha)
+    y += 0.05 * np.sin(alpha)
+
+
+moviewriter.finish()
+
+plt.show()

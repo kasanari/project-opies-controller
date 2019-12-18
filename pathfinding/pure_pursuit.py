@@ -23,8 +23,6 @@ def find_nearest_point(x,y, l, path):
     d = 0
     i = closed_point_index
 
-    plt.plot([x,path.x[closed_point_index]], [y, path.y[closed_point_index]])
-
     while d < l and (i + 1) < len(path.x):
 
         dx = x - path.x[i]
@@ -34,11 +32,14 @@ def find_nearest_point(x,y, l, path):
         if d < l:
             i += 1
 
-    return [path.x[i], path.y[i]]
+    tx = path.x[i]
+    ty = path.y[i]
+
+    return [tx, ty]
 
 
 def get_control_signal(x, y, l, yaw, path):
    tx, ty = find_nearest_point(x, y, l, path)
    return get_alpha(x, y, tx, ty, yaw)
-    
+
 
