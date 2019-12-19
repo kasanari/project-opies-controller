@@ -3,7 +3,7 @@ import csv
 
 import numpy as np
 
-from application import Context, Target
+from application.context import Target, Context
 from car.car import Car
 from car.motor_control import motor_control_task
 from kalman.kalman_filtering import init_kalman_filter, kalman_updates
@@ -31,11 +31,11 @@ async def fake_serial_task(context, data_file, update_delay=0.1):
                 await asyncio.sleep(update_delay)
 
 
-async def collect_data_task(serial_data_file=None, disable_motor=True, no_saving=False, out_file=None, sleep_time=10):
+async def collect_data_task(serial_data_file=None, disable_motor=True, no_saving=False, out_file=None, sleep_time=10, settings_file=None):
 
     message_task = None
 
-    context = Context()
+    context = Context(settings_file)
     logging.basicConfig(format='%(levelname)s:%(created)f:%(funcName)s:%(message)s', level=logging.INFO)
     asyncio.get_event_loop().set_debug(True)
     logging.getLogger('asyncio').setLevel(logging.INFO)

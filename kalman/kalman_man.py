@@ -5,7 +5,7 @@ from analysis.data_logger import DataLogger
 from kalman.PositionEstimator import PositionEstimator
 import asyncio
 
-from application import Context, ControlSignal
+from application.context import ControlSignal, Context
 from websocket_server.websocket_server import ToWeb
 
 

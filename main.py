@@ -4,7 +4,8 @@ import subprocess
 
 from analysis.collect_data import collect_data_task
 from analysis.collect_data import fake_serial_task
-from application import Context
+from application.context import Context
+import application.settings as settings
 from car.motor_control import motor_control_task
 from kalman.kalman_man import kalman_man
 from serial_with_dwm.serial_manager import serial_man
@@ -14,9 +15,9 @@ from websocket_server.websocket_server import create_websocket_task
 PORT_NUMBER = 8080  # Port for web server
 
 
-async def main_task_handler(ip_addr: str, serial_data_file: str = None, disable_motor: bool = False):
+async def main_gui_task(ip_addr: str, serial_data_file: str = None, disable_motor: bool = False, settings_file=None):
 
-    context = Context()
+    context = Context(settings_file)
 
     if serial_data_file is None:
         serial_man_task = asyncio.create_task(serial_man(context, update_delay=0.3))
@@ -46,24 +47,27 @@ def kill_pigpiod():
         pass
 
 def start_collect_data(args):
-    args = vars(args)
-    del args["func"]
     asyncio.run(
         collect_data_task(**args)
     )
 
 def start_gui(args):
-    args = vars(args)
-    del args["func"]
     location_server.start_web_client(PORT_NUMBER)
-    asyncio.run(main_task_handler(**args))
+    asyncio.run(main_gui_task(**args))
 
+def initial_setup(args):
+    args = vars(args)
+    func = args.pop("func")
+
+    func(args)
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Start the car control server.')
     parser.add_argument('--fake-serial', nargs='?', dest='serial_data_file', help='Use saved data instead of serial connection')
     parser.add_argument('--disable-motor', action='store_true', help='Do not use motor')
+
+    parser.add_argument('-s', nargs='?', dest='settings_file', help='settings file in JSON format')
 
     subparsers = parser.add_subparsers(help='subcommands help')
 
@@ -79,4 +83,5 @@ if __name__ == "__main__":
     collect_data_parser.set_defaults(func=start_collect_data)
 
     args = parser.parse_args()
-    args.func(args)
+
+    initial_setup(args)

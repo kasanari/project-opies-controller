@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from serial import Serial
 
-from application import Context, Target
+from application.context import Target, Context
 from arduino_interface import arduino_serial
 from arduino_interface.imu import IMUData
 from arduino_interface.ultrasonic import measure_distance

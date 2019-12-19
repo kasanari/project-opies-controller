@@ -9,7 +9,7 @@ import serial
 
 import arduino_interface.arduino_serial as arduino
 import arduino_interface.imu as imu
-from application import Context
+from application.context import Context
 from serial_with_dwm.serial_handler import SerialHandler
 
 

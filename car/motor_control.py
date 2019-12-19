@@ -1,6 +1,6 @@
 import asyncio
 
-from application import Context, Target
+from application.context import Target, Context
 from car.car import Car
 from car.auto_steering import auto_steer_task
 
