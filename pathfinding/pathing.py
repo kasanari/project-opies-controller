@@ -84,8 +84,6 @@ def create_path_from_points(x_points, y_points):
     total_path_x = np.array([])
     total_path_y = np.array([])
 
-
-
     for n in range(0, len(x_points)-1):
 
         path_x, path_y = plot_line(x_points[n], y_points[n], x_points[n+1], y_points[n+1])
@@ -95,9 +93,6 @@ def create_path_from_points(x_points, y_points):
 
 
     path = Path(total_path_x, total_path_y)
-
-
-
     return path
 
 def plot_path(ax, x_points, y_points, path):
@@ -109,60 +104,58 @@ def create_circle(x, y, l):
     plt.gcf().gca().add_artist(circle1)
     return circle1
 
-def update_graph(x, y, tx, ty, target_line, car, circle):
+def update_graph(x, y, tx, ty, target_line, car, circle, alpha):
+    plt.title(f'alpha: {alpha}')
     target_line.set_data([x,tx], [y,ty])
     car.set_data(x, y)
     circle.center = (x,y)
 
+def test_pure_pursuit():
 
-np.random.seed(int(time.time()))
+    np.random.seed(int(time.time()))
 
-#path_x = np.linspace(0, 2*np.pi, 10)
-#path_y = np.sin(path_x)
+    points_x = [0, 1.5, 3]
+    points_y = [1.5, 2, 1.5]
 
-points_x = [0, 1.5, 3]
-points_y = [1.5, 2, 1.5]
+    fig, ax = plt.subplots(1,1)
+    ax.set_aspect('equal')
+    plt.xlim([0, 3])
+    plt.ylim([0, 3])
 
-fig, ax = plt.subplots(1,1)
-ax.set_aspect('equal')
-plt.xlim([0, 3])
-plt.ylim([0, 3])
+    path = create_path_from_points(points_x, points_y)
 
+    x, y = 0.5, 1.25
+    yaw = np.deg2rad(0)
+    l = 0.75
 
-path = create_path_from_points(points_x, points_y, ax)
-
-x, y = 0.5, 1.25
-yaw = np.deg2rad(0)
-l = 0.75
-
-tx, ty = pp.find_nearest_point(x, y, l, path, ax)
-
-alpha = pp.get_alpha(x, y, yaw, tx, ty)
-print(np.rad2deg(alpha))
-
-moviewriter = FFMpegWriter(fps=30)
-avail = moviewriter.isAvailable()
-moviewriter.setup(fig, 'my_movie.mp4', dpi=100)
-
-plot_path(ax, points_x, points_y, path)
-target_line, = ax.plot([x, tx], [y, ty], 'g')
-car, = ax.plot(x, y, 'o')
-circle = create_circle(x,y,l)
-
-while x < 3:
-
-    tx, ty = pp.find_nearest_point(x, y, l, path, ax)
+    tx, ty = pp.find_nearest_point(x, y, l, path)
 
     alpha = pp.get_alpha(x, y, yaw, tx, ty)
     print(np.rad2deg(alpha))
 
-    update_graph(x, y, tx, ty, target_line, car, circle)
+    moviewriter = FFMpegWriter(fps=30)
+    moviewriter.setup(fig, 'my_movie.mp4', dpi=100)
 
-    moviewriter.grab_frame()
-    x += 0.05 * np.cos(alpha)
-    y += 0.05 * np.sin(alpha)
+    plot_path(ax, points_x, points_y, path)
+    target_line, = ax.plot([x, tx], [y, ty], 'g')
+    car, = ax.plot(x, y, 'o')
+    circle = create_circle(x,y,l)
+
+    while x < 3:
+
+        tx, ty = pp.find_nearest_point(x, y, l, path)
+
+        alpha = pp.get_alpha(x, y, yaw, tx, ty)
+
+        update_graph(x, y, tx, ty, target_line, car, circle, alpha)
+
+        moviewriter.grab_frame()
+        x += 0.05 * np.cos(alpha)
+        y += 0.05 * np.sin(alpha)
 
 
-moviewriter.finish()
+    moviewriter.finish()
 
-plt.show()
+    plt.show()
+
+test_pure_pursuit()
