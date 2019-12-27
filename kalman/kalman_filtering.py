@@ -22,10 +22,10 @@ class EstimatedState:
 def init_kalman_filter(loc_data, dt, use_acc=True, dim_x=6, dim_z=4, dim_u=0, variance_position=0.2,
                        variance_acc=0.8, variance_velocity=0.8):
     kf = KalmanFilter(dim_x=dim_x, dim_z=dim_z, dim_u=dim_u)
-
+    init_yaw = 0
     # init state vector x
     kf.x = set_x(loc_data, use_acc=use_acc)
-    kf.F = set_F(dt, use_acc=use_acc)
+    kf.F = set_F(dt, yaw=init_yaw, use_acc=use_acc)
     kf.H = set_H(use_acc=use_acc)
     kf.B = set_B(dim_u)  # only functional for x_dim = 4 right now
 
@@ -45,7 +45,7 @@ def set_x(loc_data, use_acc):
     return x
 
 
-def set_F(dt, use_acc=False):
+def set_F(dt, yaw, use_acc=False):
     if use_acc:  # dim_x = 6, dim_z = 4
         f = np.array([[1., 0., dt, 0, (dt * dt) / 2, 0],
                       [0., 1., 0., dt, 0., (dt * dt) / 2],
@@ -136,8 +136,8 @@ def set_B(dim_u, use_acc=True):
 
 def measurement_update(loc_data, imu_data: IMUData, use_acc=False):
     if use_acc:
-        acc_y = imu_data.world_acceleration.y
-        acc_x = imu_data.world_acceleration.x
+        acc_y = imu_data.real_acceleration.y
+        acc_x = imu_data.real_acceleration.x
 
         z = [[loc_data.x],
              [loc_data.y],
@@ -171,9 +171,9 @@ def measurement_noise_update(var_position, var_acc, use_acc=False):  # TODO: cal
 # If the loc_data is None we keep the last z, but we make the covariance matrix for the measurements
 # have ~infinity numbers, so the prediction is vastly favored over the measurement.
 # Returns: a location estimate as a LocationData
-def kalman_updates(kf, loc_data, imu_data, timestep, variance_position, variance_acceleration,
+def kalman_updates(kf, loc_data, imu_data: IMUData, timestep, variance_position, variance_acceleration,
                    u=None, use_acc=True):
-    kf.F = set_F(timestep, use_acc=use_acc)
+    kf.F = set_F(timestep, yaw=imu_data.rotation.yaw, use_acc=use_acc)
     kf.Q = set_Q(timestep, use_acc=use_acc)
     if loc_data is not None:
         z = measurement_update(loc_data, imu_data, use_acc=use_acc)
