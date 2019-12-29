@@ -5,7 +5,7 @@ from filterpy.kalman import KalmanFilter
 
 from arduino_interface.imu import IMUData
 from serial_with_dwm.location_data_handler import LocationData
-
+from serial_with_dwm import Measurement
 
 @dataclass
 class EstimatedState:
@@ -16,6 +16,7 @@ class EstimatedState:
     likelihood: float
     x_acc_est: float
     y_acc_est: float
+    measurement: Measurement = None
 
 
 # var_x and var_y in meters

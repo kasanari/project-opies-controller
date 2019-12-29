@@ -14,8 +14,8 @@ async def kalman_man(context: Context):
         # Initalize Kalman Filter
         logging.getLogger('asyncio').info("Initializing.")
         await context.new_measurement_event.wait()
-        measurements = context.measurement
-        loc_data, imu_data = measurements
+        measurement = context.measurement
+        loc_data, imu_data = measurement.result_tag, measurement.result_imu
         context.new_measurement_event.clear()
 
         data_logger = DataLogger()
@@ -28,8 +28,9 @@ async def kalman_man(context: Context):
             try:
                 logging.getLogger('asyncio').info("Waiting for new measurements.")
                 await context.new_measurement_event.wait()
-                measurements = context.measurement
-                loc_data, imu_data = context.measurement
+                measurement = context.measurement
+                loc_data, imu_data = measurement.result_tag, measurement.result_imu
+                context.new_measurement_event.clear()
 
             except asyncio.TimeoutError:
                 print("Dead reckoning")
@@ -47,11 +48,11 @@ async def kalman_man(context: Context):
             estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data,
                                                                    control_signal=control_signal.to_numpy(),
                                                                    variable_dt=True)
-
+            estimated_state.measurement = measurement
             context.estimated_state = estimated_state
             context.new_estimated_state_event.set()
 
-            data_logger.log_data(measurements, estimated_state, control_signal)
+            data_logger.log_data(estimated_state, control_signal)
 
 
             to_web = ToWeb("measurements", estimated_state, loc_data, imu_data)

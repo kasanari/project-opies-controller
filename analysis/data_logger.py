@@ -5,7 +5,7 @@ from arduino_interface.imu import IMUData
 from application.context import ControlSignal
 from kalman.kalman_filtering import EstimatedState
 from serial_with_dwm.location_data_handler import LocationData
-
+from serial_with_dwm import Measurement
 import matplotlib.pyplot as plt
 import os
 
@@ -40,9 +40,9 @@ class DataLogger:
     def make_directory(self):
         os.mkdir(self.filename_prefix)
 
-    def log_data(self, measurements, estimated_state: EstimatedState, control_signal: ControlSignal):
+    def log_data(self, estimated_state: EstimatedState, control_signal: ControlSignal):
         imu_data: IMUData
-        loc_data, imu_data = measurements
+        loc_data, imu_data = estimated_state.measurement.result_tag, estimated_state.measurement.result_imu
 
         if loc_data is None:
             loc_data = LocationData(0, 0, 0, 0)

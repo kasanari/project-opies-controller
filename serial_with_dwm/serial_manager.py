@@ -11,6 +11,7 @@ import arduino_interface.arduino_serial as arduino
 import arduino_interface.imu as imu
 from application.context import Context
 from serial_with_dwm.serial_handler import SerialHandler
+from serial_with_dwm import Measurement
 
 
 def fetch_location_data(ser_handler):
@@ -57,7 +58,8 @@ async def serial_man(context: Context, update_delay: float = 0.3):
 
             # print(result_imu)
             # print(result_tag)
-            context.measurement = [result_tag[0], result_imu]
+            measurement_obj = Measurement(result_tag[0], result_imu)
+            context.measurement = measurement_obj
             context.new_measurement_event.set()
 
             # print(result_tag)

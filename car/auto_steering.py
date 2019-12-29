@@ -13,9 +13,8 @@ from arduino_interface.ultrasonic import measure_distance
 from car.pidcontroller import PIDController
 from car.steering_control import SteeringController
 from serial_with_dwm.location_data_handler import LocationData
+from serial_with_dwm import Measurement
 import logging
-
-
 
 
 def position_error(target_x, target_y, x, y):
@@ -90,11 +89,9 @@ async def auto_steer_task(context: Context,
             log.info("Waiting for estimated state and measurements")
             await context.new_estimated_state_event.wait()
             estimated_state = context.estimated_state
-            measurements = context.measurement
-            loc_data, imu_data = measurements
+            loc_data, imu_data = estimated_state.measurement.result_tag, estimated_state.measurement.result_imu
             log.info("Calculating control signal.")
 
-            context.new_measurement_event.clear()
             context.new_estimated_state_event.clear()
 
             e_x, e_y, e_angle = calculate_lyapunov_errors(target, estimated_state.location_est, imu_data.rotation.yaw)
