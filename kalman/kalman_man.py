@@ -12,13 +12,13 @@ from websocket_server.websocket_server import ToWeb
 async def kalman_man(context: Context):
     try:
         # Initalize Kalman Filter
+        data_logger = DataLogger()
         logging.getLogger('asyncio').info("Initializing.")
         await context.new_measurement_event.wait()
         measurement = context.measurement
         loc_data, imu_data = measurement.result_tag, measurement.result_imu
         context.new_measurement_event.clear()
 
-        data_logger = DataLogger()
         position_estimator = PositionEstimator(**context.settings["kalman"])
 
         position_estimator.start_kalman_filter(loc_data)
