@@ -1,3 +1,4 @@
+import functools
 import logging
 
 from analysis.data_logger import DataLogger
@@ -7,7 +8,7 @@ import asyncio
 
 from application.context import ControlSignal, Context
 from websocket_server.websocket_server import ToWeb
-
+import concurrent.futures
 
 async def kalman_man(context: Context):
     try:
@@ -63,4 +64,15 @@ async def kalman_man(context: Context):
         logging.getLogger('asyncio').info(f"Cancelled.")
         data_logger.make_directory()
         data_logger.save_csv()
-        data_logger.create_plots()
+        plot_path = functools.partial(data_logger.plot_path, path_points=context.settings["path"])
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            event_loop = asyncio.get_event_loop()
+            result_imu_task = event_loop.run_in_executor(pool, data_logger.create_plots)
+            result_tag_task = event_loop.run_in_executor(pool, plot_path)
+            logging.getLogger('asyncio').info("Generating plots.")
+            await asyncio.gather(result_imu_task, result_tag_task)
+        return True
+
+
+
+
