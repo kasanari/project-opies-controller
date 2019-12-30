@@ -6,7 +6,7 @@ import random
 import datetime
 import functools
 from serial_with_dwm.location_data_handler import LocationData
-from kalman.kalman_filtering import EstimatedState
+from kalman.EstimatedState import EstimatedState
 from arduino_interface.imu import IMUData
 from dataclasses import dataclass, asdict
 import logging

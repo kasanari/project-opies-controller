@@ -6,7 +6,7 @@ import numpy as np
 
 from application.settings import load_settings, load_default_settings
 from arduino_interface.imu import IMUData
-from kalman.kalman_filtering import EstimatedState
+from kalman.EstimatedState import EstimatedState
 from serial_with_dwm.location_data_handler import LocationData
 
 
