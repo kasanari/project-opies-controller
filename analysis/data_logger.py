@@ -3,7 +3,7 @@ import time
 
 from arduino_interface.imu import IMUData
 from application.context import ControlSignal
-from kalman.kalman_filtering import EstimatedState
+from kalman.EstimatedState import EstimatedState
 from serial_with_dwm.location_data_handler import LocationData
 from serial_with_dwm import Measurement
 import matplotlib.pyplot as plt

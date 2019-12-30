@@ -4,6 +4,7 @@ import numpy as np
 from filterpy.kalman import KalmanFilter
 
 from arduino_interface.imu import IMUData
+from kalman.EstimatedState import EstimatedState
 from serial_with_dwm.location_data_handler import LocationData
 from serial_with_dwm import Measurement
 
