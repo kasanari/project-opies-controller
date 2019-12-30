@@ -45,9 +45,7 @@ async def kalman_man(context: Context):
                 context.new_measurement_event.clear()
                 context.new_estimated_state_event.clear()
 
-            estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data,
-                                                                   control_signal=control_signal.to_numpy(),
-                                                                   variable_dt=True)
+            estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data)
             estimated_state.measurement = measurement
             context.estimated_state = estimated_state
             context.new_estimated_state_event.set()

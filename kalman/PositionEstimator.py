@@ -1,35 +1,29 @@
-from kalman.kalman_filtering import init_kalman_filter, kalman_updates
+from kalman.unscented_kalman_filtering import init_unscented_kf, u_kalman_updates
 import time
 
 class PositionEstimator:
 
-    def __init__(self, std_dev_acc=0.8, std_dev_position=0.2, std_dev_velocity=0.8, dim_u=0,
-                 dim_x=6, update_delay=0.1):
+    def __init__(self, std_dev_acc=0.8, std_dev_position=0.2, std_dev_heading=0.8, update_delay=0.1,
+                 std_dev_angular_acc=0.2):
         self.std_dev_acc = std_dev_acc
+        self.std_dev_angular_acc = std_dev_angular_acc
         self.std_dev_position = std_dev_position
-        self.std_dev_velocity = std_dev_velocity
-        self.dim_u = dim_u
-        self.dim_x = dim_x
+        self.std_dev_heading = std_dev_heading
         self.update_delay = update_delay
         self.kf = None
         self.estimated_state = None
-        self.time = time.time()
+        #self.time = time.time()
 
     def start_kalman_filter(self, loc_data):
-        self.kf = init_kalman_filter(loc_data, dt=self.update_delay, dim_x=self.dim_x, dim_u=self.dim_u, use_acc=True,
-                                     variance_acc=self.std_dev_acc, variance_position=self.std_dev_position,
-                                     variance_velocity=self.std_dev_velocity)
+        self.kf = init_unscented_kf(loc_data, dt=self.update_delay, variance_acc=self.std_dev_acc,
+                                    variance_pos=self.std_dev_position, variance_heading=self.std_dev_heading,
+                                    variance_angular_acc=self.std_dev_angular_acc)
 
-    def do_kalman_updates(self, loc_data, imu_data, control_signal, variable_dt=False):
-        if variable_dt:
-            d_t = time.time() - self.time
-        else:
-            d_t = self.update_delay
-
-        self.estimated_state = kalman_updates(self.kf, loc_data, imu_data, variance_position=self.std_dev_position,
-                                              variance_acceleration=self.std_dev_acc, u=control_signal,
-                                              timestep=d_t, use_acc=True)
-        self.time = time.time()
+    def do_kalman_updates(self, loc_data, imu_data):
+        self.estimated_state = u_kalman_updates(self.kf, loc_data, imu_data, variance_position=self.std_dev_position,
+                                                variance_acceleration=self.std_dev_acc,
+                                                variance_heading=self.std_dev_heading)  #
+        #self.time = time.time()
         return self.estimated_state
 
     # TODO fundera på tidsstegen här. vi kollar tiden det tar att läsa location, används den?
@@ -38,7 +32,7 @@ class PositionEstimator:
         dict = {
             'std_dev_acc': self.std_dev_acc,
             'std_dev_position': self.std_dev_position,
-            'std_dev_velocity': self.std_dev_velocity,
+            #'std_dev_velocity': self.std_dev_velocity,
         }
 
         return dict
