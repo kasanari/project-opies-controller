@@ -114,6 +114,42 @@ def update_graph(x, y, tx, ty, target_line, car, circle, alpha):
     car.set_data(x, y)
     circle.center = (x,y)
 
+
+def plot_pure_pursuit(x_vals, y_vals, yaw_vals, points_x, points_y, filename="my_movie"):
+    fig, ax = plt.subplots(1, 1)
+    ax.set_aspect('equal')
+    plt.xlim([0, 5])
+    plt.ylim([0, 5])
+
+    path = create_path_from_points(points_x, points_y)
+
+    l = 1
+
+    x_0 = x_vals[0]
+    y_0 = y_vals[0]
+
+    tx, ty = pp.find_nearest_point(x_0, y_0, l, path)
+
+    moviewriter = FFMpegWriter(fps=30)
+    moviewriter.setup(fig, f'{filename}.mp4', dpi=100)
+
+    plot_path(ax, points_x, points_y, path)
+    target_line, = ax.plot([x_0, tx], [y_0, ty], 'g')
+    car, = ax.plot(x_0, y_0, 'o')
+    circle = create_circle(x_0, y_0, l)
+
+    for x, y, yaw in zip(x_vals, y_vals, yaw_vals):
+
+        tx, ty = pp.find_nearest_point(x, y, l, path)
+
+        alpha = pp.get_alpha(x, y, yaw, tx, ty)
+
+        update_graph(x, y, tx, ty, target_line, car, circle, alpha)
+
+        moviewriter.grab_frame()
+
+    moviewriter.finish()
+
 def test_pure_pursuit():
 
     np.random.seed(int(time.time()))
