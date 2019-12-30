@@ -66,8 +66,6 @@ async def collect_data_task(serial_data_file=None, disable_motor=True, no_saving
     location_task.cancel()
     kalman_task.cancel()
 
-    await kalman_task
-
 
 
     print("Done")

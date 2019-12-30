@@ -15,7 +15,7 @@ class Target:
     x: float
     y: float
     yaw: float
-    velocity: float = 0
+    velocity: float
 
 
 @dataclass

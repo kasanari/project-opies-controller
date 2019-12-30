@@ -1,5 +1,4 @@
 import math
-import numpy as np
 import matplotlib.pyplot as plt
 
 def curvature(l, alpha):
@@ -7,12 +6,11 @@ def curvature(l, alpha):
 
 
 def get_alpha(x, y, yaw, tx, ty):
-    pursuit_angle = np.rad2deg(math.atan2(ty - y, tx - x))
-    alpha = pursuit_angle - yaw
-    return alpha, pursuit_angle
+    alpha = math.atan2(ty - y, tx - x) - yaw
+    return alpha
 
 
-def find_nearest_point(x, y, l, path):
+def find_nearest_point(x,y, l, path):
 
     dx = [tx - x for tx in path.x]
     dy = [ty - y for ty in path.y]

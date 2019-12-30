@@ -138,8 +138,8 @@ def set_B(dim_u, use_acc=True):
 
 def measurement_update(loc_data, imu_data: IMUData, use_acc=False):
     if use_acc:
-        acc_y = imu_data.world_acceleration.y
-        acc_x = imu_data.world_acceleration.x
+        acc_y = imu_data.real_acceleration.y
+        acc_x = imu_data.real_acceleration.x
 
         z = [[loc_data.x],
              [loc_data.y],

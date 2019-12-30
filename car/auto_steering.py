@@ -11,12 +11,9 @@ from arduino_interface import arduino_serial
 from arduino_interface.imu import IMUData
 from arduino_interface.ultrasonic import measure_distance
 from car.pidcontroller import PIDController
-
+from car.steering_control import SteeringController
 from serial_with_dwm.location_data_handler import LocationData
 from serial_with_dwm import Measurement
-import pathfinding.pure_pursuit as pp
-import pathfinding.pathing as pathing
-
 import logging
 
 
@@ -60,6 +57,7 @@ def calculate_lyapunov_errors(target: Target, position: LocationData, angle):
 
 async def auto_steer_task(context: Context,
                           rc_car,
+                          target: Target,
                           distance_control=False):
 
     loc_data: LocationData
@@ -67,11 +65,11 @@ async def auto_steer_task(context: Context,
     arduino_connection: Serial
 
     log = logging.getLogger('asyncio')
+    log.debug("Going to (%d, %d) Angle: %d", target.x, target.y, target.yaw)
 
-    path_points = context.settings["path"]
-    path = pathing.create_path_from_points(path_points["x"], path_points["y"])
+    speed_controller = PIDController(K_p=0.2, K_d=0.02, K_i=0.0002)
 
-    steering_controller = PIDController(K_p=1)
+    steering_controller = SteeringController()
 
     if distance_control:
         arduino_connection: Serial = arduino_serial.connect_to_arduino()
@@ -91,36 +89,47 @@ async def auto_steer_task(context: Context,
             log.info("Waiting for estimated state and measurements")
             await context.new_estimated_state_event.wait()
             estimated_state = context.estimated_state
-            _, imu_data = estimated_state.measurement.result_tag, estimated_state.measurement.result_imu
-            loc_data = estimated_state.location_est
+            loc_data, imu_data = estimated_state.measurement.result_tag, estimated_state.measurement.result_imu
             log.info("Calculating control signal.")
 
             context.new_estimated_state_event.clear()
 
-            acceleration = 0.18
-            l = 1
+            e_x, e_y, e_angle = calculate_lyapunov_errors(target, estimated_state.location_est, imu_data.rotation.yaw)
+            speed = np.sqrt(np.square(estimated_state.x_v_est) + np.square(estimated_state.y_v_est))
 
-            tx, ty = pp.find_nearest_point(loc_data.x, loc_data.y, l, path)
+            if e_y < 0:
+                log.info("Done")
+                context.auto_steering = False
+                await rc_car.brake()
+                return
 
-            alpha, t_theta = pp.get_alpha(loc_data.x, loc_data.y, imu_data.rotation.yaw, tx, ty)
+            target_v_y = target.velocity
+            e_v_y = target_v_y - estimated_state.y_v_est
+            acceleration = 0.16#speed_controller.get_control_signal(e_v_y, time.time(), P=True, D=True, I=False)
+            u_angle = steering_controller.get_control_signal(speed, e_angle, e_x,
+                                                             time.time())  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
 
-            u_angle = alpha #steering_controller.get_control_signal(alpha, time.time())  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
+            acceleration = 0 if acceleration < 0 else acceleration
 
 
-            log.info(f"alpha: {alpha}")
             log.debug(f"acceleration: {acceleration}")
             log.debug(f"u_angle: {u_angle}")
 
             context.control_signal.steering = u_angle
             context.control_signal.velocity = acceleration
-            context.control_signal.target = Target(tx, ty, yaw=t_theta)
-            context.control_signal.error.yaw = alpha
+            context.control_signal.target = target
+            context.control_signal.error.x = e_x
+            context.control_signal.error.y = e_y
+            context.control_signal.error.yaw = e_angle
+            context.control_signal.error.velocity = e_v_y
 
             rc_car.set_wheel_angle(u_angle)
             rc_car.set_acceleration(acceleration)
 
             context.new_control_signal_event.set()
 
+
+            #log.info("Auto Steering: Done for now.")
 
     except asyncio.CancelledError as e:
         print(e)

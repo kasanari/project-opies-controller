@@ -34,12 +34,12 @@ class Car:
 
     def set_wheel_angle(self, angle):
         angle += self.steering_offset
-        if angle < -35:
-            angle = -35
-        if angle > 35:
-            angle = 35
+        if angle < -34.5:
+            angle = -34.5
+        if angle > 17.5:
+            angle = 17.5
 
-        self.steering_servo.angle = -angle
+        self.steering_servo.angle = angle
 
     def set_acceleration(self, speed):
         if speed < 0:
