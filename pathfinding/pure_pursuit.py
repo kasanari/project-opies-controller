@@ -1,14 +1,14 @@
 import math
 import matplotlib.pyplot as plt
 
-lookahead = 0.2
-
 def curvature(l, alpha):
     return (2*math.sin(alpha))/l
+
 
 def get_alpha(x, y, yaw, tx, ty):
     alpha = math.atan2(ty - y, tx - x) - yaw
     return alpha
+
 
 def find_nearest_point(x,y, l, path):
 
@@ -40,6 +40,6 @@ def find_nearest_point(x,y, l, path):
 
 def get_control_signal(x, y, l, yaw, path):
    tx, ty = find_nearest_point(x, y, l, path)
-   return get_alpha(x, y, tx, ty, yaw)
+   return get_alpha(x, y, tx, ty, yaw), tx, ty
 
 
