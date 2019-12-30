@@ -81,15 +81,19 @@ def create_path():
 
 def create_path_from_points(x_points, y_points):
 
-    total_path_x = np.array([])
-    total_path_y = np.array([])
+    total_path_x = []
+    total_path_y = []
+
+    x_points = [x*100 for x in x_points]
+    y_points = [y*100 for y in y_points]
 
     for n in range(0, len(x_points)-1):
 
-        path_x, path_y = plot_line(x_points[n], y_points[n], x_points[n+1], y_points[n+1])
+        for x, y in bresenham(x_points[n], y_points[n], x_points[n+1], y_points[n+1]):
+            total_path_x.append(x/100)
+            total_path_y.append(y/100)
 
-        total_path_x = np.concatenate((total_path_x, path_x), axis=None)
-        total_path_y = np.concatenate((total_path_y, path_y), axis=None)
+
 
 
     path = Path(total_path_x, total_path_y)
