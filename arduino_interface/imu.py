@@ -91,9 +91,6 @@ def read_IMU(connection):
 
         rotation.yaw *= -1
 
-        if rotation.yaw < 0:
-            rotation.yaw += 360
-
         realaccel_dict = {"x": realaccel[0], "y": realaccel[1], "z": realaccel[2]}
         worldaccel_dict = {"x": worldaccel[0], "y": worldaccel[1], "z": worldaccel[2]}
 
