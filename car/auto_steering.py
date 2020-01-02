@@ -18,6 +18,7 @@ import pathfinding.pure_pursuit as pp
 import pathfinding.pathing as pathing
 
 import logging
+import math
 
 
 def position_error(target_x, target_y, x, y):
@@ -71,7 +72,7 @@ async def auto_steer_task(context: Context,
     path_points = context.settings["path"]
     path = pathing.create_path_from_points(path_points["x"], path_points["y"])
 
-    steering_controller = PIDController(K_p=1)
+    speed_controller = PIDController(K_p=1)
 
     if distance_control:
         arduino_connection: Serial = arduino_serial.connect_to_arduino()
@@ -97,8 +98,7 @@ async def auto_steer_task(context: Context,
 
             context.new_estimated_state_event.clear()
 
-            acceleration = 0.18
-            l = 1
+            l = context.settings["lookahead"]
 
             tx, ty = pp.find_nearest_point(loc_data.x, loc_data.y, l, path)
 
@@ -106,18 +106,26 @@ async def auto_steer_task(context: Context,
 
             u_angle = alpha #steering_controller.get_control_signal(alpha, time.time())  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
 
+            speed = math.hypot(estimated_state.y_v_est, estimated_state.x_v_est)
+            target_speed = 0.5
+            speed_error = target_speed - speed
+            u_speed = 0.16 + speed_controller.get_control_signal(speed_error, time.time())
+            if u_speed > 0.18:
+                u_speed = 0.18
+            elif u_speed < 0.16:
+                u_speed = 0.16
 
             log.info(f"alpha: {alpha}")
-            log.debug(f"acceleration: {acceleration}")
+            log.debug(f"acceleration: {u_speed}")
             log.debug(f"u_angle: {u_angle}")
 
             context.control_signal.steering = u_angle
-            context.control_signal.velocity = acceleration
+            context.control_signal.velocity = u_speed
             context.control_signal.target = Target(tx, ty, yaw=t_theta)
             context.control_signal.error.yaw = alpha
 
             rc_car.set_wheel_angle(u_angle)
-            rc_car.set_acceleration(acceleration)
+            rc_car.set_acceleration(u_speed)
 
             context.new_control_signal_event.set()
 
