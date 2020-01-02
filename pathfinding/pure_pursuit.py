@@ -8,7 +8,23 @@ def curvature(l, alpha):
 
 def get_alpha(x, y, yaw, tx, ty):
     pursuit_angle = np.rad2deg(math.atan2(ty - y, tx - x))
+
+    if pursuit_angle < 0 and yaw < 0:
+        pursuit_angle *= -1
+        pursuit_angle *= -1
+
+    if pursuit_angle < 0:
+        pursuit_angle += 360
+    if yaw < 0:
+        yaw += 360
+
     alpha = pursuit_angle - yaw
+
+    if alpha > 180:
+        alpha -= 360
+    if alpha < -180:
+        alpha += 360
+
     return alpha, pursuit_angle
 
 
@@ -28,7 +44,7 @@ def find_nearest_point(x, y, l, path):
 
     closest_point_index = d.index(min(d))
 
-    d = 0
+    d = 0    
     i = closest_point_index
 
     while d < l and (i + 1) < len(path.x):
