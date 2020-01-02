@@ -105,7 +105,7 @@ class DataLogger:
         # line plot
         self.df.reset_index().plot(x='index', y=['x', 'y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
 
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_collect_data_line_plot_xy.png"))
+        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_line_plot_xy.png"))
 
         fancy_scatter_plot(self.df, filename_timestamp)
 
