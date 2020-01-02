@@ -84,8 +84,8 @@ def create_path_from_points(x_points, y_points):
     total_path_x = []
     total_path_y = []
 
-    x_points = [x*100 for x in x_points]
-    y_points = [y*100 for y in y_points]
+    x_points = [int(x*100) for x in x_points]
+    y_points = [int(y*100) for y in y_points]
 
     for n in range(0, len(x_points)-1):
 
