@@ -177,7 +177,6 @@ def test_pure_pursuit():
     moviewriter.setup(fig, 'my_movie.mp4', dpi=100)
 
     plot_path(ax, points_x, points_y, path)
-    plt.show()
     target_line, = ax.plot([x, tx], [y, ty], 'g')
     car, = ax.plot(x, y, 'o')
     circle = create_circle(x , y,l)
@@ -197,5 +196,4 @@ def test_pure_pursuit():
 
     moviewriter.finish()
 
-    plt.show()
 

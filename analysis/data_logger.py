@@ -52,7 +52,6 @@ class DataLogger:
             plt.savefig(os.path.join(f'{self.filename_prefix}', f"{self.filename_prefix}_path.png"))
         else:
             plt.savefig(os.path.join(f"{filename}.png"))
-        plt.show()
 
         plot_pure_pursuit(self.df.reset_index()["x"], self.df.reset_index()["y"], self.df.reset_index()["yaw"], path_points["x"], path_points["y"], filename=self.filename_prefix)
 
