@@ -11,9 +11,9 @@ from websocket_server.websocket_server import ToWeb
 import concurrent.futures
 
 async def kalman_man(context: Context):
+    data_logger = DataLogger()
     try:
         # Initalize Kalman Filter
-        data_logger = DataLogger()
         logging.getLogger('asyncio').info("Initializing.")
         await context.new_measurement_event.wait()
         measurement = context.measurement
@@ -64,13 +64,8 @@ async def kalman_man(context: Context):
         logging.getLogger('asyncio').info(f"Cancelled.")
         data_logger.make_directory()
         data_logger.save_csv()
-        plot_path = functools.partial(data_logger.plot_path, path_points=context.settings["path"])
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            event_loop = asyncio.get_event_loop()
-            result_imu_task = event_loop.run_in_executor(pool, data_logger.create_plots)
-            result_tag_task = event_loop.run_in_executor(pool, plot_path)
-            logging.getLogger('asyncio').info("Generating plots.")
-            await asyncio.gather(result_imu_task, result_tag_task)
+        data_logger.create_plots()
+        data_logger.plot_path(path_points=context.settings["path"])
         return True
 
 
