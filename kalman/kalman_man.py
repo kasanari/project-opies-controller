@@ -1,3 +1,4 @@
+import functools
 import logging
 
 from analysis.data_logger import DataLogger
@@ -7,9 +8,10 @@ import asyncio
 
 from application.context import ControlSignal, Context
 from websocket_server.websocket_server import ToWeb
-
+import concurrent.futures
 
 async def kalman_man(context: Context):
+    data_logger = DataLogger()
     try:
         # Initalize Kalman Filter
         logging.getLogger('asyncio').info("Initializing.")
@@ -18,7 +20,6 @@ async def kalman_man(context: Context):
         loc_data, imu_data = measurement.result_tag, measurement.result_imu
         context.new_measurement_event.clear()
 
-        data_logger = DataLogger()
         position_estimator = PositionEstimator(**context.settings["kalman"])
 
         position_estimator.start_kalman_filter(loc_data)
@@ -62,3 +63,9 @@ async def kalman_man(context: Context):
         data_logger.make_directory()
         data_logger.save_csv()
         data_logger.create_plots()
+        data_logger.plot_path(path_points=context.settings["path"])
+        return True
+
+
+
+
