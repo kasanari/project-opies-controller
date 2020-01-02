@@ -40,8 +40,8 @@ class DataLogger:
 
         fig, ax = plt.subplots(1, 1)
         ax.set_aspect('equal')
-        ax.set_xlim(0, 5)
-        ax.set_ylim(0, 5)
+        ax.set_xlim(0, 6)
+        ax.set_ylim(0, 6)
 
         path = create_path_from_points(path_points["x"], path_points["y"])
 

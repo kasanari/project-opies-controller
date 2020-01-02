@@ -117,8 +117,8 @@ def update_graph(x, y, yaw, tx, ty, target_line, car, circle, alpha):
 def plot_pure_pursuit(x_vals, y_vals, yaw_vals, points_x, points_y, filename="my_movie"):
     fig, ax = plt.subplots(1, 1)
     ax.set_aspect('equal')
-    plt.xlim([0, 5])
-    plt.ylim([0, 5])
+    plt.xlim([0, 6])
+    plt.ylim([0, 6])
 
     path = create_path_from_points(points_x, points_y)
 
