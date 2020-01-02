@@ -1,0 +1,12 @@
+{
+  "kalman": {
+    "std_dev_acc": 0.8,
+    "std_dev_position": 0.04,
+    "std_dev_heading": 0.8,
+    "update_delay": 0.2
+  },
+  "path": {
+    "x": [],
+    "y": []
+}
+}

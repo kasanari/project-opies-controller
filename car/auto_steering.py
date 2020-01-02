@@ -95,7 +95,7 @@ async def auto_steer_task(context: Context,
             context.new_estimated_state_event.clear()
 
             e_x, e_y, e_angle = calculate_lyapunov_errors(target, estimated_state.location_est, imu_data.rotation.yaw)
-            speed = np.sqrt(np.square(estimated_state.x_v_est) + np.square(estimated_state.y_v_est))
+            speed = estimated_state.v_est  # np.sqrt(np.square(estimated_state.x_v_est) + np.square(estimated_state.y_v_est))
 
             if e_y < 0:
                 log.info("Done")
@@ -104,8 +104,8 @@ async def auto_steer_task(context: Context,
                 return
 
             target_v_y = target.velocity
-            e_v_y = target_v_y - estimated_state.y_v_est
-            acceleration = 0.16#speed_controller.get_control_signal(e_v_y, time.time(), P=True, D=True, I=False)
+            e_v_y = target_v_y - estimated_state.v_est
+            acceleration = 0.18#speed_controller.get_control_signal(e_v_y, time.time(), P=True, D=True, I=False)
             u_angle = steering_controller.get_control_signal(speed, e_angle, e_x,
                                                              time.time())  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
 

@@ -1,4 +1,4 @@
-from kalman.unscented_kalman_filtering import init_unscented_kf, u_kalman_updates
+from kalman.nonlinear_kalman_filtering import init_unscented_kf, u_kalman_updates, init_extended_kf, e_kalman_updates
 import time
 
 class PositionEstimator:
@@ -15,12 +15,12 @@ class PositionEstimator:
         #self.time = time.time()
 
     def start_kalman_filter(self, loc_data):
-        self.kf = init_unscented_kf(loc_data, dt=self.update_delay, variance_acc=self.std_dev_acc,
+        self.kf = init_extended_kf(loc_data, dt=self.update_delay, variance_acc=self.std_dev_acc,
                                     variance_pos=self.std_dev_position, variance_heading=self.std_dev_heading,
                                     variance_angular_acc=self.std_dev_angular_acc)
 
     def do_kalman_updates(self, loc_data, imu_data):
-        self.estimated_state = u_kalman_updates(self.kf, loc_data, imu_data, variance_position=self.std_dev_position,
+        self.estimated_state = e_kalman_updates(self.kf, loc_data, imu_data, variance_position=self.std_dev_position,
                                                 variance_acceleration=self.std_dev_acc,
                                                 variance_heading=self.std_dev_heading)  #
         #self.time = time.time()
