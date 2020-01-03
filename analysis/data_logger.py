@@ -36,7 +36,7 @@ class DataLogger:
         self.start_time = time.time()
         self.filename_prefix = generate_timestamp()
 
-    def plot_path(self, path_points, filename=None):
+    def plot_path(self, path_points, lookahead, filename=None):
 
         fig, ax = plt.subplots(1, 1)
         ax.set_aspect('equal')
@@ -53,7 +53,7 @@ class DataLogger:
         else:
             plt.savefig(os.path.join(f"{filename}.png"))
 
-        plot_pure_pursuit(self.df.reset_index()["x"], self.df.reset_index()["y"], self.df.reset_index()["yaw"], path_points["x"], path_points["y"], filename=self.filename_prefix)
+        plot_pure_pursuit(self.df.reset_index()["x"], self.df.reset_index()["y"], self.df.reset_index()["yaw"], path_points["x"], path_points["y"], lookahead, filename=self.filename_prefix)
 
     def make_directory(self):
         os.mkdir(self.filename_prefix)

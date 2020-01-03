@@ -108,13 +108,14 @@ def create_circle(x, y, l):
     plt.gcf().gca().add_artist(circle1)
     return circle1
 
-def update_graph(x, y, yaw, tx, ty, target_line, car, circle, alpha):
+def update_graph(x, y, yaw, tx, ty, target_line, heading_line, car, circle, alpha, l):
     target_line.set_data([x,tx], [y,ty])
+    heading_line.set_data([x, x+0.5*math.cos(np.deg2rad(yaw))], [y, y+0.5*math.sin(np.deg2rad(yaw))])
     car.set_data(x, y)
     circle.center = (x,y)
 
 
-def plot_pure_pursuit(x_vals, y_vals, yaw_vals, points_x, points_y, filename="my_movie"):
+def plot_pure_pursuit(x_vals, y_vals, yaw_vals, points_x, points_y, lookahead, filename="my_movie", ):
     fig, ax = plt.subplots(1, 1)
     ax.set_aspect('equal')
     plt.xlim([0, 6])
@@ -122,10 +123,11 @@ def plot_pure_pursuit(x_vals, y_vals, yaw_vals, points_x, points_y, filename="my
 
     path = create_path_from_points(points_x, points_y)
 
-    l = 1
-
     x_0 = x_vals[0]
     y_0 = y_vals[0]
+    yaw_0 = yaw_vals[0]
+
+    l = lookahead
 
     tx, ty = pp.find_nearest_point(x_0, y_0, l, path)
 
@@ -134,6 +136,7 @@ def plot_pure_pursuit(x_vals, y_vals, yaw_vals, points_x, points_y, filename="my
 
     plot_path(ax, points_x, points_y, path)
     target_line, = ax.plot([x_0, tx], [y_0, ty], 'g')
+    heading_line, = ax.plot([x_0, x_0+0.5*math.cos(np.deg2rad(yaw_0))], [y_0, y_0+0.5*math.sin(np.deg2rad(yaw_0))])
     car, = ax.plot(x_0, y_0, 'o')
     circle = create_circle(x_0, y_0, l)
 
@@ -144,7 +147,7 @@ def plot_pure_pursuit(x_vals, y_vals, yaw_vals, points_x, points_y, filename="my
         alpha = pp.get_alpha(x, y, yaw, tx, ty)
         ax.set_title(f'alpha, heading: {alpha} \n x,y,yaw: {(x, y, yaw)}')
         #ax.arrow(x, y, x+0.1*math.cos(yaw), y+0.1*math.sin(yaw))
-        update_graph(x, y, yaw, tx, ty, target_line, car, circle, alpha)
+        update_graph(x, y, yaw, tx, ty, target_line, heading_line, car, circle, alpha, l)
 
         moviewriter.grab_frame()
 

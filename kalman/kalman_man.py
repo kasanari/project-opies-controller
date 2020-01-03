@@ -65,7 +65,7 @@ async def kalman_man(context: Context):
         data_logger.make_directory()
         data_logger.save_csv()
         data_logger.create_plots()
-        data_logger.plot_path(path_points=context.settings["path"])
+        data_logger.plot_path(path_points=context.settings["path"], lookahead=context.settings["lookahead"])
         return True
 
 
