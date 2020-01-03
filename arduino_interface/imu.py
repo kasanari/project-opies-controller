@@ -1,7 +1,7 @@
 import asyncio
 import re
 from dataclasses import dataclass
-
+import logging
 
 @dataclass
 class Transform:
@@ -28,7 +28,7 @@ async def start_IMU(connection):
     try:
         await asyncio.wait_for(calibrate_IMU(connection), timeout=10)
     except asyncio.TimeoutError:
-        print("IMU setup timed out.")
+        logging.getLogger('asyncio').error("IMU setup timed out.")
         return False
 
     return True
@@ -54,7 +54,7 @@ async def calibrate_IMU(connection):
         await asyncio.sleep(0.1)
 
     connection.flushInput()
-    print("IMU startup complete.")
+    logging.getLogger('asyncio').info("IMU startup complete.")
     return
 
 
@@ -100,7 +100,7 @@ def read_IMU(connection):
         real_accel = Transform(realaccel_dict["x"], realaccel_dict["y"], realaccel_dict["z"])
         world_accel = Transform(worldaccel_dict["x"], worldaccel_dict["y"], worldaccel_dict["z"])
         return IMUData(rotation, real_accel, world_accel)
-    except RuntimeError as e:
+    except Exception as e:
         print(e)
-        print("IMU read failed.")
+        logging.getLogger('asyncio').error("IMU read failed.")
         return None
