@@ -27,16 +27,6 @@ class ToWeb:
         else:
             msg_dict['estimation'] = {}
 
-        if self.location_measurements.get_as_dict() is not None:
-            msg_dict['location'] = self.location_measurements.get_as_dict()
-        else:
-            msg_dict['location'] = {}
-
-        if self.location_measurements.get_as_dict() is not None:
-            msg_dict['imu'] = asdict(self.imu_measurements)
-        else:
-            msg_dict['imu'] = {}
-
         if self.anchors is not None:
             msg_dict['anchors'] = [asdict(anchor) for anchor in self.anchors]
         else:
