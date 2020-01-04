@@ -9,6 +9,7 @@ from serial import Serial
 
 import pathfinding.pathing as pathing
 import pathfinding.pure_pursuit as pp
+from analysis.data_logger import DataLogger
 from application.context import Target, Context
 from arduino_interface import arduino_serial
 from arduino_interface.imu import IMUData
@@ -68,7 +69,7 @@ async def auto_steer_task(context: Context,
     path_points = context.settings["path"]
 
     path = pathing.Path(path_points["x"], path_points["y"])
-
+    data_logger = DataLogger()
     steering_controller = PIDController(K_p=1, K_d=0.1, K_i=0.01)
     speed_controller = PIDController(K_p=1, K_d=0.25)
 
@@ -141,6 +142,8 @@ async def auto_steer_task(context: Context,
             rc_car.set_wheel_angle(u_angle)
             rc_car.set_acceleration(u_speed)
 
+            data_logger.log_data(estimated_state, context.control_signal)
+
             context.new_control_signal_event.set()
 
 
@@ -157,3 +160,15 @@ async def auto_steer_task(context: Context,
         if distance_control:
             arduino_connection.close()
         context.auto_steering = False
+
+        logging.getLogger('asyncio').info(f"Cancelled.")
+        data_logger.make_directory()
+        data_logger.save_csv()
+        data_logger.create_plots()
+        if context.settings["generate_movie"]:
+            try:
+                data_logger.plot_path(path_points=context.settings["path"], lookahead=context.settings["lookahead"])
+            except KeyError as e:
+                print(e)
+                print("Path plot failed due to missing data")
+        return True

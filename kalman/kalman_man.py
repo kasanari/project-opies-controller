@@ -8,7 +8,7 @@ from websocket_server.websocket_server import ToWeb
 
 
 async def kalman_man(context: Context):
-    data_logger = DataLogger()
+
     try:
         # Initalize Kalman Filter
         logging.getLogger('asyncio').info("Initializing.")
@@ -51,24 +51,11 @@ async def kalman_man(context: Context):
             context.estimated_state = estimated_state
             context.new_estimated_state_event.set()
 
-            data_logger.log_data(estimated_state, control_signal)
-
 
             to_web = ToWeb("measurements", estimated_state, loc_data, imu_data)
             context.to_web_queue.put_nowait(to_web)
 
     except asyncio.CancelledError:
-
-        logging.getLogger('asyncio').info(f"Cancelled.")
-        data_logger.make_directory()
-        data_logger.save_csv()
-        data_logger.create_plots()
-        if context.settings["generate_movie"]:
-            try:
-                data_logger.plot_path(path_points=context.settings["path"], lookahead=context.settings["lookahead"])
-            except KeyError as e:
-                print(e)
-                print("Path plot failed due to missing data")
         return True
 
 
