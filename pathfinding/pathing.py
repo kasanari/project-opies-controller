@@ -1,17 +1,43 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import time
+import math
 from dataclasses import dataclass
 
-from matplotlib.animation import MovieWriter, FFMpegWriter
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.animation import FFMpegWriter
 
 import pathfinding.pure_pursuit as pp
-import math
+
 
 @dataclass
 class Path:
     x: np.ndarray
     y: np.ndarray
+
+    def __init__(self, x_points, y_points):
+        if not isinstance(x_points, list) or len(x_points) == 1:
+            self.x = x_points
+            self.y = y_points
+            return
+        if len(x_points) != len(y_points):
+            raise RuntimeError("Number of x points are not equal to the number of y points!")
+        else:
+            total_path_x = []
+            total_path_y = []
+
+            x_points = [int(x * 100) for x in x_points]
+            y_points = [int(y * 100) for y in y_points]
+
+            for n in range(0, len(x_points)-1): #not an off by one error
+
+                for x, y in bresenham(x_points[n], y_points[n], x_points[n + 1], y_points[n + 1]):
+                    total_path_x.append(x / 100)
+                    total_path_y.append(y / 100)
+
+            self.x = total_path_x
+            self.y = total_path_y
+
+    def __len__(self):
+        return len(self.x)
 
 def bresenham(x0, y0, x1, y1):
     """Yield integer coordinates on the line from (x0, y0) to (x1, y1).
@@ -79,34 +105,16 @@ def create_path():
     return list(path)
 
 
-def create_path_from_points(x_points, y_points):
-
-    total_path_x = []
-    total_path_y = []
-
-    x_points = [int(x*100) for x in x_points]
-    y_points = [int(y*100) for y in y_points]
-
-    for n in range(0, len(x_points)-1):
-
-        for x, y in bresenham(x_points[n], y_points[n], x_points[n+1], y_points[n+1]):
-            total_path_x.append(x/100)
-            total_path_y.append(y/100)
-
-
-
-
-    path = Path(total_path_x, total_path_y)
-    return path
-
 def plot_path(ax, x_points, y_points, path):
     ax.plot(x_points, y_points, 'ro')
     ax.plot(path.x, path.y, 'bx')
+
 
 def create_circle(x, y, l):
     circle1 = plt.Circle((x, y), l, color='r', fill=False)
     plt.gcf().gca().add_artist(circle1)
     return circle1
+
 
 def update_graph(x, y, yaw, tx, ty, target_line, heading_line, car, circle, alpha, l):
     target_line.set_data([x,tx], [y,ty])
@@ -121,7 +129,7 @@ def plot_pure_pursuit(x_vals, y_vals, yaw_vals, points_x, points_y, lookahead, f
     plt.xlim([0, 6])
     plt.ylim([0, 6])
 
-    path = create_path_from_points(points_x, points_y)
+    path = Path(points_x, points_y)
 
     x_0 = x_vals[0]
     y_0 = y_vals[0]
@@ -146,56 +154,9 @@ def plot_pure_pursuit(x_vals, y_vals, yaw_vals, points_x, points_y, lookahead, f
 
         alpha = pp.get_alpha(x, y, yaw, tx, ty)
         ax.set_title(f'alpha, heading: {alpha} \n x,y,yaw: {(x, y, yaw)}')
-        #ax.arrow(x, y, x+0.1*math.cos(yaw), y+0.1*math.sin(yaw))
         update_graph(x, y, yaw, tx, ty, target_line, heading_line, car, circle, alpha, l)
 
         moviewriter.grab_frame()
-
-    moviewriter.finish()
-
-def test_pure_pursuit():
-
-    np.random.seed(int(time.time()))
-
-    points_x = [3, 3, 3]
-    points_y = [3, 4, 5]
-
-    fig, ax = plt.subplots(1,1)
-    ax.set_aspect('equal')
-    plt.xlim([0, 6])
-    plt.ylim([0, 6])
-
-    path = create_path_from_points(points_x, points_y)
-
-    x, y = 0.5, 1.25
-    yaw = np.deg2rad(0)
-    l = 0.75
-
-    tx, ty = pp.find_nearest_point(x, y, l, path)
-
-    alpha, _ = pp.get_alpha(x, y, yaw, tx, ty)
-    print(np.rad2deg(alpha))
-
-    moviewriter = FFMpegWriter(fps=30)
-    moviewriter.setup(fig, 'my_movie.mp4', dpi=100)
-
-    plot_path(ax, points_x, points_y, path)
-    target_line, = ax.plot([x, tx], [y, ty], 'g')
-    car, = ax.plot(x, y, 'o')
-    circle = create_circle(x , y,l)
-
-    while x < 3:
-
-        tx, ty = pp.find_nearest_point(x, y, l, path)
-
-        alpha = pp.get_alpha(x, y, yaw, tx, ty)
-
-        update_graph(x, y, tx, ty, target_line, car, circle, alpha)
-
-        moviewriter.grab_frame()
-        x += 0.05 * np.cos(alpha)
-        y += 0.05 * np.sin(alpha)
-
 
     moviewriter.finish()
 

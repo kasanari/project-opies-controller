@@ -1,14 +1,14 @@
-import pandas as pd
+import os
 import time
 
-from arduino_interface.imu import IMUData
-from application.context import ControlSignal
-from kalman.EstimatedState import EstimatedState
-from pathfinding.pathing import create_path_from_points, plot_pure_pursuit
-from serial_with_dwm.location_data_handler import LocationData
-from serial_with_dwm import Measurement
 import matplotlib.pyplot as plt
-import os
+import pandas as pd
+
+from application.context import ControlSignal
+from arduino_interface.imu import IMUData
+from kalman.EstimatedState import EstimatedState
+from pathfinding.pathing import plot_pure_pursuit, Path
+from serial_with_dwm.location_data_handler import LocationData
 
 
 def fancy_scatter_plot(data, filename_timestamp):
@@ -43,7 +43,7 @@ class DataLogger:
         ax.set_xlim(0, 6)
         ax.set_ylim(0, 6)
 
-        path = create_path_from_points(path_points["x"], path_points["y"])
+        path = Path(path_points["x"], path_points["y"])
 
         self.df.reset_index().plot.scatter(ax=ax, x='x_kf', y='y_kf')
         ax.scatter(path.x, path.y)
@@ -98,29 +98,34 @@ class DataLogger:
         # plt.ylim(0, 5)
         # plt.xlim(0, 5)
         #
-        filename_timestamp = self.filename_prefix
-        #
-        # plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_collect_data_scatter_plot.png"))
+        try:
+            filename_timestamp = self.filename_prefix
+            #
+            # plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_collect_data_scatter_plot.png"))
 
-        # line plot
-        self.df.reset_index().plot(x='index', y=['x', 'y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
+            # line plot
+            self.df.reset_index().plot(x='index', y=['x', 'y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
 
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_line_plot_xy.png"))
+            plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_line_plot_xy.png"))
 
-        fancy_scatter_plot(self.df, filename_timestamp)
+            fancy_scatter_plot(self.df, filename_timestamp)
 
-        # velocity
-        self.df.reset_index().plot(x='index', y=['y_dot', 'x_dot'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity.png"))
+            # velocity
+            self.df.reset_index().plot(x='index', y=['y_dot', 'x_dot'])
+            plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity.png"))
 
-        # acceleration
-        self.df.reset_index().plot(x='index', y=['a_y', 'a_x', 'a_x_kf', 'a_y_kf'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration.png"))
+            # acceleration
+            self.df.reset_index().plot(x='index', y=['a_y', 'a_x', 'a_x_kf', 'a_y_kf'])
+            plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration.png"))
 
 
-        # Steering control
-        self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_steering_control.png"))
+            # Steering control
+            self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw'])
+            plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_steering_control.png"))
+        except KeyError as e:
+            print(e)
+            print("Plotting failed")
+
 
 
     def get_file_name(self, suffix, extension='png'):

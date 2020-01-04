@@ -1,6 +1,7 @@
 import math
+
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 def curvature(l, alpha):
     return (2*math.sin(alpha))/l

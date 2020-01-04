@@ -14,11 +14,34 @@ function addMessage(message_content) {
 
 function eventHandler(event) {
     addMessage(event.data);
-    var data = JSON.parse(event.data);
+    var data = JSON.parse(event.data).estimation;
+    var measurement = data.measurement;
+    var imu_data = measurement.result_imu;
 
-    position = {'x':data.location.x, 'y':data.location.y};
+    var lines = [
+        "x, y: " + measurement.result_tag.x + ", " + measurement.result_tag.y + "\n",
+        "x_est, y_est: " + data.location_est.x + ", " + data.location_est.y + "\n",
+        "v_x_est, v_x_est: " + data.x_v_est + ", " + data.y_v_est + "\n",
+        "a_y_est, a_y_est: " + data.x_acc_est.x + ", " + data.y_acc_est + "\n",
+        "a_real_x, a_real_y: " + imu_data.real_acceleration.x + ", " + imu_data.real_acceleration.y + "\n",
+        "a_world_x, a_world_y: " + imu_data.world_acceleration.x + ", " + imu_data.world_acceleration.y + "\n",
+        "yaw: " + imu_data.rotation.yaw + "\n"
+        ];
 
-    //myLineChart.data.datasets[0].data.shift();
+    var data_values = document.getElementById("values");
+
+    var new_data = document.createElement("div");
+
+    for (let line of lines) {
+        var content = document.createElement("p");
+        content.innerHTML = line;
+        new_data.appendChild(content)
+    }
+
+    data_values.replaceChild(new_data, data_values.firstChild);
+
+    position = {'x':data.location_est.x, 'y':data.location_est.y};
+
 
         if (graph_index % 40 === 0) {
             graph_index = 0;
@@ -57,8 +80,8 @@ function sendDestination() {
         var formData = new FormData(document.getElementById('form-destination'));
         var message = {};
         message.type = "destination";
-        message.x = formData.get("x_destination");
-        message.y = formData.get("y_destination");
+        message.x = [formData.get("x_destination")];
+        message.y = [formData.get("y_destination")];
         sendWSMessage(message)
     } else {
         console.log("WebSocket not connected!")

@@ -1,24 +1,20 @@
 import asyncio
+import logging
+import math
 import time
-from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 from serial import Serial
 
+import pathfinding.pathing as pathing
+import pathfinding.pure_pursuit as pp
 from application.context import Target, Context
 from arduino_interface import arduino_serial
 from arduino_interface.imu import IMUData
 from arduino_interface.ultrasonic import measure_distance
 from car.pidcontroller import PIDController
-
 from serial_with_dwm.location_data_handler import LocationData
-from serial_with_dwm import Measurement
-import pathfinding.pure_pursuit as pp
-import pathfinding.pathing as pathing
-
-import logging
-import math
 
 
 def position_error(target_x, target_y, x, y):
@@ -70,9 +66,11 @@ async def auto_steer_task(context: Context,
     log = logging.getLogger('asyncio')
 
     path_points = context.settings["path"]
-    path = pathing.create_path_from_points(path_points["x"], path_points["y"])
 
-    speed_controller = PIDController(K_p=1)
+    path = pathing.Path(path_points["x"], path_points["y"])
+
+    steering_controller = PIDController(K_p=1, K_d=0.1, K_i=0.01)
+    speed_controller = PIDController(K_p=1, K_d=0.25)
 
     if distance_control:
         arduino_connection: Serial = arduino_serial.connect_to_arduino()
@@ -98,24 +96,38 @@ async def auto_steer_task(context: Context,
 
             context.new_estimated_state_event.clear()
 
+            dx = path_points["x"][-1] - loc_data.x
+            dy = path_points["y"][-1] - loc_data.y
+            distance_to_goal = math.hypot(dx, dy)
+
+            # if distance_to_goal < 0.1:
+            #     await rc_car.brake()
+            #     rc_car.stop()
+            #     print(f"Reached goal at {(path_points['x'][-1], path_points['y'][-1])}.")
+            #     return
+
             l = context.settings["lookahead"]
 
-            tx, ty = pp.find_nearest_point(loc_data.x, loc_data.y, l, path)
+            if len(path) > 1:
+                 tx, ty = pp.find_nearest_point(loc_data.x, loc_data.y, l, path)
+            else:
+                tx, ty = path.x[0], path.y[0]
 
             alpha, t_theta = pp.get_alpha(loc_data.x, loc_data.y, imu_data.rotation.yaw, tx, ty)
 
-            u_angle = alpha #steering_controller.get_control_signal(alpha, time.time())  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
+            u_angle = steering_controller.get_control_signal(alpha, time.time(), P=True, D=True, I=True)  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
 
             speed = math.hypot(estimated_state.y_v_est, estimated_state.x_v_est)
             target_speed = 0.5
             speed_error = target_speed - speed
-            u_speed = 0.16 + speed_controller.get_control_signal(speed_error, time.time())
+            u_speed = 0.16 + speed_controller.get_control_signal(speed_error, time.time(), P=True, D=False)
             if u_speed > 0.18:
                 u_speed = 0.18
             elif u_speed < 0.16:
                 u_speed = 0.16
 
-            log.info(f"alpha: {alpha}")
+            log.info(f"distance_to_goal: {distance_to_goal}")
+            log.debug(f"alpha: {alpha}")
             log.debug(f"acceleration: {u_speed}")
             log.debug(f"u_angle: {u_angle}")
 
@@ -131,14 +143,15 @@ async def auto_steer_task(context: Context,
 
 
     except asyncio.CancelledError as e:
-        print(e)
+        log.warning(e)
         await rc_car.brake()
         rc_car.stop()
         print("Auto steer cancelled.")
 
     except Exception as e:
-        print(e)
+        log.error(e)
 
     finally:
         if distance_control:
             arduino_connection.close()
+        context.auto_steering = False

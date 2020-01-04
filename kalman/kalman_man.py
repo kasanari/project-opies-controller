@@ -1,14 +1,11 @@
-import functools
+import asyncio
 import logging
 
 from analysis.data_logger import DataLogger
-
-from kalman.PositionEstimator import PositionEstimator
-import asyncio
-
 from application.context import ControlSignal, Context
+from kalman.PositionEstimator import PositionEstimator
 from websocket_server.websocket_server import ToWeb
-import concurrent.futures
+
 
 async def kalman_man(context: Context):
     data_logger = DataLogger()
@@ -66,7 +63,11 @@ async def kalman_man(context: Context):
         data_logger.save_csv()
         data_logger.create_plots()
         if context.settings["generate_movie"]:
-            data_logger.plot_path(path_points=context.settings["path"], lookahead=context.settings["lookahead"])
+            try:
+                data_logger.plot_path(path_points=context.settings["path"], lookahead=context.settings["lookahead"])
+            except KeyError as e:
+                print(e)
+                print("Path plot failed due to missing data")
         return True
 
 

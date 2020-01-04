@@ -1,8 +1,9 @@
 import asyncio
+import logging
 
-from application.context import Target, Context
-from car.car import Car
+from application.context import Context
 from car.auto_steering import auto_steer_task
+from car.car import Car
 
 
 def control_car_from_message(rc_car, message):
@@ -24,14 +25,13 @@ async def motor_control_task(context: Context, debug_no_car=False):
         rc_car = Car(debug_no_car)
     except OSError as e:
         print(e)
-        print("Failed to connect to PIGPIOD")
+        logging.getLogger('asyncio').error("Failed to connect to PIGPIOD")
         return
 
-    print("Waiting for speed controller...")
+    logging.getLogger('asyncio').info("Waiting for speed controller...")
 
     await asyncio.sleep(2)
-
-    print("Initialized motors.")
+    logging.getLogger('asyncio').info("Initialized motors.")
 
     auto_steer = None
 
@@ -46,24 +46,15 @@ async def motor_control_task(context: Context, debug_no_car=False):
                 control_car_from_message(rc_car, message)
 
             elif message_type == "destination":
-                x_destination = message["x"]
-                y_destination = message["y"]
 
-                try:
-                    yaw = message["yaw"]
-                except KeyError:
-                    yaw = 0
-
-                try:
-                    speed = message["speed"]
-                except KeyError:
-                    speed = 2
+                context.settings["path"]["x"] = [float(x) for x in message["x"]]
+                context.settings["path"]["y"] = [float(y) for y in message["y"]]
 
                 if auto_steer is not None:
                     auto_steer.cancel()
 
-                context.auto_steering = True
                 auto_steer = asyncio.create_task(auto_steer_task(context, rc_car))
+                context.auto_steering = True
 
             elif message_type == 'stop':
                 if auto_steer is not None:
@@ -75,10 +66,10 @@ async def motor_control_task(context: Context, debug_no_car=False):
                 await rc_car.brake()
 
             else:
-                print("Invalid message type")
+                logging.getLogger('asyncio').warning("Invalid message type")
 
     except asyncio.CancelledError:
-        print("Motor task cancelled.")
+        logging.getLogger('asyncio').info("Motor task cancelled.")
     finally:
         await rc_car.brake()
         rc_car.disable()
