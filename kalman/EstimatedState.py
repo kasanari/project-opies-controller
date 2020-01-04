@@ -12,4 +12,6 @@ class EstimatedState:
     likelihood: float
     x_acc_est: float
     y_acc_est: float
-    measurement: Measurement = None
+    yaw_est: float
+    yaw_acc_est: float
+    measurement: Measurement = None  # has result_tag, result_imu

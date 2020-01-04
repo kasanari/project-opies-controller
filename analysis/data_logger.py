@@ -57,8 +57,12 @@ class DataLogger:
             'y_kf': estimated_state.location_est.y,
             'y_dot': estimated_state.y_v_est,
             'x_dot': estimated_state.x_v_est,
-            'a_x': imu_data.real_acceleration.x,
-            'a_y': imu_data.real_acceleration.y,
+            'yaw_kf': estimated_state.yaw_est,
+            'yaw_acc_kf': estimated_state.yaw_acc_est,
+            'a_r_x': imu_data.real_acceleration.x,
+            'a_r_y': imu_data.real_acceleration.y,
+            'a_w_x': imu_data.world_acceleration.x,
+            'a_w_y': imu_data.world_acceleration.y,
             'a_x_kf': estimated_state.x_acc_est,
             'a_y_kf': estimated_state.y_acc_est,
             'yaw': imu_data.rotation.yaw,
@@ -96,15 +100,19 @@ class DataLogger:
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity.png"))
 
         # acceleration
-        self.df.reset_index().plot(x='index', y=['a_y', 'a_x', 'a_x_kf', 'a_y_kf'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration.png"))
+        self.df.reset_index().plot(x='index', y=['a_w_y', 'a_w_x', 'a_x_kf', 'a_y_kf'])
+        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_world.png"))
+
+        # acceleration real
+        self.df.reset_index().plot(x='index', y=['a_r_x', 'a_r_y', 'a_x_kf', 'a_y_kf'])
+        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_real.png"))
 
         # Control
         self.df.reset_index().plot(x='index', y=['u_v', 'target_v', 'y_dot'])
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity_control.png"))
 
         # Steering control
-        self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw'])
+        self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw', 'yaw_kf', 'yaw_acc_kf'])
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_steering_control.png"))
 
         # Errors

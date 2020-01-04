@@ -1,11 +1,16 @@
 {
   "kalman": {
-    "std_dev_acc": 0.8,
-    "std_dev_position": 0.25,
-    "std_dev_velocity": 0.8,
-    "dim_u": 0,
-    "dim_x": 6,
-    "update_delay": 0.2
+    "dim_u": 1,
+    "dim_x": 8,
+    "update_delay": 0.1,
+    "process_dev_pos": 0.005,
+    "process_dev_acc": 0.005,
+    "process_dev_heading": 0.005,
+    "process_dev_heading_acc": 0.01,
+    "process_dev_vel": 0.08,
+    "meas_dev_pos": 0.15,
+    "meas_dev_heading": 0.01,
+    "meas_dev_acc": 0.01
   },
   "path": {
     "x": [],
