@@ -40,7 +40,18 @@ class Context:
     measurement: (LocationData, IMUData) = None
     control_signal = ControlSignal(0, 0, Target(0, 0, 0, 0))
     estimated_state: EstimatedState = None
-    auto_steering = False
+    _auto_steering = False
+
+    @property
+    def auto_steering(self):
+        return self._auto_steering
+
+    @auto_steering.setter
+    def auto_steering(self, value):
+        if value:
+            print("Auto steering enabled.")
+        else:
+            print("Auto steering disabled.")
 
     def __init__(self, settings_file = None):
 
@@ -62,6 +73,7 @@ class Context:
     async def get_estimated_state(self):
         await self.new_estimated_state_event.wait()
         return self.estimated_state
+
 
 
 settings = None

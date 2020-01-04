@@ -36,8 +36,9 @@ async def kalman_man(context: Context):
             if context.auto_steering:
                 logging.getLogger('asyncio').info("Waiting for control signal.")
                 await context.new_control_signal_event.wait()
-                control_signal = context.control_signal
-                context.new_control_signal_event.clear()
+                if context.auto_steering:
+                    control_signal = context.control_signal
+                    context.new_control_signal_event.clear()
             else:
                 control_signal = ControlSignal()
                 context.new_measurement_event.clear()

@@ -62,7 +62,7 @@ async def auto_steer_task(context: Context,
     loc_data: LocationData
     imu_data: IMUData
     arduino_connection: Serial
-
+    print("Auto steering started.")
     log = logging.getLogger('asyncio')
 
     path_points = context.settings["path"]
@@ -100,11 +100,13 @@ async def auto_steer_task(context: Context,
             dy = path_points["y"][-1] - loc_data.y
             distance_to_goal = math.hypot(dx, dy)
 
-            # if distance_to_goal < 0.1:
-            #     await rc_car.brake()
-            #     rc_car.stop()
-            #     print(f"Reached goal at {(path_points['x'][-1], path_points['y'][-1])}.")
-            #     return
+            if distance_to_goal < 0.45:
+                context.auto_steering = False
+                context.new_control_signal_event.set()
+                await rc_car.brake()
+                rc_car.stop()
+                print(f"Reached goal at {(path_points['x'][-1], path_points['y'][-1])}.")
+                return
 
             l = context.settings["lookahead"]
 
