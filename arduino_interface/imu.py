@@ -97,10 +97,24 @@ def read_IMU(connection):
         realaccel_dict = convert_g_to_acceleration(realaccel_dict)
         worldaccel_dict = convert_g_to_acceleration(worldaccel_dict)
 
+        for key in realaccel_dict:
+            realaccel_dict[key] = float_with_2_decimals(realaccel_dict[key])
+
+        for key in worldaccel_dict:
+            worldaccel_dict[key] = float_with_2_decimals(worldaccel_dict[key])
+
+
         real_accel = Transform(realaccel_dict["x"], realaccel_dict["y"], realaccel_dict["z"])
         world_accel = Transform(worldaccel_dict["x"], worldaccel_dict["y"], worldaccel_dict["z"])
+
+
+
         return IMUData(rotation, real_accel, world_accel)
     except Exception as e:
         print(e)
         logging.getLogger('asyncio').error("IMU read failed.")
         return None
+
+def float_with_2_decimals(value):
+    two_decimal_float = float("{0:.2f}".format(value))
+    return two_decimal_float
