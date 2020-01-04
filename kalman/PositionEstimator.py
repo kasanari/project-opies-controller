@@ -23,12 +23,12 @@ class PositionEstimator:
                                     variance_angular_acc=self.std_dev_angular_acc, var_process_v=self.std_process_v,
                                    var_process_acc=self.std_process_acc, var_process_xy=self.std_process_xy)
 
-    def do_kalman_updates(self, loc_data, imu_data, variable_time=False):
+    def do_kalman_updates(self, loc_data, imu_data, steering_signal=0, variable_time=False):
         if variable_time:
             d_t = time.time() - self.time
         else:
             d_t = self.update_delay
-        self.estimated_state = e_kalman_updates(self.kf, loc_data, imu_data, variance_position=self.std_dev_position,
+        self.estimated_state = e_kalman_updates(self.kf, loc_data, imu_data, steering_signal=steering_signal, variance_position=self.std_dev_position,
                                                 variance_acceleration=self.std_dev_acc,
                                                 variance_heading=self.std_dev_heading, dt=d_t,
                                                 variance_angular_acc=self.std_dev_angular_acc,
