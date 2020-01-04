@@ -90,9 +90,12 @@ def read_IMU(connection):
         rotation = Rotation(ypr[0], ypr[1], ypr[2])
 
         rotation.yaw *= -1
+        if rotation.yaw < 0:
+            rotation.yaw += 360
 
-        realaccel_dict = {"x": realaccel[0], "y": realaccel[1], "z": realaccel[2]}
-        worldaccel_dict = {"x": worldaccel[0], "y": worldaccel[1], "z": worldaccel[2]}
+        #flips imu x and y
+        realaccel_dict = {"x": realaccel[1], "y": -realaccel[0], "z": realaccel[2]}
+        worldaccel_dict = {"x": worldaccel[1], "y": -worldaccel[0], "z": worldaccel[2]}
 
         realaccel_dict = convert_g_to_acceleration(realaccel_dict)
         worldaccel_dict = convert_g_to_acceleration(worldaccel_dict)

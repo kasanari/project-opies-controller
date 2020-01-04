@@ -3,26 +3,38 @@ import time
 
 class PositionEstimator:
 
-    def __init__(self, std_dev_acc=0.8, std_dev_position=0.2, std_dev_heading=0.8, update_delay=0.1,
-                 std_dev_angular_acc=0.2):
+    def __init__(self, std_dev_acc, std_dev_position, std_dev_heading, std_dev_angular_acc, update_delay,
+                 var_process_acc, var_process_v, var_process_xy):
         self.std_dev_acc = std_dev_acc
         self.std_dev_angular_acc = std_dev_angular_acc
         self.std_dev_position = std_dev_position
         self.std_dev_heading = std_dev_heading
+        self.std_process_acc = var_process_acc
+        self.std_process_v = var_process_v
+        self.std_process_xy = var_process_xy
         self.update_delay = update_delay
         self.kf = None
         self.estimated_state = None
-        #self.time = time.time()
+        self.time = time.time()
 
     def start_kalman_filter(self, loc_data):
         self.kf = init_extended_kf(loc_data, dt=self.update_delay, variance_acc=self.std_dev_acc,
                                     variance_pos=self.std_dev_position, variance_heading=self.std_dev_heading,
-                                    variance_angular_acc=self.std_dev_angular_acc)
+                                    variance_angular_acc=self.std_dev_angular_acc, var_process_v=self.std_process_v,
+                                   var_process_acc=self.std_process_acc, var_process_xy=self.std_process_xy)
 
-    def do_kalman_updates(self, loc_data, imu_data):
+    def do_kalman_updates(self, loc_data, imu_data, variable_time=False):
+        if variable_time:
+            d_t = time.time() - self.time
+        else:
+            d_t = self.update_delay
         self.estimated_state = e_kalman_updates(self.kf, loc_data, imu_data, variance_position=self.std_dev_position,
                                                 variance_acceleration=self.std_dev_acc,
-                                                variance_heading=self.std_dev_heading)  #
+                                                variance_heading=self.std_dev_heading, dt=d_t,
+                                                variance_angular_acc=self.std_dev_angular_acc,
+                                                var_process_v=self.std_process_v,
+                                                var_process_acc=self.std_process_acc, var_process_xy=self.std_process_xy
+                                                )  #
         #self.time = time.time()
         return self.estimated_state
 

@@ -46,7 +46,7 @@ async def kalman_man(context: Context):
                 context.new_measurement_event.clear()
                 context.new_estimated_state_event.clear()
 
-            estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data)
+            estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data, variable_time=False)
             estimated_state.measurement = measurement
             context.estimated_state = estimated_state
             context.new_estimated_state_event.set()
@@ -56,7 +56,6 @@ async def kalman_man(context: Context):
 
             to_web = ToWeb("measurements", estimated_state, loc_data, imu_data)
             context.to_web_queue.put_nowait(to_web)
-
     except asyncio.CancelledError:
 
         logging.getLogger('asyncio').info(f"Cancelled.")
@@ -65,6 +64,8 @@ async def kalman_man(context: Context):
         data_logger.create_plots()
         data_logger.plot_path(path_points=context.settings["path"])
         return True
+    except Exception as e:
+        print(e)
 
 
 
