@@ -4,6 +4,7 @@ import time
 from arduino_interface.imu import IMUData
 from application.context import ControlSignal
 from kalman.EstimatedState import EstimatedState
+from pathfinding.pathing import create_path_from_points, plot_pure_pursuit
 from serial_with_dwm.location_data_handler import LocationData
 from serial_with_dwm import Measurement
 import matplotlib.pyplot as plt
@@ -19,7 +20,6 @@ def fancy_scatter_plot(data, filename_timestamp):
     data.reset_index().plot.line(ax=ax, x='index', y=['x_kf', 'y_kf'])
     plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_fancy_line_plot.png"))
     fig.set_size_inches(15, 7, forward=True)
-    plt.show()
 
 
 def generate_timestamp():
@@ -36,6 +36,24 @@ class DataLogger:
         self.start_time = time.time()
         self.filename_prefix = generate_timestamp()
 
+    def plot_path(self, path_points, filename=None):
+
+        fig, ax = plt.subplots(1, 1)
+        ax.set_aspect('equal')
+        ax.set_xlim(0, 6)
+        ax.set_ylim(0, 6)
+
+        path = create_path_from_points(path_points["x"], path_points["y"])
+
+        self.df.reset_index().plot.scatter(ax=ax, x='x_kf', y='y_kf')
+        ax.scatter(path.x, path.y)
+
+        if filename is None:
+            plt.savefig(os.path.join(f'{self.filename_prefix}', f"{self.filename_prefix}_path.png"))
+        else:
+            plt.savefig(os.path.join(f"{filename}.png"))
+
+        plot_pure_pursuit(self.df.reset_index()["x"], self.df.reset_index()["y"], self.df.reset_index()["yaw"], path_points["x"], path_points["y"], filename=self.filename_prefix)
 
     def make_directory(self):
         os.mkdir(self.filename_prefix)
@@ -91,7 +109,7 @@ class DataLogger:
         # line plot
         self.df.reset_index().plot(x='index', y=['x', 'y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
 
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_collect_data_line_plot_xy.png"))
+        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_line_plot_xy.png"))
 
         fancy_scatter_plot(self.df, filename_timestamp)
 
@@ -107,17 +125,11 @@ class DataLogger:
         self.df.reset_index().plot(x='index', y=['a_r_x', 'a_r_y', 'a_x_kf', 'a_y_kf'])
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_real.png"))
 
-        # Control
-        self.df.reset_index().plot(x='index', y=['u_v', 'target_v', 'y_dot'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity_control.png"))
 
         # Steering control
         self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw', 'yaw_kf', 'yaw_acc_kf'])
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_steering_control.png"))
 
-        # Errors
-        self.df.reset_index().plot(x='index', y=['e_x', 'e_y', 'x_kf', 'y_kf'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_control_error.png"))
 
     def get_file_name(self, suffix, extension='png'):
         filename_timestamp = self.filename_prefix

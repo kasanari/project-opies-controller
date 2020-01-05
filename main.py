@@ -78,10 +78,18 @@ if __name__ == "__main__":
 
     collect_data_parser = subparsers.add_parser("collect-data", help="automatically run the car and log data")
     collect_data_parser.add_argument("--sleep-time", nargs='?', dest='sleep_time', type=int)
-    collect_data_parser.add_argument("-o", nargs='?', dest="out_file", help="output file name, in csv format. Defaults to a timestamp.")
+    collect_data_parser.add_argument("-o",
+                                     nargs='?',
+                                     dest="out_file",
+                                     help="output file name, in csv format. Defaults to a timestamp.")
     collect_data_parser.add_argument("--no-saving", dest='no_saving', action='store_true', help="Disables saving results to a file")
     collect_data_parser.set_defaults(func=start_collect_data)
 
     args = parser.parse_args()
 
-    initial_setup(args)
+    try:
+        initial_setup(args)
+    except KeyboardInterrupt:
+        print("Stopping")
+
+
