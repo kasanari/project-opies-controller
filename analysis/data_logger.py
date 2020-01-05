@@ -118,29 +118,21 @@ class DataLogger:
             self.df.reset_index().plot(x='index', y=['y_dot', 'x_dot'])
             plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity.png"))
 
-            # acceleration
-            self.df.reset_index().plot(x='index', y=['a_y', 'a_x', 'a_x_kf', 'a_y_kf'])
-            plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration.png"))
+            # acceleration world
+            self.df.reset_index().plot(x='index', y=['a_w_y', 'a_w_x', 'a_x_kf', 'a_y_kf'])
+            plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_world.png"))
 
-        # acceleration
-        self.df.reset_index().plot(x='index', y=['a_w_y', 'a_w_x', 'a_x_kf', 'a_y_kf'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_world.png"))
-
-        # acceleration real
-        self.df.reset_index().plot(x='index', y=['a_r_x', 'a_r_y', 'a_x_kf', 'a_y_kf'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_real.png"))
+            # acceleration real
+            self.df.reset_index().plot(x='index', y=['a_r_x', 'a_r_y', 'a_x_kf', 'a_y_kf'])
+            plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_real.png"))
 
             # Steering control
-            self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw'])
+            self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw', 'yaw_kf', 'yaw_acc_kf'])
             plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_steering_control.png"))
+
         except KeyError as e:
             print(e)
             print("Plotting failed")
-
-        # Steering control
-        self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw', 'yaw_kf', 'yaw_acc_kf'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_steering_control.png"))
-
 
     def get_file_name(self, suffix, extension='png'):
         filename_timestamp = self.filename_prefix
