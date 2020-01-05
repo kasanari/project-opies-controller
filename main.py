@@ -5,12 +5,12 @@ import subprocess
 from analysis.collect_data import collect_data_task
 from analysis.collect_data import fake_serial_task
 from application.context import Context
-import application.settings as settings
 from car.motor_control import motor_control_task
 from kalman.kalman_man import kalman_man
 from serial_with_dwm.serial_manager import serial_man
 from web_server import location_server
 from websocket_server.websocket_server import create_websocket_task
+import logging
 
 PORT_NUMBER = 8080  # Port for web server
 
@@ -51,6 +51,7 @@ def start_collect_data(args):
         collect_data_task(**args)
     )
 
+
 def start_gui(args):
     location_server.start_web_client(PORT_NUMBER)
     asyncio.run(main_gui_task(**args))
@@ -86,6 +87,10 @@ if __name__ == "__main__":
     collect_data_parser.set_defaults(func=start_collect_data)
 
     args = parser.parse_args()
+
+    asyncio.get_event_loop().set_debug(True)
+    logging.basicConfig(format='%(levelname)s:%(created)f:%(funcName)s:%(message)s', level=logging.INFO)
+    logging.getLogger('asyncio').setLevel(logging.INFO)
 
     try:
         initial_setup(args)

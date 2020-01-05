@@ -6,6 +6,7 @@ import os
 
 def test_plot_path():
     data_logger = DataLogger()
+    lookahead = 0.5
     path = {
         "x": [2.3, 3.5, 3.5, 2.3, 2.3],
         "y": [1.5, 1.5, 5.0, 5.0, 1.5]
@@ -17,4 +18,4 @@ def test_plot_path():
     plot_pure_pursuit(data_logger.df.reset_index()["x"],
                       data_logger.df.reset_index()["y"],
                       data_logger.df.reset_index()["yaw"],
-                      path["x"], path["y"], filename="test")
+                      path["x"], path["y"], lookahead=lookahead, filename="test")

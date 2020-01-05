@@ -1,10 +1,10 @@
-import matplotlib.pyplot as plt
-import pandas as pd
 import asyncio
 import csv
-import argparse
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
 from car.motor_control import motor_control_task
-from serial_with_dwm.serial_handler import serial_task
 from serial_with_dwm.location_data_handler import LocationData
 
 sleep_time = 3

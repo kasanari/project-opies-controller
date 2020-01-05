@@ -1,17 +1,14 @@
-import functools
+import asyncio
 import logging
 
 from analysis.data_logger import DataLogger
-
-from kalman.PositionEstimator import PositionEstimator
-import asyncio
-
 from application.context import ControlSignal, Context
+from kalman.PositionEstimator import PositionEstimator
 from websocket_server.websocket_server import ToWeb
-import concurrent.futures
+
 
 async def kalman_man(context: Context):
-    data_logger = DataLogger()
+
     try:
         # Initalize Kalman Filter
         logging.getLogger('asyncio').info("Initializing.")
@@ -39,8 +36,9 @@ async def kalman_man(context: Context):
             if context.auto_steering:
                 logging.getLogger('asyncio').info("Waiting for control signal.")
                 await context.new_control_signal_event.wait()
-                control_signal = context.control_signal
-                context.new_control_signal_event.clear()
+                if context.auto_steering:
+                    control_signal = context.control_signal
+                    context.new_control_signal_event.clear()
             else:
                 control_signal = ControlSignal()
                 context.new_measurement_event.clear()
@@ -53,19 +51,11 @@ async def kalman_man(context: Context):
             context.estimated_state = estimated_state
             context.new_estimated_state_event.set()
 
-            data_logger.log_data(estimated_state, control_signal)
-
 
             to_web = ToWeb("measurements", estimated_state, loc_data, imu_data)
             context.to_web_queue.put_nowait(to_web)
 
     except asyncio.CancelledError:
-
-        logging.getLogger('asyncio').info(f"Cancelled.")
-        data_logger.make_directory()
-        data_logger.save_csv()
-        data_logger.create_plots()
-        data_logger.plot_path(path_points=context.settings["path"])
         return True
 
 

@@ -1,6 +1,7 @@
 import math
+
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 def curvature(l, alpha):
     return (2*math.sin(alpha))/l
@@ -13,9 +14,9 @@ def get_alpha(x, y, yaw, tx, ty):
         pursuit_angle *= -1
         pursuit_angle *= -1
 
-    if pursuit_angle < 0:
+    elif pursuit_angle < 0:
         pursuit_angle += 360
-    if yaw < 0:
+    elif yaw < 0:
         yaw += 360
 
     alpha = pursuit_angle - yaw
@@ -25,7 +26,7 @@ def get_alpha(x, y, yaw, tx, ty):
     if alpha < -180:
         alpha += 360
 
-    return alpha, pursuit_angle
+    return alpha, np.rad2deg(math.atan2(ty - y, tx - x))
 
 
 def calc_distance(x0, y0, x1, y1):
