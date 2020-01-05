@@ -68,7 +68,17 @@ async def auto_steer_task(context: Context,
 
     path_points = context.settings["path"]
 
-    path = pathing.Path(path_points["x"], path_points["y"])
+    checkpoint_threshold = 0.75
+    goal_threshold = 0.35
+
+    points_x = path_points["x"]
+    points_y = path_points["y"]
+
+
+    path = pathing.Path(points_x, points_y)
+
+    checkpoints = [False for _ in points_x]
+
     data_logger = DataLogger()
     steering_controller = PIDController(K_p=1, K_d=0.1, K_i=0.01)
     speed_controller = PIDController(K_p=1, K_d=0.25)
@@ -97,17 +107,27 @@ async def auto_steer_task(context: Context,
 
             context.new_estimated_state_event.clear()
 
-            dx = path_points["x"][-1] - loc_data.x
-            dy = path_points["y"][-1] - loc_data.y
-            distance_to_goal = math.hypot(dx, dy)
+            for i, (x, y) in enumerate(zip(points_x, points_y)):
+                if checkpoints[i] is not True:
+                    dx = x - loc_data.x
+                    dy = y - loc_data.y
+                    distance_to_checkpoint = math.hypot(dx, dy)
+                    if distance_to_checkpoint < checkpoint_threshold:
+                        print(f"Reeached checkpoint {i}")
+                        checkpoints[i] = True
 
-            if distance_to_goal < 0.45:
-                context.auto_steering = False
-                context.new_control_signal_event.set()
-                await rc_car.brake()
-                rc_car.stop()
-                print(f"Reached goal at {(path_points['x'][-1], path_points['y'][-1])}.")
-                return
+            if not (False in checkpoints):
+                print("All checkpoints passed!")
+                dx = points_x[-1] - loc_data.x
+                dy = points_y[-1] - loc_data.y
+                distance_to_goal = math.hypot(dx, dy)
+                if distance_to_goal < goal_threshold:
+                    context.auto_steering = False
+                    context.new_control_signal_event.set()
+                    await rc_car.brake()
+                    rc_car.stop()
+                    print(f"Reached goal at {(path_points['x'][-1], path_points['y'][-1])}.")
+                    return
 
             l = context.settings["lookahead"]
 
@@ -129,7 +149,7 @@ async def auto_steer_task(context: Context,
             elif u_speed < 0.16:
                 u_speed = 0.16
 
-            log.info(f"distance_to_goal: {distance_to_goal}")
+            #log.info(f"distance_to_goal: {distance_to_goal}")
             log.debug(f"alpha: {alpha}")
             log.debug(f"acceleration: {u_speed}")
             log.debug(f"u_angle: {u_angle}")

@@ -2,6 +2,8 @@ import json
 
 DEFAULT_SETTINGS = {
     "lookahead": 1,
+    "checkpoint_threshold": 0.75,
+    "goal_threshold": 0.35,
     "generate_movie": True,
     "kalman": {
         "std_dev_acc": 0.8,
