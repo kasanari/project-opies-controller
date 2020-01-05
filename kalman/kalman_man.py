@@ -45,9 +45,10 @@ async def kalman_man(context: Context):
                 control_signal = ControlSignal()
                 context.new_measurement_event.clear()
                 context.new_estimated_state_event.clear()
+            steering_signal = context.control_signal.to_numpy()
 
             estimated_state = position_estimator.do_kalman_updates(loc_data, imu_data,
-                                                                   steering_signal=0,
+                                                                   steering_signal=steering_signal[1],
                                                                    variable_time=False)
             estimated_state.measurement = measurement
             context.estimated_state = estimated_state

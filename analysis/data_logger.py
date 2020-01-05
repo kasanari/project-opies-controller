@@ -118,9 +118,13 @@ class DataLogger:
         self.df.reset_index().plot(x='index', y=['v_est'])
         plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity.png"))
 
-        # acceleration
-        self.df.reset_index().plot(x='index', y=['a_y', 'a_x', 'a_kf'])
-        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration.png"))
+        # acceleration world
+        self.df.reset_index().plot(x='index', y=['a_w_y', 'a_w_x', 'a_kf'])
+        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_world.png"))
+
+        # acceleration real
+        self.df.reset_index().plot(x='index', y=['a_r_y', 'a_r_x', 'a_kf'])
+        plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_real.png"))
 
         # Control
         self.df.reset_index().plot(x='index', y=['u_v', 'target_v', 'v_est'])
