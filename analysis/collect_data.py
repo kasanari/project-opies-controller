@@ -32,14 +32,15 @@ async def fake_serial_task(context, data_file, update_delay=0.1):
 
 
 async def collect_data_task(serial_data_file=None, disable_motor=True, no_saving=False, out_file=None, sleep_time=10, settings_file=None):
+    message_task = None
+    kalman_task = None
+    location_task = None
     try:
-        message_task = None
+
 
         context = Context(settings_file)
 
         asyncio.get_event_loop().set_debug(True)
-
-
 
 
         if serial_data_file is None:
@@ -68,14 +69,17 @@ async def collect_data_task(serial_data_file=None, disable_motor=True, no_saving
 
         await kalman_task
     except KeyboardInterrupt:
-        print("stopping")
-        message_task.cancel()
-        kalman_task.cancel()
-        location_task.cancel()
+        print("Stopping")
+        if message_task is not None:
+            message_task.cancel()
+        if kalman_task is not None:
+            kalman_task.cancel()
+        if location_task is not None:
+            location_task.cancel()
         return
 
 
-    print("Done")
+    print("Done.")
 
 
 
