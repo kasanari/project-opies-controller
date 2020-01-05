@@ -160,10 +160,10 @@ def kalman_updates(kf, loc_data, imu_data: IMUData, timestep, variance_position,
         z = kf.z
         kf.R = set_R(var_position=500, var_acc=500, var_heading=500, use_acc=use_acc)  # High value, prefer process model
         loc_quality = -99
-    #if u is not None:
-    #    if u[0] < 0:
-    #        u[0] = kf.x[3]  # last y_dot.  # TODO: for u=u_steering, controlling y_dot only. Change if changed!!
-    kf.predict(u=u[1])
+
+    u_rad = np.deg2rad(u[1])
+
+    kf.predict(u=u_rad)
     kf.update(z)
 
     # Values for estimated state as floats, showing two decimals
