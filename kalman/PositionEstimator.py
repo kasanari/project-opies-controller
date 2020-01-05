@@ -31,7 +31,7 @@ class PositionEstimator:
                                      meas_var_acc=self.meas_var_acc, meas_var_heading=self.meas_var_heading, meas_var_pos=self.meas_var_pos
                                      )
 
-    def do_kalman_updates(self, loc_data, imu_data, control_signal, variable_dt=False):
+    def do_kalman_updates(self, loc_data, imu_data, control_signal, variable_dt=True):
         if variable_dt:
             d_t = time.time() - self.time
         else:
