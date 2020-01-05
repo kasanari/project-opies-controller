@@ -9,3 +9,5 @@ __pycache__
 *.mp4
 *.zip
 *.7z
+application/default_settings.json
+application/settings.json
