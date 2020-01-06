@@ -1,19 +1,19 @@
 {
   "kalman": {
-    "std_dev_acc": 0.8,
-    "std_dev_position": 0.04,
-    "std_dev_heading": 0.8,
-    "update_delay": 0.2,
-    "std_dev_angular_acc":  0.2,
-    "var_process_acc":  0.2,
+    "std_dev_acc": 1.2,
+    "std_dev_position": 0.3,
+    "std_dev_heading": 0.3,
+    "update_delay": 0.12,
+    "std_dev_angular_acc":  0.08,
+    "var_process_acc":  0.08,
     "var_process_v": 0.2,
-    "var_process_xy": 0.2
+    "var_process_xy": 0.0
 
   },
   "lookahead": 1,
 
   "path": {
-    "x": [2.2, 3.3, 3.3, 2.2, 2.2],
+    "x": [1.8, 2.5, 2.5, 1.8, 1.8],
     "y": [1.5, 1.5, 5.0, 5.0, 1.5]
 }
 }
