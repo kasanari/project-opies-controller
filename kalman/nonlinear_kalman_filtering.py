@@ -34,8 +34,9 @@ def init_unscented_kf(loc_data, dt, variance_angular_acc, variance_pos,
 
 
 def set_F(x, dt):
-    cos_heading = np.cos(x[4, 0])
-    sin_heading = np.sin(x[4, 0])
+    rad_heading = np.deg2rad(x[4, 0])
+    cos_heading = np.cos(rad_heading)
+    sin_heading = np.sin(rad_heading)
     f = np.array([[1., 0., dt*cos_heading, 0.5*dt*dt*cos_heading, -1*sin_heading*(dt*x[2, 0]+0.5*dt*dt*x[3, 0]), 0.],
                   [0., 1., dt*sin_heading, 0.5*dt*dt*sin_heading, cos_heading*(dt*x[2, 0]+0.5*dt*dt*x[3, 0]), 0.],
                   [0., 0., 1., dt, 0., 0.],
@@ -59,8 +60,9 @@ def set_Q(dt, var_process_x, var_process_y, var_process_v, var_process_a,
 
 
 def HJacobian_of(x):
-    cos_heading = np.cos(x[4, 0])
-    sin_heading = np.sin(x[4, 0])
+    rad_heading = np.deg2rad(x[4, 0])
+    cos_heading = np.cos(rad_heading)
+    sin_heading = np.sin(rad_heading)
     acceleration = x[3, 0]
 
     jacobian = np.array([
@@ -77,8 +79,9 @@ def HJacobian_of(x):
 
 def fx(x, dt):  # only for unscented
     x_out = np.empty_like(x)
-    cos_heading = np.cos(x[4, 0])
-    sin_heading = np.sin(x[4, 0])
+    rad_heading = np.deg2rad(x[4, 0])
+    cos_heading = np.cos(rad_heading)
+    sin_heading = np.sin(rad_heading)
 
     x_out[0, 0] = x[0, 0] + dt * x[2, 0] * cos_heading + 0.5 * dt * dt * x[3, 0] * cos_heading  # x_(k+1)
     x_out[1, 0] = x[1, 0] + dt * x[2, 0] * sin_heading + 0.5 * dt * dt * x[3, 0] * sin_heading  # y_(k+1)
@@ -89,11 +92,12 @@ def fx(x, dt):  # only for unscented
 
 
 def hx(x):
+    rad_heading = np.deg2rad(x[4, 0])
     z_out = np.zeros([6, 1])
     z_out[0, 0] = x[0, 0]
     z_out[1, 0] = x[1, 0]
-    z_out[2, 0] = x[3, 0] * np.cos(x[4, 0])
-    z_out[3, 0] = x[3, 0] * np.sin(x[4, 0])
+    z_out[2, 0] = x[3, 0] * np.cos(rad_heading)
+    z_out[3, 0] = x[3, 0] * np.sin(rad_heading)
     z_out[4, 0] = x[4, 0]
     z_out[5, 0] = x[5, 0]
     return z_out
@@ -222,7 +226,8 @@ def e_kalman_updates(ekf, loc_data: LocationData, imu_data: IMUData, variance_po
 
 def predict_with_control(ekf: ExtendedKalmanFilter, steering_signal, var_steering=0.001):
     length_of_car = 0.45
-    cos2_steering_signal = np.cos(steering_signal)*np.cos(steering_signal)
+    rad_steering = np.deg2rad(steering_signal)
+    cos2_steering_signal = np.cos(rad_steering)*np.cos(rad_steering)
     #V = np.array[[0.], [0.], [0.], [0.], [ekf.x[2]/length_of_car]]
     V = np.array([[0., 0., 0., 0., 0., 0.],
                   [0., 0., 0., 0., 0., 0.],
