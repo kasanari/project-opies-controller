@@ -6,9 +6,9 @@ import os
 
 def test_plot_path():
     data_logger = DataLogger()
-    lookahead = 0.5
+    lookahead = 0.8
     path = {
-        "x": [2.3, 3.5, 3.5, 2.3, 2.3],
+        "x": [1.6, 2.9, 2.9, 1.6, 1.6],
         "y": [1.5, 1.5, 5.0, 5.0, 1.5]
     }
     if os.path.isfile("test.mp4"):
