@@ -14,13 +14,13 @@ def init_kalman_filter(loc_data, dt,
                        process_var_acc, process_var_vel, process_var_heading,
                        process_var_heading_acc, process_var_pos,
                        meas_var_pos, meas_var_heading, meas_var_acc, speed_div_by_length,
-                       use_acc=True, dim_x=6, dim_z=4, dim_u=0,):
+                       use_acc, dim_x, dim_z, dim_u):
     kf = KalmanFilter(dim_x=dim_x, dim_z=dim_z, dim_u=dim_u)
     # init state vector x
     kf.x = set_x(loc_data, use_acc=use_acc)
     kf.F = set_F(dt, use_acc=use_acc)
     kf.H = set_H(use_acc=use_acc)
-    kf.B = set_B(speed_div_by_length=speed_div_by_length)
+    kf.B = set_B(speed_div_by_length=speed_div_by_length, use_acc=use_acc)
 
     kf.P *= 10
 
@@ -75,7 +75,7 @@ def set_H(use_acc=False):
     return h
 
 
-def set_Q(dt, var_heading, var_heading_acc, var_velocity, use_acc = True, acceleleration=True, var_x=0.0, var_y=0.0,
+def set_Q(dt, var_heading, var_heading_acc, var_velocity, use_acc = True, var_x=0.0, var_y=0.0,
           var_acc=0.5):  # TODO: prune
     if use_acc:
         var_acc_x = var_acc
@@ -90,7 +90,6 @@ def set_Q(dt, var_heading, var_heading_acc, var_velocity, use_acc = True, accele
                       [0., 0., 0., 0., 0., 0., 0., var_acc_y]
                       ])
     else:  # remove this if acc is good
-        if acceleleration:
             var_x_dot = np.square(dt)
             var_y_dot = np.square(dt)
         q = np.array([[var_x, 0., 0., 0.],
@@ -100,9 +99,12 @@ def set_Q(dt, var_heading, var_heading_acc, var_velocity, use_acc = True, accele
     return q
 
 
-def set_B(speed_div_by_length):
+def set_B(speed_div_by_length, use_acc):
+    if use_acc:
     b = np.zeros([8, 1])
     b[3, 0] = speed_div_by_length
+    else:
+        b = 0
     return b
 
 
@@ -169,14 +171,24 @@ def kalman_updates(kf, loc_data, imu_data: IMUData, timestep, variance_position,
     # Values for estimated state as floats, showing two decimals
     x_kf = float_with_2_decimals(kf.x[0, 0])
     y_kf = float_with_2_decimals(kf.x[1, 0])
+
+    if use_acc:
     yaw_kf = float_with_2_decimals(kf.x[2, 0])
     yaw_acc_kf = float_with_2_decimals(kf.x[3, 0])
-    log_likelihood = float_with_2_decimals(kf.log_likelihood)
-    likelihood = float_with_2_decimals(kf.likelihood)
     x_v_est = float_with_2_decimals(kf.x[4, 0])
     y_v_est = float_with_2_decimals(kf.x[5, 0])
     x_acc_est = float_with_2_decimals(kf.x[6, 0])
     y_acc_est = float_with_2_decimals(kf.x[7, 0])
+    else:
+        x_v_est = float_with_2_decimals(kf.x[2, 0])
+        y_v_est = float_with_2_decimals(kf.x[3, 0])
+        yaw_kf = float_with_2_decimals(0)
+        yaw_acc_kf = float_with_2_decimals(0)
+        x_acc_est = float_with_2_decimals(0)
+        y_acc_est = float_with_2_decimals(0)
+
+    log_likelihood = float_with_2_decimals(kf.log_likelihood)
+    likelihood = float_with_2_decimals(kf.likelihood)
 
     filtered_loc = LocationData(x=x_kf, y=y_kf, z=0, quality=loc_quality)
     estimated_state = EstimatedState(filtered_loc, x_v_est=x_v_est, y_v_est=y_v_est, yaw_est=yaw_kf,
