@@ -92,7 +92,7 @@ def set_Q(dt, var_heading, var_heading_acc, var_velocity, use_acc = True, var_x=
     else:  # remove this if acc is good
             var_x_dot = np.square(dt)
             var_y_dot = np.square(dt)
-        q = np.array([[var_x, 0., 0., 0.],
+            q = np.array([[var_x, 0., 0., 0.],
                       [0., var_y, 0., 0.],
                       [0., 0., var_x_dot, 0.],
                       [0., 0., 0., var_y_dot]])
@@ -101,8 +101,8 @@ def set_Q(dt, var_heading, var_heading_acc, var_velocity, use_acc = True, var_x=
 
 def set_B(speed_div_by_length, use_acc):
     if use_acc:
-    b = np.zeros([8, 1])
-    b[3, 0] = speed_div_by_length
+        b = np.zeros([8, 1])
+        b[3, 0] = speed_div_by_length
     else:
         b = 0
     return b
@@ -173,12 +173,12 @@ def kalman_updates(kf, loc_data, imu_data: IMUData, timestep, variance_position,
     y_kf = float_with_2_decimals(kf.x[1, 0])
 
     if use_acc:
-    yaw_kf = float_with_2_decimals(kf.x[2, 0])
-    yaw_acc_kf = float_with_2_decimals(kf.x[3, 0])
-    x_v_est = float_with_2_decimals(kf.x[4, 0])
-    y_v_est = float_with_2_decimals(kf.x[5, 0])
-    x_acc_est = float_with_2_decimals(kf.x[6, 0])
-    y_acc_est = float_with_2_decimals(kf.x[7, 0])
+        yaw_kf = float_with_2_decimals(kf.x[2, 0])
+        yaw_acc_kf = float_with_2_decimals(kf.x[3, 0])
+        x_v_est = float_with_2_decimals(kf.x[4, 0])
+        y_v_est = float_with_2_decimals(kf.x[5, 0])
+        x_acc_est = float_with_2_decimals(kf.x[6, 0])
+        y_acc_est = float_with_2_decimals(kf.x[7, 0])
     else:
         x_v_est = float_with_2_decimals(kf.x[2, 0])
         y_v_est = float_with_2_decimals(kf.x[3, 0])
