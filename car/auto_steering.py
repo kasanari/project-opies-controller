@@ -148,7 +148,7 @@ async def auto_steer_task(context: Context,
             speed = math.hypot(estimated_state.y_v_est, estimated_state.x_v_est)
             target_speed = 0.5
             speed_error = target_speed - speed
-            u_speed = 0.16 + speed_controller.get_control_signal(speed_error, time.time(), P=True, D=False)
+            u_speed = 0.16 + speed_controller.get_control_signal(speed_error, time.time())
             if u_speed > 0.18:
                 u_speed = 0.18
             elif u_speed < 0.16:
