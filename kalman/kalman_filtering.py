@@ -13,14 +13,14 @@ from serial_with_dwm import Measurement
 def init_kalman_filter(loc_data, dt,
                        process_var_acc, process_var_vel, process_var_heading,
                        process_var_heading_acc, process_var_pos,
-                       meas_var_pos, meas_var_heading, meas_var_acc,
+                       meas_var_pos, meas_var_heading, meas_var_acc, speed_div_by_length,
                        use_acc=True, dim_x=6, dim_z=4, dim_u=0,):
     kf = KalmanFilter(dim_x=dim_x, dim_z=dim_z, dim_u=dim_u)
     # init state vector x
     kf.x = set_x(loc_data, use_acc=use_acc)
     kf.F = set_F(dt, use_acc=use_acc)
     kf.H = set_H(use_acc=use_acc)
-    kf.B = set_B()
+    kf.B = set_B(speed_div_by_length=speed_div_by_length)
 
     kf.P *= 10
 
@@ -100,9 +100,9 @@ def set_Q(dt, var_heading, var_heading_acc, var_velocity, use_acc = True, accele
     return q
 
 
-def set_B():
+def set_B(speed_div_by_length):
     b = np.zeros([8, 1])
-    b[3, 0] = 1
+    b[3, 0] = speed_div_by_length
     return b
 
 
