@@ -80,8 +80,8 @@ async def auto_steer_task(context: Context,
     checkpoints = [False for _ in points_x]
 
     data_logger = DataLogger()
-    steering_controller = PIDController(K_p=1, K_d=0.1, K_i=0.01)
-    speed_controller = PIDController(K_p=1, K_d=0.25)
+    steering_controller = PIDController(**context.settings["pid"]["steering"])
+    speed_controller = PIDController(**context.settings["pid"]["speed"])
 
     if distance_control:
         arduino_connection: Serial = arduino_serial.connect_to_arduino()
@@ -138,7 +138,7 @@ async def auto_steer_task(context: Context,
 
             alpha, t_theta = pp.get_alpha(loc_data.x, loc_data.y, imu_data.rotation.yaw, tx, ty)
 
-            u_angle = steering_controller.get_control_signal(alpha, time.time(), P=True, D=True, I=True)  # steering_controller.get_control_signal(x_diff, loop.time(), P=True, D=False)
+            u_angle = steering_controller.get_control_signal(alpha, time.time())
 
             speed = math.hypot(estimated_state.y_v_est, estimated_state.x_v_est)
             target_speed = 0.5

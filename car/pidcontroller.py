@@ -2,13 +2,15 @@ import time
 
 
 class PIDController:
-    def __init__(self, K_p=1, K_d=1, K_i=1):
+    def __init__(self, p=1, d=1, i=1, enable_d=False, enable_i=False):
         self.prev_e = 0
         self.sum_e = 0
-        self.K_p = K_p
-        self.K_d = K_d
-        self.K_i = K_i
+        self.K_p = p
+        self.K_d = d
+        self.K_i = i
         self.time = time.time()
+        self.D = enable_d
+        self.I = enable_i
 
     def get_constant_control_signal(self, error, current_time):
 
@@ -23,7 +25,7 @@ class PIDController:
         else:
             return 0
 
-    def get_control_signal(self, error, current_time, P=True, D=False, I=False):
+    def get_control_signal(self, error, current_time):
         e = error
         control_signal = 0
 
@@ -33,21 +35,21 @@ class PIDController:
         self.time = current_time
 
         # print(f"delta_t = {delta_t}")
-
-        if P:
-            p = self.K_p * e
-            # print(f"p: {p}")
-            control_signal += p
-        if D:
+        p = self.K_p * e
+        # print(f"p: {p}")
+        control_signal += p
+        if self.D:
             d = self.K_d * (e - self.prev_e) / delta_t
             control_signal += d
+            self.prev_e = e
             # print(f"d: {d}")
-        if I:
+        if self.I:
             i = self.K_i * self.sum_e
             control_signal += i
+            self.sum_e += e * delta_t
             # print(f"i: {i}")
 
-        self.sum_e += e * delta_t
-        self.prev_e = e
+
+
 
         return control_signal

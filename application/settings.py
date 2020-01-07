@@ -23,6 +23,22 @@ DEFAULT_SETTINGS = {
     "path": {
         "x": [],
         "y": []
+    },
+    "pid": {
+      "steering": {
+        "enable_d": False,
+        "enable_i": False,
+        "p": 1,
+        "d": 0.1,
+        "i": 0.01
+      },
+      "speed": {
+          "enable_d": False,
+          "enable_i": False,
+          "p": 1,
+          "d": 0.1,
+          "i": 0.01
+      }
     }
 }
 
