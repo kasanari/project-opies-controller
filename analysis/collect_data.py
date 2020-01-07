@@ -53,8 +53,8 @@ async def collect_data_task(serial_data_file=None, disable_motor=True, no_saving
 
         if not disable_motor:
             message = {'type': "destination",
-                       'x': [2.2, 3, 3, 2.2, 2.2],
-                       'y': [1.5, 1.5, 5.0, 5.0, 1.5]
+                       'x': context.settings["path"]["x"],
+                       'y': context.settings["path"]["y"]
                        }
             await context.from_web_queue.put(message)
             message_task = asyncio.create_task(motor_control_task(context))
