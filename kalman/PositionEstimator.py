@@ -5,7 +5,7 @@ class PositionEstimator:
 
     def __init__(self, process_dev_pos, process_dev_acc, process_dev_heading, process_dev_heading_acc,
                  process_dev_vel,
-                 meas_dev_pos, meas_dev_heading, meas_dev_acc, speed_div_by_length, dim_z = 5, dim_u=0,
+                 meas_dev_pos, meas_dev_heading, meas_dev_acc, speed_div_by_length, variable_dt, dim_z = 5, dim_u=0,
                  dim_x=6, update_delay=0.1):
         self.process_var_acc = process_dev_acc
         self.process_var_vel = process_dev_vel
@@ -23,6 +23,7 @@ class PositionEstimator:
         self.estimated_state = None
         self.time = time.time()
         self.speed_div_by_length = speed_div_by_length
+        self.variable_dt = variable_dt
 
     def start_kalman_filter(self, loc_data):
         self.kf = init_kalman_filter(loc_data, process_var_pos=self.process_var_pos, process_var_acc=self.process_var_acc,
@@ -33,8 +34,9 @@ class PositionEstimator:
                                      meas_var_acc=self.meas_var_acc, meas_var_heading=self.meas_var_heading, meas_var_pos=self.meas_var_pos
                                      )
 
-    def do_kalman_updates(self, loc_data, imu_data, control_signal, variable_dt=True):
-        if variable_dt:
+    def do_kalman_updates(self, loc_data, imu_data, control_signal):
+
+        if self.variable_dt:
             d_t = time.time() - self.time
         else:
             d_t = self.update_delay
