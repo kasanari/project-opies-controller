@@ -6,8 +6,6 @@ DEFAULT_SETTINGS = {
     "goal_threshold": 0.35,
     "generate_movie": True,
     "kalman": {
-        "dim_u": 1,
-        "dim_x": 8,
         "update_delay": 0.1,
         "process_dev_pos": 0,
         "process_dev_acc": 0.08,
