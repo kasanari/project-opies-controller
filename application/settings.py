@@ -17,7 +17,7 @@ DEFAULT_SETTINGS = {
         "meas_dev_pos": 0.3,
         "meas_dev_heading": 0.08,
         "meas_dev_acc": 1.2,
-        "speed_div_by_length": 0.9
+        "speed_div_by_length": 0.9,
         "variable_dt": True
     },
     "path": {
