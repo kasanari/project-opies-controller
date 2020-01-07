@@ -101,9 +101,14 @@ async def auto_steer_task(context: Context,
             log.info("Waiting for estimated state and measurements")
             await context.new_estimated_state_event.wait()
             estimated_state = context.estimated_state
-            _, imu_data = estimated_state.measurement.result_tag, estimated_state.measurement.result_imu
             loc_data = estimated_state.location_est
             log.info("Calculating control signal.")
+
+            if context.settings["kalman"]["uwb_only_kf"]:
+                _, imu_data = estimated_state.measurement.result_tag, estimated_state.measurement.result_imu
+                yaw = imu_data.rotation.yaw
+            else:
+                yaw = estimated_state.yaw_est
 
             context.new_estimated_state_event.clear()
 
@@ -136,7 +141,7 @@ async def auto_steer_task(context: Context,
             else:
                 tx, ty = path.x[0], path.y[0]
 
-            alpha, t_theta = pp.get_alpha(loc_data.x, loc_data.y, imu_data.rotation.yaw, tx, ty)
+            alpha, t_theta = pp.get_alpha(loc_data.x, loc_data.y, yaw, tx, ty)
 
             u_angle = steering_controller.get_control_signal(alpha, time.time())
 
