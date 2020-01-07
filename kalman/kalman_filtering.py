@@ -38,7 +38,7 @@ def set_x(loc_data, use_acc):
         x[0,0] = loc_data.x
         x[1,0] = loc_data.y
     else:
-        x = np.array([loc_data.x, loc_data.y, 0.0, 0.0])  # initialize with first loc_data x and y, 0 in v and a
+        x = np.array([[loc_data.x], [loc_data.y], [0.0], [0.0]])  # initialize with first loc_data x and y, 0 in v and a
     return x
 
 

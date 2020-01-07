@@ -35,8 +35,7 @@ for x, y, u_yaw, yaw, a_r_y, a_r_x, a_w_y, a_w_x in zip(df["x"], df["y"], df["u_
 
     estimated_state = position_estimator.do_kalman_updates(loc_data,
                                                             imu_data,
-                                                            control_signal = control_signal.to_numpy(),
-                                                            variable_dt=False)
+                                                            control_signal = control_signal.to_numpy())
     estimated_state.measurement = measurement
     data_logger.log_data(estimated_state, control_signal)
 
