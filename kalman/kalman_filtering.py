@@ -90,9 +90,9 @@ def set_Q(dt, var_heading, var_heading_acc, var_velocity, use_acc = True, var_x=
                       [0., 0., 0., 0., 0., 0., 0., var_acc_y]
                       ])
     else:  # remove this if acc is good
-            var_x_dot = np.square(dt)
-            var_y_dot = np.square(dt)
-            q = np.array([[var_x, 0., 0., 0.],
+        var_x_dot = var_velocity
+        var_y_dot = var_velocity
+        q = np.array([[var_x, 0., 0., 0.],
                       [0., var_y, 0., 0.],
                       [0., 0., var_x_dot, 0.],
                       [0., 0., 0., var_y_dot]])
