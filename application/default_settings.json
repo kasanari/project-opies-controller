@@ -13,7 +13,8 @@
     "meas_dev_heading": 0.08,
     "meas_dev_acc": 1.2,
     "speed_div_by_length": 0.9,
-    "variable_dt": true
+    "variable_dt": true,
+    "uwb_only_kf": false
   },
   "path": {
     "x": [],
