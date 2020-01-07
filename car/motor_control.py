@@ -71,5 +71,5 @@ async def motor_control_task(context: Context, debug_no_car=False):
     except asyncio.CancelledError:
         logging.getLogger('asyncio').info("Motor task cancelled.")
     finally:
-        await rc_car.brake()
+        #await rc_car.brake()
         rc_car.disable()
