@@ -96,10 +96,10 @@ function add_element_to_array()
 {
     array_x[arr_index] = document.getElementById("x_destination").value;
     array_y[arr_index] = document.getElementById("y_destination").value;
-    //alert("Element: " + array_x[arr_index] + " Added at index " + arr_index);
     arr_index++;
     document.getElementById("x_destination").value = "";
     document.getElementById("y_destination").value = "";
+    display_array();
 }
 
 function erase_array()
@@ -107,18 +107,33 @@ function erase_array()
     array_x = Array();
     array_y = Array();
     arr_index = 0;
+    display_array();
+}
+
+function erase_last_element()
+{
+    let new_array_x = Array();
+    let new_array_y = Array();
+    for (let index=0; index<array_x.length-1; index++)
+    {
+        new_array_x[index] = array_x[index];
+        new_array_y[index] = array_y[index];
+    }
+    array_x = new_array_x;
+    array_y = new_array_y;
+    arr_index = array_x.length;
+    display_array();
 }
 
 function display_array()
 {
-    let e = "<hr/>";
+    let path_status = "<hr/>";
 
     for (let disp_index=0; disp_index<array_x.length; disp_index++)
     {
-        e += "Point " + disp_index + ": (" + array_x[disp_index] + ", " + array_y[disp_index] + ") <br/>"
-        //e += "x[" + disp_index + "]=" + array_x[disp_index] + ", y[" + disp_index + "]=" + array_y[disp_index] + "<br/>";
+        path_status += "Point " + disp_index + ": (" + array_x[disp_index] + ", " + array_y[disp_index] + ") <br/>"
     }
-    document.getElementById("Array_res").innerHTML = e;
+    document.getElementById("Array_res").innerHTML = path_status;
 }
 
 
@@ -128,8 +143,10 @@ function sendPath() {
         message.type = "path";
         message.x = array_x;
         message.y = array_y;
-        let json = JSON.stringify(message)
-        alert("Sending path as: " + json);
+
+        let path_status = document.getElementById("Array_res").innerHTML;
+        path_status += "Path sent! <br/>";
+        document.getElementById("Array_res").innerHTML = path_status
         sendWSMessage(message)
     } else {
         console.log("WebSocket not connected!")
