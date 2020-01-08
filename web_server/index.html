@@ -16,14 +16,18 @@
                 <form id="form-destination">
                     <h2>Destination</h2>
                     <div>
-                        <label for="x_destination">X:</label>
                         <input id="x_destination" type="number" step="0.1" value="0" name="x_destination">
+                        <label for="x_destination">X</label>
                     </div>
                     <div>
-                        <label for="y_destination">Y:</label>
                         <input id="y_destination" type="number" step="0.1" value="0" name="y_destination">
+                        <label for="y_destination">Y</label>
                     </div>
-                    <button type="button" onclick="sendDestination()">Send</button>
+                    <button type="button" onclick="add_element_to_array();">Add (x, y) point to path</button>
+                    <button type="button" onclick="erase_array();">Remove current path</button>
+                    <button type="button" onclick="display_array();">Display path</button>
+                    <div id="Array_res"></div>
+                    <button type="button" onclick="sendPath()">Send path</button>
                 </form>
             </div>
 

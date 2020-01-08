@@ -45,8 +45,7 @@ async def motor_control_task(context: Context, debug_no_car=False):
                     auto_steer.cancel()
                 control_car_from_message(rc_car, message)
 
-            elif message_type == "destination":
-
+            elif message_type == "destination" or message_type == "path":
                 context.settings["path"]["x"] = [float(x) for x in message["x"]]
                 context.settings["path"]["y"] = [float(y) for y in message["y"]]
 

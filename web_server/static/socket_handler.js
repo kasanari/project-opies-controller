@@ -88,6 +88,54 @@ function sendDestination() {
     }
 }
 
+var arr_index = 0;
+var array_x = Array();
+var array_y = Array();
+
+function add_element_to_array()
+{
+    array_x[arr_index] = document.getElementById("x_destination").value;
+    array_y[arr_index] = document.getElementById("y_destination").value;
+    //alert("Element: " + array_x[arr_index] + " Added at index " + arr_index);
+    arr_index++;
+    document.getElementById("x_destination").value = "";
+    document.getElementById("y_destination").value = "";
+}
+
+function erase_array()
+{
+    array_x = Array();
+    array_y = Array();
+    arr_index = 0;
+}
+
+function display_array()
+{
+    let e = "<hr/>";
+
+    for (let disp_index=0; disp_index<array_x.length; disp_index++)
+    {
+        e += "Point " + disp_index + ": (" + array_x[disp_index] + ", " + array_y[disp_index] + ") <br/>"
+        //e += "x[" + disp_index + "]=" + array_x[disp_index] + ", y[" + disp_index + "]=" + array_y[disp_index] + "<br/>";
+    }
+    document.getElementById("Array_res").innerHTML = e;
+}
+
+
+function sendPath() {
+    if (connected) {
+        var message = {};
+        message.type = "path";
+        message.x = array_x;
+        message.y = array_y;
+        let json = JSON.stringify(message)
+        alert("Sending path as: " + json);
+        sendWSMessage(message)
+    } else {
+        console.log("WebSocket not connected!")
+    }
+}
+
 function stop() {
     var message = {};
     message.type = "stop";
