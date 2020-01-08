@@ -17,6 +17,10 @@ type: 'scatter',
     ]
   },
   options: {
+    animation: {
+        duration:1,
+        easing:'linear'
+    },
     title: {
       display: false,
       text: 'Steering'
