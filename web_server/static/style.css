@@ -10,7 +10,8 @@
     color: #FFBF00;
 }
 
-#controls {
+
+#controls, #top_part {
     margin: auto;
     display: flex;
     flex-wrap: wrap;

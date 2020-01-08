@@ -14,9 +14,9 @@ import logging
 @dataclass
 class ToWeb:
     type: str
-    estimated_state: EstimatedState
-    location_measurements: LocationData
-    imu_measurements: IMUData
+    estimated_state: EstimatedState = None
+    location_measurements: LocationData = None
+    imu_measurements: IMUData = None
     anchors = None
 
     def generate_json_msg(self):

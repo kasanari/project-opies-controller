@@ -1,6 +1,6 @@
 import asyncio
 import logging
-
+import os
 from application.context import Context
 from car.auto_steering import auto_steer_task
 from car.car import Car
@@ -50,10 +50,18 @@ async def motor_control_task(context: Context, debug_no_car=False):
                 context.settings["path"]["x"] = [float(x) for x in message["x"]]
                 context.settings["path"]["y"] = [float(y) for y in message["y"]]
 
+                try:
+                    filename = message["filename"]
+                    filename = "movie"
+                    movie_path = os.path.join(os.getcwd(),'web_server', 'static',  filename)
+                except KeyError:
+                    filename = None
+
+
                 if auto_steer is not None:
                     auto_steer.cancel()
 
-                auto_steer = asyncio.create_task(auto_steer_task(context, rc_car))
+                auto_steer = asyncio.create_task(auto_steer_task(context, rc_car, movie_filename=movie_path))
                 context.auto_steering = True
 
             elif message_type == 'stop':
