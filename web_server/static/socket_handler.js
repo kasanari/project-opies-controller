@@ -65,7 +65,7 @@ function eventHandler(event) {
     } else if (type === "movie") {
         console.log("movie ready");
         var video = document.getElementById("path_movie");
-        var source = document.createElement('source');
+        var source = document.getElementById("movie_source");//document.createElement('source');
         source.setAttribute('src', 'static/movie.mp4');
         video.load();
         video.play()

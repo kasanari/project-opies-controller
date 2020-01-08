@@ -54,6 +54,10 @@ async def motor_control_task(context: Context, debug_no_car=False):
                     filename = message["filename"]
                     filename = "movie"
                     movie_path = os.path.join(os.getcwd(),'web_server', 'static',  filename)
+
+                    if os.path.isfile(f"{movie_path}.mp4"):
+                        os.remove(f"{movie_path}.mp4")
+
                 except KeyError:
                     filename = None
 
