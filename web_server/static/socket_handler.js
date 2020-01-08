@@ -99,7 +99,17 @@ function sendDestination() {
         message.x = [formData.get("x_destination")];
         message.y = [formData.get("y_destination")];
         message.filename = "movie";
-        sendWSMessage(message)
+        sendWSMessage(message);
+
+        let x_points = [1.1, 2.5, 2.5, 1.1, 1,1];
+        let y_points = [1.1, 1.1, 5.0, 5.0, 1.1];
+
+        let p = x_points.map(function(e, i) {
+            return {'x':e, 'y':y_points[i]};
+        });
+
+        myLineChart.data.datasets[1].data = p;
+
     } else {
         console.log("WebSocket not connected!")
     }

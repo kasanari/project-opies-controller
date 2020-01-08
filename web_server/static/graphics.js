@@ -13,7 +13,38 @@ type: 'scatter',
     datasets: [{
         data: [],
         label: "Position Data"
-      }
+      }, {
+            label: 'Path',
+            data: [
+                {
+                    'x': 1.1,
+                    'y': 1.1
+                },
+                {
+                    'x': 2.5,
+                    'y': 1.1
+                },
+                {
+                    'x': 2.5,
+                    'y': 5
+                },
+                {
+                    'x': 1.1,
+                    'y': 5
+                },
+                {
+                    'x': 1.1,
+                    'y': 1.1
+                },
+            ],
+
+            // Changes this dataset to become a line
+            type: 'line',
+            fill: false,
+            cubicInterpolationMode: 'monotone',
+            borderColor: '#FFBF00'
+
+        }
     ]
   },
   options: {
@@ -31,7 +62,7 @@ type: 'scatter',
                 position: 'bottom',
                 ticks: {
                     beginAtZero: true,
-                    suggestedMax:5
+                    suggestedMax:6
                 }
             }],
             yAxes: [{
@@ -39,7 +70,7 @@ type: 'scatter',
                     position: 'left',
                     ticks: {
                         beginAtZero: true,
-                        suggestedMax:5
+                        suggestedMax:6
                     }
                 }]
         }
