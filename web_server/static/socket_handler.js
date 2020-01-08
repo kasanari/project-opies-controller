@@ -14,7 +14,7 @@ function addMessage(message_content) {
 
 
 function dataHandler(data) {
-    addMessage(data);
+    //addMessage(data.toString());
 
     var measurement = data.measurement;
     var imu_data = measurement.result_imu;
@@ -29,7 +29,7 @@ function dataHandler(data) {
         "yaw: " + imu_data.rotation.yaw + "\n"
     ];
 
-    var data_values = document.getElementById("values");
+    var data_values = document.getElementById("values_data");
 
     var new_data = document.createElement("div");
 
@@ -65,6 +65,8 @@ function eventHandler(event) {
     } else if (type === "movie") {
         console.log("movie ready");
         var video = document.getElementById("path_movie");
+        var source = document.createElement('source');
+        source.setAttribute('src', 'static/movie.mp4');
         video.load();
         video.play()
     }
