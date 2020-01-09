@@ -50,7 +50,7 @@ async def motor_control_task(context: Context, debug_no_car=False):
                 context.settings["path"]["y"] = [float(y) for y in message["y"]]
 
                 try:
-                    filename = message["filename"]
+                    filename = message["filename"]  # To prevent hackers
                     filename = "movie"
                     movie_path = os.path.join(os.getcwd(),'web_server', 'static',  filename)
 
