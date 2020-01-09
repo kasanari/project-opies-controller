@@ -18,9 +18,9 @@ def fancy_scatter_plot(data, filename_timestamp):
     data.reset_index().plot.scatter(ax=ax, x='index', y=['x'], marker='o', c=colors, colormap='plasma')
     data.reset_index().plot.scatter(ax=ax, x='index', y=['y'], marker='o', c=colors, colormap='plasma')
     data.reset_index().plot.line(ax=ax, x='index', y=['x_kf', 'y_kf'])
-    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_fancy_line_plot.png"))
     fig.set_size_inches(15, 7, forward=True)
-
+    plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_fancy_line_plot.png"))
+    plt.close()
 
 def generate_timestamp():
     timestamp = pd.Timestamp.utcnow().ctime()
@@ -36,7 +36,7 @@ class DataLogger:
         self.start_time = time.time()
         self.filename_prefix = generate_timestamp()
 
-    def plot_path(self, path_points, lookahead, filename=None):
+    def plot_path(self, path_points, lookahead, plot_filename=None, movie_filename=None):
 
         fig, ax = plt.subplots(1, 1)
         ax.set_aspect('equal')
@@ -48,10 +48,15 @@ class DataLogger:
         self.df.reset_index().plot.scatter(ax=ax, x='x_kf', y='y_kf')
         ax.scatter(path.x, path.y)
 
-        if filename is None:
+        if plot_filename is None:
             plt.savefig(os.path.join(f'{self.filename_prefix}', f"{self.filename_prefix}_path.png"))
         else:
-            plt.savefig(os.path.join(f"{filename}.png"))
+            plt.savefig(os.path.join(f"{plot_filename}.png"))
+
+        plt.close()
+
+        if movie_filename is None:
+            movie_filename = self.filename_prefix
 
         plot_pure_pursuit(self.df.reset_index()["x"],
                           self.df.reset_index()["y"],
@@ -59,7 +64,7 @@ class DataLogger:
                           path_points["x"],
                           path_points["y"],
                           lookahead,
-                          filename=self.filename_prefix
+                          filename=movie_filename
                           )
 
     def make_directory(self):
@@ -118,24 +123,29 @@ class DataLogger:
             self.df.reset_index().plot(x='index', y=['x', 'y', 'target_x', 'target_y', 'x_kf', 'y_kf'])
 
             plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_line_plot_xy.png"))
+            plt.close()
 
             fancy_scatter_plot(self.df, filename_timestamp)
 
             # velocity
             self.df.reset_index().plot(x='index', y=['y_dot', 'x_dot'])
             plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_velocity.png"))
+            plt.close()
 
             # acceleration world
             self.df.reset_index().plot(x='index', y=['a_w_y', 'a_w_x', 'a_x_kf', 'a_y_kf'])
             plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_world.png"))
+            plt.close()
 
             # acceleration real
             self.df.reset_index().plot(x='index', y=['a_r_x', 'a_r_y', 'a_x_kf', 'a_y_kf'])
             plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_acceleration_real.png"))
+            plt.close()
 
             # Steering control
             self.df.reset_index().plot(x='index', y=['u_yaw', 'target_yaw', 'yaw', 'e_yaw', 'yaw_kf', 'yaw_acc_kf'])
             plt.savefig(os.path.join(f'{filename_timestamp}', f"{filename_timestamp}_steering_control.png"))
+            plt.close()
 
         except KeyError as e:
             print(e)

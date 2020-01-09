@@ -2,7 +2,6 @@
     overflow-y: scroll;
     overflow-x: scroll;
     height: 500px;
-    margin: auto;
     background-color: black;
 }
 
@@ -10,7 +9,8 @@
     color: #FFBF00;
 }
 
-#controls {
+
+#controls, #top_part {
     margin: auto;
     display: flex;
     flex-wrap: wrap;

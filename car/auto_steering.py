@@ -16,6 +16,7 @@ from arduino_interface.imu import IMUData
 from arduino_interface.ultrasonic import measure_distance
 from car.pidcontroller import PIDController
 from serial_with_dwm.location_data_handler import LocationData
+from websocket_server.websocket_server import ToWeb
 
 
 def position_error(target_x, target_y, x, y):
@@ -58,7 +59,7 @@ def calculate_lyapunov_errors(target: Target, position: LocationData, angle):
 
 async def auto_steer_task(context: Context,
                           rc_car,
-                          distance_control=False):
+                          movie_filename=None):
 
     loc_data: LocationData
     imu_data: IMUData
@@ -83,20 +84,10 @@ async def auto_steer_task(context: Context,
     steering_controller = PIDController(**context.settings["pid"]["steering"])
     speed_controller = PIDController(**context.settings["pid"]["speed"])
 
-    if distance_control:
-        arduino_connection: Serial = arduino_serial.connect_to_arduino()
+
 
     try:
         while True:
-
-            if distance_control:
-                collision_imminent = check_for_collision(arduino_connection, limit=60)
-                if collision_imminent:
-                    print("Stopping due to wall.")
-                    await rc_car.brake()
-                    rc_car.stop()
-                    return
-
 
             log.info("Waiting for estimated state and measurements")
             await context.new_estimated_state_event.wait()
@@ -182,8 +173,7 @@ async def auto_steer_task(context: Context,
         log.error(e)
 
     finally:
-        if distance_control:
-            arduino_connection.close()
+
         context.auto_steering = False
 
         logging.getLogger('asyncio').info(f"Cancelled.")
@@ -192,7 +182,12 @@ async def auto_steer_task(context: Context,
         data_logger.create_plots()
         if context.settings["generate_movie"]:
             try:
-                data_logger.plot_path(path_points=context.settings["path"], lookahead=context.settings["lookahead"])
+                data_logger.plot_path(path_points=context.settings["path"],
+                                      lookahead=context.settings["lookahead"],
+                                      movie_filename=movie_filename)
+
+                to_web = ToWeb("movie")
+                context.to_web_queue.put_nowait(to_web)
             except KeyError as e:
                 print(e)
                 print("Path plot failed due to missing data")

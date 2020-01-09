@@ -22,7 +22,7 @@ async def main_gui_task(ip_addr: str, serial_data_file: str = None, disable_moto
     if serial_data_file is None:
         serial_man_task = asyncio.create_task(serial_man(context, update_delay=0.3))
     else:
-        serial_man_task = asyncio.create_task(fake_serial_task(context, serial_data_file, update_delay=0.3))
+        serial_man_task = asyncio.create_task(fake_serial_task(context, serial_data_file, update_delay=0.11))
 
     kalman_task = asyncio.create_task(kalman_man(context))
 

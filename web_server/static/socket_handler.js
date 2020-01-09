@@ -12,9 +12,10 @@ function addMessage(message_content) {
     message_holder.scrollTop = message_holder.scrollHeight
 }
 
-function eventHandler(event) {
-    addMessage(event.data);
-    var data = JSON.parse(event.data).estimation;
+
+function dataHandler(data) {
+    //addMessage(data.toString());
+
     var measurement = data.measurement;
     var imu_data = measurement.result_imu;
 
@@ -26,9 +27,9 @@ function eventHandler(event) {
         "a_real_x, a_real_y: " + imu_data.real_acceleration.x + ", " + imu_data.real_acceleration.y + "\n",
         "a_world_x, a_world_y: " + imu_data.world_acceleration.x + ", " + imu_data.world_acceleration.y + "\n",
         "yaw: " + imu_data.rotation.yaw + "\n"
-        ];
+    ];
 
-    var data_values = document.getElementById("values");
+    var data_values = document.getElementById("values_data");
 
     var new_data = document.createElement("div");
 
@@ -43,17 +44,32 @@ function eventHandler(event) {
     position = {'x':data.location_est.x, 'y':data.location_est.y};
 
 
-        if (graph_index % 40 === 0) {
-            graph_index = 0;
-            myLineChart.data.datasets[0].data[graph_index] = position;
-            graph_index++;
-        } else {
-            myLineChart.data.datasets[0].data[graph_index] = position;
-            graph_index++;
-        }
+    if (graph_index % 40 === 0) {
+        graph_index = 0;
+        myLineChart.data.datasets[0].data[graph_index] = position;
+        graph_index++;
+    } else {
+        myLineChart.data.datasets[0].data[graph_index] = position;
+        graph_index++;
+    }
 
-        //myLineChart.data.datasets[0].data.push(position)
+    //myLineChart.data.datasets[0].data.push(position)
     myLineChart.update()
+}
+
+function eventHandler(event) {
+    var data = JSON.parse(event.data);
+    var type = data.type;
+    if (type === "measurements") {
+        dataHandler(data.estimation);
+    } else if (type === "movie") {
+        console.log("movie ready");
+        var video = document.getElementById("path_movie");
+        var source = document.getElementById("movie_source");//document.createElement('source');
+        source.setAttribute('src', 'static/movie.mp4');
+        video.load();
+        video.play()
+    }
 }
 
 function sendWSMessage(message) {
@@ -82,7 +98,18 @@ function sendDestination() {
         message.type = "destination";
         message.x = [formData.get("x_destination")];
         message.y = [formData.get("y_destination")];
-        sendWSMessage(message)
+        message.filename = "movie";
+        sendWSMessage(message);
+
+        let x_points = [1.1, 2.5, 2.5, 1.1, 1,1];
+        let y_points = [1.1, 1.1, 5.0, 5.0, 1.1];
+
+        let p = x_points.map(function(e, i) {
+            return {'x':e, 'y':y_points[i]};
+        });
+
+        myLineChart.data.datasets[1].data = p;
+
     } else {
         console.log("WebSocket not connected!")
     }
