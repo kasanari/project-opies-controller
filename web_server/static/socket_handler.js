@@ -170,11 +170,18 @@ function sendPath() {
         message.type = "path";
         message.x = array_x;
         message.y = array_y;
+        message.filename = "movie";
 
         let path_status = document.getElementById("Array_res").innerHTML;
         path_status += "Path sent! <br/>";
-        document.getElementById("Array_res").innerHTML = path_status
-        sendWSMessage(message)
+        document.getElementById("Array_res").innerHTML = path_status;
+        sendWSMessage(message);
+
+        let p = array_x.map(function(e, i) {
+            return {'x':parseFloat(e), 'y':parseFloat(array_y[i])};
+        });
+
+        myLineChart.data.datasets[1].data = p;
     } else {
         console.log("WebSocket not connected!")
     }
