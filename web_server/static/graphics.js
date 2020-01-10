@@ -16,26 +16,7 @@ type: 'scatter',
       }, {
             label: 'Path',
             data: [
-                {
-                    'x': 1.1,
-                    'y': 1.1
-                },
-                {
-                    'x': 2.5,
-                    'y': 1.1
-                },
-                {
-                    'x': 2.5,
-                    'y': 5
-                },
-                {
-                    'x': 1.1,
-                    'y': 5
-                },
-                {
-                    'x': 1.1,
-                    'y': 1.1
-                },
+
             ],
 
             // Changes this dataset to become a line
