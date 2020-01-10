@@ -58,7 +58,7 @@ async def motor_control_task(context: Context, debug_no_car=False):
                         os.remove(f"{movie_path}.mp4")
 
                 except KeyError:
-                    filename = None
+                    movie_path = None
 
 
                 if auto_steer is not None:
