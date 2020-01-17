@@ -95,11 +95,11 @@ async def auto_steer_task(context: Context,
             loc_data = estimated_state.location_est
             log.info("Calculating control signal.")
 
+            _, imu_data = estimated_state.measurement.result_tag, estimated_state.measurement.result_imu
             if context.settings["kalman"]["uwb_only_kf"]:
-                _, imu_data = estimated_state.measurement.result_tag, estimated_state.measurement.result_imu
                 yaw = imu_data.rotation.yaw
             else:
-                yaw = estimated_state.yaw_est
+                yaw = imu_data.rotation.yaw
 
             context.new_estimated_state_event.clear()
 
@@ -166,7 +166,7 @@ async def auto_steer_task(context: Context,
     except asyncio.CancelledError as e:
         log.warning(e)
         await rc_car.brake()
-        rc_car.stop()
+        #rc_car.stop()
         print("Auto steer cancelled.")
 
     except Exception as e:
