@@ -62,6 +62,7 @@ async def motor_control_task(context: Context, debug_no_car=False):
 
 
                 if auto_steer is not None:
+                    rc_car.stop()
                     auto_steer.cancel()
 
                 auto_steer = asyncio.create_task(auto_steer_task(context, rc_car, movie_filename=movie_path))
@@ -80,6 +81,7 @@ async def motor_control_task(context: Context, debug_no_car=False):
                 logging.getLogger('asyncio').warning("Invalid message type")
 
     except asyncio.CancelledError:
+        rc_car.stop()
         logging.getLogger('asyncio').info("Motor task cancelled.")
     finally:
         #await rc_car.brake()

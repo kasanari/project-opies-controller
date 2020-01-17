@@ -165,6 +165,8 @@ async def auto_steer_task(context: Context,
 
     except asyncio.CancelledError as e:
         log.warning(e)
+        rc_car.set_wheel_angle(0)
+        rc_car.set_acceleration(0)
         await rc_car.brake()
         #rc_car.stop()
         print("Auto steer cancelled.")
@@ -175,7 +177,7 @@ async def auto_steer_task(context: Context,
     finally:
 
         context.auto_steering = False
-
+        rc_car.stop()
         logging.getLogger('asyncio').info(f"Cancelled.")
         data_logger.make_directory()
         data_logger.save_csv()
